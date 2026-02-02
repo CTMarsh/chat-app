@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__supabase__get_project_url",
+      "mcp__supabase__get_publishable_keys",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__search_docs",
+      "Bash(npm run dev:*)",
+      "Bash(timeout:*)",
+      "Bash(move:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}
