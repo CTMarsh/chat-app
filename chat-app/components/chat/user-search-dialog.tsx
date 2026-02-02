@@ -1,0 +1,184 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Search, Loader2 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { createClient } from '@/lib/supabase/client'
+import { useChat } from '@/components/providers/chat-provider'
+import type { Profile } from '@/lib/types/database'
+
+interface UserSearchDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
+export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) {
+  const router = useRouter()
+  const { currentUser, conversations, refreshConversations } = useChat()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [users, setUsers] = useState<Profile[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const supabase = createClient()
+
+  // Search users when query changes
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (!searchQuery.trim()) {
+        setUsers([])
+        return
+      }
+
+      setIsLoading(true)
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', currentUser?.id || '')
+        .or(`username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`)
+        .limit(10)
+
+      if (data) {
+        setUsers(data)
+      }
+      setIsLoading(false)
+    }
+
+    const debounce = setTimeout(searchUsers, 300)
+    return () => clearTimeout(debounce)
+  }, [searchQuery, supabase, currentUser?.id])
+
+  // Reset state when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('')
+      setUsers([])
+    }
+  }, [open])
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '?'
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const handleSelectUser = async (user: Profile) => {
+    // Check if conversation already exists
+    const existingConversation = conversations.find(conv => {
+      if (conv.type !== 'direct') return false
+      return conv.participants.some(p => p.user_id === user.id)
+    })
+
+    if (existingConversation) {
+      router.push(`/chat/${existingConversation.id}`)
+      onOpenChange(false)
+      return
+    }
+
+    // Create new direct conversation
+    setIsCreating(true)
+    try {
+      const { data: conversation, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          type: 'direct',
+          created_by: currentUser?.id,
+        })
+        .select()
+        .single()
+
+      if (convError) throw convError
+
+      // Add participants
+      const { error: partError } = await supabase
+        .from('conversation_participants')
+        .insert([
+          { conversation_id: conversation.id, user_id: currentUser!.id, role: 'member' },
+          { conversation_id: conversation.id, user_id: user.id, role: 'member' },
+        ])
+
+      if (partError) throw partError
+
+      await refreshConversations()
+      router.push(`/chat/${conversation.id}`)
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>New Chat</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search users by name or username..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9"
+              autoFocus
+            />
+          </div>
+
+          <div className="max-h-64 overflow-y-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : users.length === 0 ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                {searchQuery ? 'No users found' : 'Search for users to start a chat'}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {users.map(user => (
+                  <button
+                    key={user.id}
+                    onClick={() => handleSelectUser(user)}
+                    disabled={isCreating}
+                    className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent disabled:opacity-50"
+                  >
+                    <Avatar>
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback>{getInitials(user.display_name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="font-medium truncate">
+                        {user.display_name || user.username}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        @{user.username}
+                      </p>
+                    </div>
+                    {user.status === 'online' && (
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

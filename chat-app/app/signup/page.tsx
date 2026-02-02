@@ -14,9 +14,10 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card'
-import { Mail, Lock, Loader2, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Loader2, CheckCircle, User } from 'lucide-react'
 
 export default function SignupPage() {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -40,12 +41,19 @@ export default function SignupPage() {
 
     setLoading(true)
 
+    // Extract username from email (part before @)
+    const username = email.split('@')[0]
+
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          full_name: name.trim() || null,
+          username: username,
+        },
       },
     })
 
@@ -100,6 +108,20 @@ export default function SignupPage() {
                 {error}
               </div>
             )}
+            <div className="space-y-2">
+              <Label htmlFor="name">Name <span className="text-muted-foreground">(optional)</span></Label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
