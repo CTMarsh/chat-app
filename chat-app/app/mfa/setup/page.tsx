@@ -37,6 +37,12 @@ export default function MFASetupPage() {
         return
       }
 
+      // Clean up any unverified factors from previous attempts
+      const unverifiedFactors = factors?.totp.filter(f => f.status === 'unverified') || []
+      for (const factor of unverifiedFactors) {
+        await supabase.auth.mfa.unenroll({ factorId: factor.id })
+      }
+
       // Start enrollment
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
