@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Loader2 } from 'lucide-react'
 import {
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { createClient } from '@/lib/supabase/client'
 import { useChat } from '@/components/providers/chat-provider'
+import { createDirectConversation } from '@/lib/actions/conversations'
 import type { Profile } from '@/lib/types/database'
 
 interface UserSearchDialogProps {
@@ -27,41 +28,68 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
   const [users, setUsers] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const supabase = createClient()
 
-  // Search users when query changes
-  useEffect(() => {
-    const searchUsers = async () => {
-      if (!searchQuery.trim()) {
-        setUsers([])
-        return
-      }
+  // Create a stable Supabase client instance
+  const supabase = useMemo(() => createClient(), [])
 
-      setIsLoading(true)
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .neq('id', currentUser?.id || '')
-        .or(`username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`)
-        .limit(10)
-
-      if (data) {
-        setUsers(data)
-      }
-      setIsLoading(false)
-    }
-
-    const debounce = setTimeout(searchUsers, 300)
-    return () => clearTimeout(debounce)
-  }, [searchQuery, supabase, currentUser?.id])
-
-  // Reset state when dialog closes
+  // Fetch users when dialog opens or search query changes
   useEffect(() => {
     if (!open) {
       setSearchQuery('')
       setUsers([])
+      return
     }
-  }, [open])
+
+    const fetchUsers = async () => {
+      // Get current user ID from context or session
+      let currentUserId = currentUser?.id
+      if (!currentUserId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        currentUserId = user?.id
+      }
+
+      if (!currentUserId) {
+        console.error('No user ID available')
+        return
+      }
+
+      setIsLoading(true)
+      try {
+        let query = supabase
+          .from('profiles')
+          .select('*')
+          .neq('id', currentUserId)
+          .order('display_name', { ascending: true })
+          .limit(20)
+
+        if (searchQuery.trim()) {
+          // Search by username, display_name, or email
+          query = query.or(
+            `username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`
+          )
+        }
+
+        const { data, error } = await query
+
+        if (error) {
+          console.error('Error fetching users:', error)
+          return
+        }
+
+        if (data) {
+          setUsers(data)
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    // Debounce search
+    const debounce = setTimeout(fetchUsers, searchQuery ? 300 : 0)
+    return () => clearTimeout(debounce)
+  }, [open, searchQuery, currentUser?.id, supabase])
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?'
@@ -74,7 +102,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
   }
 
   const handleSelectUser = async (user: Profile) => {
-    // Check if conversation already exists
+    // Check if conversation already exists (client-side check for immediate feedback)
     const existingConversation = conversations.find(conv => {
       if (conv.type !== 'direct') return false
       return conv.participants.some(p => p.user_id === user.id)
@@ -86,33 +114,21 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
       return
     }
 
-    // Create new direct conversation
+    // Create new direct conversation using server action (secure, server-side)
     setIsCreating(true)
     try {
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .insert({
-          type: 'direct',
-          created_by: currentUser?.id,
-        })
-        .select()
-        .single()
+      const result = await createDirectConversation(user.id)
 
-      if (convError) throw convError
+      if (result.error) {
+        console.error('Error creating conversation:', result.error)
+        return
+      }
 
-      // Add participants
-      const { error: partError } = await supabase
-        .from('conversation_participants')
-        .insert([
-          { conversation_id: conversation.id, user_id: currentUser!.id, role: 'member' },
-          { conversation_id: conversation.id, user_id: user.id, role: 'member' },
-        ])
-
-      if (partError) throw partError
-
-      await refreshConversations()
-      router.push(`/chat/${conversation.id}`)
-      onOpenChange(false)
+      if (result.conversationId) {
+        await refreshConversations()
+        router.push(`/chat/${result.conversationId}`)
+        onOpenChange(false)
+      }
     } catch (error) {
       console.error('Error creating conversation:', error)
     } finally {
@@ -131,7 +147,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search users by name or username..."
+              placeholder="Search by name, username, or email..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -146,7 +162,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
               </div>
             ) : users.length === 0 ? (
               <div className="py-8 text-center text-sm text-muted-foreground">
-                {searchQuery ? 'No users found' : 'Search for users to start a chat'}
+                {searchQuery ? 'No users found' : 'No other users available'}
               </div>
             ) : (
               <div className="space-y-1">
@@ -167,6 +183,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                       </p>
                       <p className="text-sm text-muted-foreground truncate">
                         @{user.username}
+                        {user.email && ` · ${user.email}`}
                       </p>
                     </div>
                     {user.status === 'online' && (
