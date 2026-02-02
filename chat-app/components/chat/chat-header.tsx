@@ -1,6 +1,6 @@
 'use client'
 
-import { MoreVertical, Phone, Video, Info } from 'lucide-react'
+import { MoreVertical, Phone, Video, Info, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useChat } from '@/components/providers/chat-provider'
+import { SearchDialog } from './search-dialog'
 
 export function ChatHeader() {
   const { activeConversation, currentUser } = useChat()
@@ -72,6 +73,13 @@ export function ChatHeader() {
       </div>
 
       <div className="flex items-center gap-1">
+        <SearchDialog
+          trigger={
+            <Button variant="ghost" size="icon">
+              <Search className="h-5 w-5" />
+            </Button>
+          }
+        />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">

@@ -100,8 +100,18 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
           id: string
           is_edited: boolean | null
+          is_pinned: boolean | null
+          link_previews: Json | null
+          pinned_at: string | null
+          pinned_by: string | null
           reply_to_id: string | null
           sender_id: string
           type: string | null
@@ -111,8 +121,17 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_edited?: boolean | null
+          is_pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           sender_id: string
           type?: string | null
@@ -122,8 +141,17 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           is_edited?: boolean | null
+          is_pinned?: boolean | null
+          pinned_at?: string | null
+          pinned_by?: string | null
           reply_to_id?: string | null
           sender_id?: string
           type?: string | null
@@ -257,14 +285,31 @@ export type Conversation = Tables<'conversations'>
 export type ConversationParticipant = Tables<'conversation_participants'>
 export type Message = Tables<'messages'>
 export type Notification = Tables<'notifications'>
+export type MessageReaction = {
+  id: string
+  message_id: string
+  user_id: string
+  emoji: string
+  created_at: string | null
+}
+
+export type MessageReadReceipt = {
+  id: string
+  message_id: string
+  user_id: string
+  read_at: string | null
+}
 
 // Extended types with relations
 export type ConversationWithParticipants = Conversation & {
   participants: (ConversationParticipant & { profile: Profile })[]
   last_message?: Message & { sender: Profile }
+  unread_count?: number
 }
 
 export type MessageWithSender = Message & {
   sender: Profile
   reply_to?: Message & { sender: Profile }
+  reactions?: MessageReaction[]
+  read_receipts?: MessageReadReceipt[]
 }

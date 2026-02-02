@@ -6,8 +6,8 @@ import { ArrowLeft, Loader2, Camera, Shield, ShieldCheck, ShieldOff } from 'luci
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AvatarUpload } from '@/components/ui/avatar-upload'
 import { createClient } from '@/lib/supabase/client'
 import { MFAEnroll } from '@/components/auth/mfa-enroll'
 import { MFAUnenroll } from '@/components/auth/mfa-unenroll'
@@ -133,19 +133,15 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Avatar */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback className="text-xl">
-                  {getInitials(profile?.display_name || profile?.username)}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Avatar changes are not supported yet
-                </p>
-              </div>
-            </div>
+            <AvatarUpload
+              userId={profile?.id || ''}
+              currentUrl={profile?.avatar_url || null}
+              fallback={getInitials(profile?.display_name || profile?.username)}
+              onUpload={(url) => {
+                setProfile(prev => prev ? { ...prev, avatar_url: url } : null)
+                setMessage({ type: 'success', text: url ? 'Avatar updated successfully' : 'Avatar removed successfully' })
+              }}
+            />
 
             {/* Display Name */}
             <div className="space-y-2">

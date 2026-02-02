@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useChat } from '@/components/providers/chat-provider'
 import type { ConversationWithParticipants } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
+import { UnreadBadge } from './unread-badge'
 
 interface ConversationItemProps {
   conversation: ConversationWithParticipants
@@ -91,16 +92,29 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
 
       <div className="flex-1 overflow-hidden">
         <div className="flex items-center justify-between">
-          <span className="font-medium truncate">{displayName}</span>
-          {lastMessage?.created_at && (
-            <span className="text-xs text-muted-foreground">
-              {formatTime(lastMessage.created_at)}
-            </span>
-          )}
+          <span className={cn(
+            'font-medium truncate',
+            conversation.unread_count && conversation.unread_count > 0 && 'font-semibold'
+          )}>{displayName}</span>
+          <div className="flex items-center gap-2">
+            {lastMessage?.created_at && (
+              <span className="text-xs text-muted-foreground">
+                {formatTime(lastMessage.created_at)}
+              </span>
+            )}
+          </div>
         </div>
-        <p className="truncate text-sm text-muted-foreground">
-          {lastMessagePreview}
-        </p>
+        <div className="flex items-center justify-between gap-2">
+          <p className={cn(
+            'truncate text-sm',
+            conversation.unread_count && conversation.unread_count > 0
+              ? 'font-medium text-foreground'
+              : 'text-muted-foreground'
+          )}>
+            {lastMessagePreview}
+          </p>
+          <UnreadBadge count={conversation.unread_count || 0} />
+        </div>
       </div>
     </button>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare } from 'lucide-react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,7 @@ import { CreateGroupDialog } from './create-group-dialog'
 import { NotificationBadge } from './notification-badge'
 import { useChat } from '@/components/providers/chat-provider'
 import { createClient } from '@/lib/supabase/client'
+import { useTheme } from 'next-themes'
 
 interface ConversationListProps {
   onSelect?: () => void
@@ -31,6 +32,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const [userSearchOpen, setUserSearchOpen] = useState(false)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const supabase = createClient()
+  const { theme, setTheme } = useTheme()
 
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery) return true
@@ -93,6 +95,22 @@ export function ConversationList({ onSelect }: ConversationListProps) {
               <DropdownMenuItem onClick={() => router.push('/settings')}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setTheme('light')}>
+                <Sun className="mr-2 h-4 w-4" />
+                Light Mode
+                {theme === 'light' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('dark')}>
+                <Moon className="mr-2 h-4 w-4" />
+                Dark Mode
+                {theme === 'dark' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme('system')}>
+                <Monitor className="mr-2 h-4 w-4" />
+                System
+                {theme === 'system' && <span className="ml-auto text-xs text-muted-foreground">Active</span>}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>

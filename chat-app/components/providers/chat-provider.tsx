@@ -4,6 +4,15 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ConversationWithParticipants, MessageWithSender, Notification } from '@/lib/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { scanFile } from '@/lib/utils/scan-file'
+
+interface FileAttachment {
+  file: File
+  url: string
+  name: string
+  size: number
+  type: string
+}
 
 interface ChatContextType {
   currentUser: Profile | null
@@ -15,12 +24,18 @@ interface ChatContextType {
   typingUsers: Map<string, string[]>
   isLoading: boolean
   setActiveConversation: (conversation: ConversationWithParticipants | null) => void
-  sendMessage: (content: string, conversationId: string) => Promise<void>
+  sendMessage: (content: string, conversationId: string, file?: File) => Promise<void>
   markAsRead: (conversationId: string) => Promise<void>
   markNotificationRead: (notificationId: string) => Promise<void>
   markAllNotificationsRead: () => Promise<void>
   setTyping: (conversationId: string, isTyping: boolean) => void
   refreshConversations: () => Promise<void>
+  toggleReaction: (messageId: string, emoji: string) => Promise<void>
+  deleteMessage: (messageId: string) => Promise<void>
+  sendMessageWithMentions: (content: string, conversationId: string, mentionedUserIds: string[], file?: File) => Promise<void>
+  pinnedMessages: MessageWithSender[]
+  pinMessage: (messageId: string) => Promise<void>
+  unpinMessage: (messageId: string) => Promise<void>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -33,6 +48,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [typingUsers, setTypingUsers] = useState<Map<string, string[]>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
+  const [pinnedMessages, setPinnedMessages] = useState<MessageWithSender[]>([])
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
 
   const supabase = createClient()
@@ -84,20 +100,25 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .order('updated_at', { ascending: false })
 
     if (conversationsData) {
-      // Fetch last message for each conversation
+      // Fetch last message and unread count for each conversation
       const conversationsWithLastMessage = await Promise.all(
         conversationsData.map(async (conv) => {
-          const { data: lastMessage } = await supabase
-            .from('messages')
-            .select('*, sender:profiles(*)')
-            .eq('conversation_id', conv.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
+          const [lastMessageResult, unreadCountResult] = await Promise.all([
+            supabase
+              .from('messages')
+              .select('*, sender:profiles(*)')
+              .eq('conversation_id', conv.id)
+              .is('deleted_at', null)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single(),
+            supabase.rpc('get_unread_count', { conv_id: conv.id, usr_id: userId }),
+          ])
 
           return {
             ...conv,
-            last_message: lastMessage || undefined,
+            last_message: lastMessageResult.data || undefined,
+            unread_count: unreadCountResult.data || 0,
           } as ConversationWithParticipants
         })
       )
@@ -130,24 +151,286 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .limit(100)
 
     if (data) {
-      setMessages(data as MessageWithSender[])
+      // Fetch reactions and read receipts for all messages
+      const messageIds = data.map(m => m.id)
+      const [reactionsResult, receiptsResult] = await Promise.all([
+        supabase
+          .from('message_reactions')
+          .select('*')
+          .in('message_id', messageIds),
+        supabase
+          .from('message_read_receipts')
+          .select('*')
+          .in('message_id', messageIds),
+      ])
+
+      const messagesWithData = data.map(message => ({
+        ...message,
+        reactions: reactionsResult.data?.filter(r => r.message_id === message.id) || [],
+        read_receipts: receiptsResult.data?.filter(r => r.message_id === message.id) || [],
+      }))
+
+      setMessages(messagesWithData as MessageWithSender[])
+
+      // Mark messages as read
+      const unreadMessages = data.filter(m => m.sender_id !== userId)
+      if (unreadMessages.length > 0) {
+        const receipts = unreadMessages.map(m => ({
+          message_id: m.id,
+          user_id: userId,
+        }))
+        await supabase
+          .from('message_read_receipts')
+          .upsert(receipts, { onConflict: 'message_id,user_id' })
+      }
+    }
+
+    // Fetch pinned messages
+    const { data: pinnedData } = await supabase
+      .from('messages')
+      .select('*, sender:profiles(*)')
+      .eq('conversation_id', conversationId)
+      .eq('is_pinned', true)
+      .is('deleted_at', null)
+      .order('pinned_at', { ascending: false })
+
+    if (pinnedData) {
+      setPinnedMessages(pinnedData as MessageWithSender[])
     }
   }, [supabase])
 
+  // Pin a message
+  const pinMessage = useCallback(async (messageId: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({
+        is_pinned: true,
+        pinned_at: new Date().toISOString(),
+        pinned_by: userId,
+      })
+      .eq('id', messageId)
+
+    if (error) {
+      console.error('Error pinning message:', error)
+      throw error
+    }
+
+    // Update local state
+    const pinnedMessage = messages.find(m => m.id === messageId)
+    if (pinnedMessage) {
+      const updated = { ...pinnedMessage, is_pinned: true, pinned_at: new Date().toISOString(), pinned_by: userId }
+      setPinnedMessages(prev => [updated, ...prev])
+      setMessages(prev =>
+        prev.map(m => m.id === messageId ? updated : m)
+      )
+    }
+  }, [supabase, userId, messages])
+
+  // Unpin a message
+  const unpinMessage = useCallback(async (messageId: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({
+        is_pinned: false,
+        pinned_at: null,
+        pinned_by: null,
+      })
+      .eq('id', messageId)
+
+    if (error) {
+      console.error('Error unpinning message:', error)
+      throw error
+    }
+
+    // Update local state
+    setPinnedMessages(prev => prev.filter(m => m.id !== messageId))
+    setMessages(prev =>
+      prev.map(m => m.id === messageId ? { ...m, is_pinned: false, pinned_at: null, pinned_by: null } : m)
+    )
+  }, [supabase])
+
   // Send message
-  const sendMessage = useCallback(async (content: string, conversationId: string) => {
+  const sendMessage = useCallback(async (content: string, conversationId: string, file?: File) => {
+    let fileUrl: string | null = null
+    let fileName: string | null = null
+    let fileSize: number | null = null
+    let fileType: string | null = null
+
+    // Upload file if provided
+    if (file) {
+      // Scan file for viruses before uploading
+      try {
+        const scanResult = await scanFile(file)
+        if (!scanResult.isClean) {
+          throw new Error(`File rejected: ${scanResult.message}`)
+        }
+        if (!scanResult.skipped) {
+          console.log('File scan passed:', scanResult.message)
+        }
+      } catch (scanError) {
+        console.error('File scan failed:', scanError)
+        throw scanError
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('message-attachments')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError)
+        throw uploadError
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('message-attachments')
+        .getPublicUrl(filePath)
+
+      fileUrl = publicUrl
+      fileName = file.name
+      fileSize = file.size
+      fileType = file.type
+    }
+
+    const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
+
     const { error } = await supabase
       .from('messages')
       .insert({
         content,
         conversation_id: conversationId,
         sender_id: userId,
-        type: 'text',
+        type: messageType,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_size: fileSize,
+        file_type: fileType,
       })
 
     if (error) {
       console.error('Error sending message:', error)
       throw error
+    }
+
+    // Update conversation timestamp
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', conversationId)
+  }, [supabase, userId])
+
+  // Send message with mentions
+  const sendMessageWithMentions = useCallback(async (
+    content: string,
+    conversationId: string,
+    mentionedUserIds: string[],
+    file?: File
+  ) => {
+    let fileUrl: string | null = null
+    let fileName: string | null = null
+    let fileSize: number | null = null
+    let fileType: string | null = null
+
+    // Upload file if provided
+    if (file) {
+      // Scan file for viruses before uploading
+      try {
+        const scanResult = await scanFile(file)
+        if (!scanResult.isClean) {
+          throw new Error(`File rejected: ${scanResult.message}`)
+        }
+        if (!scanResult.skipped) {
+          console.log('File scan passed:', scanResult.message)
+        }
+      } catch (scanError) {
+        console.error('File scan failed:', scanError)
+        throw scanError
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('message-attachments')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        console.error('Error uploading file:', uploadError)
+        throw uploadError
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('message-attachments')
+        .getPublicUrl(filePath)
+
+      fileUrl = publicUrl
+      fileName = file.name
+      fileSize = file.size
+      fileType = file.type
+    }
+
+    const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
+
+    // Extract URLs for link previews
+    const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,:;"')\]!?])/g
+    const urls = content.match(urlRegex) || []
+    let linkPreviews: Array<{url: string; title?: string; description?: string; image?: string; siteName?: string}> = []
+
+    // Fetch link previews (limit to first 3 URLs)
+    if (urls.length > 0) {
+      const previewPromises = urls.slice(0, 3).map(async (url) => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-link-preview`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session?.access_token}`,
+            },
+            body: JSON.stringify({ url }),
+          })
+          if (response.ok) {
+            return await response.json()
+          }
+          return { url }
+        } catch {
+          return { url }
+        }
+      })
+      linkPreviews = await Promise.all(previewPromises)
+    }
+
+    const { data: messageData, error } = await supabase
+      .from('messages')
+      .insert({
+        content,
+        conversation_id: conversationId,
+        sender_id: userId,
+        type: messageType,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_size: fileSize,
+        file_type: fileType,
+        link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error sending message:', error)
+      throw error
+    }
+
+    // Create mentions
+    if (mentionedUserIds.length > 0 && messageData) {
+      const mentions = mentionedUserIds.map(mentionedUserId => ({
+        message_id: messageData.id,
+        mentioned_user_id: mentionedUserId,
+      }))
+
+      await supabase.from('message_mentions').insert(mentions)
     }
 
     // Update conversation timestamp
@@ -203,6 +486,77 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const refreshConversations = useCallback(async () => {
     await fetchConversations()
   }, [fetchConversations])
+
+  // Delete message (soft delete)
+  const deleteMessage = useCallback(async (messageId: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: userId,
+      })
+      .eq('id', messageId)
+      .eq('sender_id', userId) // Only allow deleting own messages
+
+    if (error) {
+      console.error('Error deleting message:', error)
+      throw error
+    }
+
+    // Update local state
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === messageId
+          ? { ...m, deleted_at: new Date().toISOString(), deleted_by: userId }
+          : m
+      )
+    )
+  }, [supabase, userId])
+
+  // Toggle reaction on a message
+  const toggleReaction = useCallback(async (messageId: string, emoji: string) => {
+    // Check if user already reacted with this emoji
+    const existingReaction = messages
+      .find(m => m.id === messageId)
+      ?.reactions?.find(r => r.user_id === userId && r.emoji === emoji)
+
+    if (existingReaction) {
+      // Remove reaction
+      await supabase
+        .from('message_reactions')
+        .delete()
+        .eq('id', existingReaction.id)
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === messageId
+            ? { ...m, reactions: m.reactions?.filter(r => r.id !== existingReaction.id) }
+            : m
+        )
+      )
+    } else {
+      // Add reaction
+      const { data, error } = await supabase
+        .from('message_reactions')
+        .insert({
+          message_id: messageId,
+          user_id: userId,
+          emoji,
+        })
+        .select()
+        .single()
+
+      if (!error && data) {
+        setMessages(prev =>
+          prev.map(m =>
+            m.id === messageId
+              ? { ...m, reactions: [...(m.reactions || []), data] }
+              : m
+          )
+        )
+      }
+    }
+  }, [supabase, userId, messages])
 
   // Setup realtime subscriptions
   useEffect(() => {
@@ -362,6 +716,12 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         markAllNotificationsRead,
         setTyping,
         refreshConversations,
+        toggleReaction,
+        deleteMessage,
+        sendMessageWithMentions,
+        pinnedMessages,
+        pinMessage,
+        unpinMessage,
       }}
     >
       {children}

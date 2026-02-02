@@ -1,0 +1,190 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { Search, X, Loader2 } from 'lucide-react'
+import { useDebounce } from 'use-debounce'
+import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { createClient } from '@/lib/supabase/client'
+import { useChat } from '@/components/providers/chat-provider'
+import type { MessageWithSender } from '@/lib/types/database'
+
+interface SearchDialogProps {
+  trigger?: React.ReactNode
+}
+
+export function SearchDialog({ trigger }: SearchDialogProps) {
+  const { activeConversation } = useChat()
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [debouncedQuery] = useDebounce(query, 300)
+  const [results, setResults] = useState<MessageWithSender[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const supabase = createClient()
+
+  const search = useCallback(async (searchQuery: string) => {
+    if (!searchQuery.trim() || !activeConversation) {
+      setResults([])
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*, sender:profiles(*)')
+        .eq('conversation_id', activeConversation.id)
+        .is('deleted_at', null)
+        .ilike('content', `%${searchQuery}%`)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (error) throw error
+      setResults((data as MessageWithSender[]) || [])
+    } catch (error) {
+      console.error('Search error:', error)
+      setResults([])
+    } finally {
+      setIsLoading(false)
+    }
+  }, [supabase, activeConversation])
+
+  useEffect(() => {
+    search(debouncedQuery)
+  }, [debouncedQuery, search])
+
+  const handleResultClick = (messageId: string) => {
+    setOpen(false)
+    // Scroll to message
+    setTimeout(() => {
+      const element = document.getElementById(`message-${messageId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        element.classList.add('bg-primary/10')
+        setTimeout(() => {
+          element.classList.remove('bg-primary/10')
+        }, 2000)
+      }
+    }, 100)
+  }
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '?'
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim()) return text
+    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800">$1</mark>')
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="ghost" size="icon">
+            <Search className="h-5 w-5" />
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-h-[80vh] sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Search Messages</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search in this conversation..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-9 pr-9"
+              autoFocus
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-[50vh] overflow-auto">
+            {isLoading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            )}
+
+            {!isLoading && query && results.length === 0 && (
+              <div className="py-8 text-center text-muted-foreground">
+                No messages found for "{query}"
+              </div>
+            )}
+
+            {!isLoading && results.length > 0 && (
+              <div className="space-y-2">
+                {results.map((message) => (
+                  <button
+                    key={message.id}
+                    onClick={() => handleResultClick(message.id)}
+                    className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-accent"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={message.sender.avatar_url || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {getInitials(message.sender.display_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {message.sender.display_name || message.sender.username}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {message.created_at && format(new Date(message.created_at), 'MMM d, yyyy HH:mm')}
+                          </span>
+                        </div>
+                        <p
+                          className="line-clamp-2 text-sm text-muted-foreground"
+                          dangerouslySetInnerHTML={{
+                            __html: highlightMatch(message.content, query),
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {!isLoading && !query && (
+              <div className="py-8 text-center text-muted-foreground">
+                Start typing to search messages
+              </div>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
