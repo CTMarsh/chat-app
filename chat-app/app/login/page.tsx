@@ -38,10 +38,26 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      router.push('/')
-      router.refresh()
+      return
     }
+
+    // Check MFA status
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const { data: factors } = await supabase.auth.mfa.listFactors()
+
+    const hasVerifiedFactor = factors?.totp.some(f => f.status === 'verified')
+
+    if (hasVerifiedFactor && aalData?.currentLevel !== 'aal2') {
+      // User has MFA enrolled but hasn't verified yet - go to verify
+      router.push('/mfa/verify')
+    } else if (!hasVerifiedFactor) {
+      // User doesn't have MFA set up - force setup
+      router.push('/mfa/setup')
+    } else {
+      // MFA verified, go to chat
+      router.push('/chat')
+    }
+    router.refresh()
   }
 
   return (

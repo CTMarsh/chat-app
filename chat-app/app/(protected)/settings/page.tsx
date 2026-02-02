@@ -2,14 +2,22 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2, Camera } from 'lucide-react'
+import { ArrowLeft, Loader2, Camera, Shield, ShieldCheck, ShieldOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import { MFAEnroll } from '@/components/auth/mfa-enroll'
+import { MFAUnenroll } from '@/components/auth/mfa-unenroll'
 import type { Profile } from '@/lib/types/database'
+
+interface MFAFactor {
+  id: string
+  friendly_name?: string
+  status: string
+}
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -20,6 +28,20 @@ export default function SettingsPage() {
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername] = useState('')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // MFA state
+  const [mfaFactors, setMfaFactors] = useState<MFAFactor[]>([])
+  const [enrollOpen, setEnrollOpen] = useState(false)
+  const [unenrollOpen, setUnenrollOpen] = useState(false)
+  const [selectedFactorId, setSelectedFactorId] = useState('')
+
+  const fetchMFAFactors = async () => {
+    const { data, error } = await supabase.auth.mfa.listFactors()
+    if (!error && data) {
+      const verifiedFactors = data.totp.filter(f => f.status === 'verified')
+      setMfaFactors(verifiedFactors)
+    }
+  }
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -40,6 +62,8 @@ export default function SettingsPage() {
         setDisplayName(data.display_name || '')
         setUsername(data.username)
       }
+
+      await fetchMFAFactors()
       setIsLoading(false)
     }
 
@@ -174,6 +198,102 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* MFA Settings */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Two-Factor Authentication
+            </CardTitle>
+            <CardDescription>
+              Add an extra layer of security to your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {mfaFactors.length > 0 ? (
+              <>
+                <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
+                  <ShieldCheck className="h-5 w-5 text-green-600" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-900 dark:text-green-100">
+                      Two-factor authentication is enabled
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      Your account is protected with an authenticator app
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {mfaFactors.map((factor) => (
+                    <div
+                      key={factor.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Shield className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">
+                          {factor.friendly_name || 'Authenticator App'}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedFactorId(factor.id)
+                          setUnenrollOpen(true)
+                        }}
+                      >
+                        <ShieldOff className="mr-2 h-4 w-4" />
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
+                  <ShieldOff className="h-5 w-5 text-yellow-600" />
+                  <div className="flex-1">
+                    <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                      Two-factor authentication is not enabled
+                    </p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      We recommend enabling 2FA to secure your account
+                    </p>
+                  </div>
+                </div>
+
+                <Button onClick={() => setEnrollOpen(true)}>
+                  <Shield className="mr-2 h-4 w-4" />
+                  Enable Two-Factor Authentication
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* MFA Dialogs */}
+        <MFAEnroll
+          open={enrollOpen}
+          onOpenChange={setEnrollOpen}
+          onEnrolled={() => {
+            fetchMFAFactors()
+            setMessage({ type: 'success', text: 'Two-factor authentication enabled successfully' })
+          }}
+        />
+
+        <MFAUnenroll
+          open={unenrollOpen}
+          onOpenChange={setUnenrollOpen}
+          factorId={selectedFactorId}
+          onUnenrolled={() => {
+            fetchMFAFactors()
+            setMessage({ type: 'success', text: 'Two-factor authentication disabled' })
+          }}
+        />
       </main>
     </div>
   )

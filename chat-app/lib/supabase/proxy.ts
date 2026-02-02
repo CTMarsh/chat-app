@@ -34,19 +34,64 @@ export async function updateSession(request: NextRequest) {
   const publicRoutes = ['/login', '/signup', '/auth', '/forgot-password', '/reset-password']
   const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isLandingPage = request.nextUrl.pathname === '/'
-
-  // Redirect authenticated users from landing page to chat
-  if (user && isLandingPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/chat'
-    return NextResponse.redirect(url)
-  }
+  const isMFARoute = request.nextUrl.pathname.startsWith('/mfa')
+  const isProtectedRoute = !isPublicRoute && !isLandingPage && !isMFARoute
 
   // Redirect unauthenticated users from protected routes to login
-  if (!user && !isPublicRoute && !isLandingPage) {
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  // For authenticated users, check MFA status
+  if (user) {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    const { data: factors } = await supabase.auth.mfa.listFactors()
+
+    const hasVerifiedFactor = factors?.totp?.some(f => f.status === 'verified') ?? false
+    const isAAL2 = aalData?.currentLevel === 'aal2'
+
+    // Redirect from landing page
+    if (isLandingPage) {
+      const url = request.nextUrl.clone()
+      if (!hasVerifiedFactor) {
+        url.pathname = '/mfa/setup'
+      } else if (!isAAL2) {
+        url.pathname = '/mfa/verify'
+      } else {
+        url.pathname = '/chat'
+      }
+      return NextResponse.redirect(url)
+    }
+
+    // Allow MFA routes
+    if (isMFARoute) {
+      // If already at aal2, redirect to chat
+      if (isAAL2 && hasVerifiedFactor) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/chat'
+        return NextResponse.redirect(url)
+      }
+      return supabaseResponse
+    }
+
+    // For protected routes, enforce MFA
+    if (isProtectedRoute) {
+      if (!hasVerifiedFactor) {
+        // No MFA set up - redirect to setup
+        const url = request.nextUrl.clone()
+        url.pathname = '/mfa/setup'
+        return NextResponse.redirect(url)
+      }
+
+      if (!isAAL2) {
+        // Has MFA but not verified this session - redirect to verify
+        const url = request.nextUrl.clone()
+        url.pathname = '/mfa/verify'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse
