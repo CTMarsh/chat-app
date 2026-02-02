@@ -18,6 +18,14 @@ import {
 } from '@/components/ui/sheet'
 import { Menu, User, LogOut, MessageSquare } from 'lucide-react'
 
+type UserClaims = {
+  email?: string
+  user_metadata?: {
+    avatar_url?: string
+    full_name?: string
+  }
+}
+
 const navLinks = [
   { href: '#features', label: 'Features' },
   { href: '#pricing', label: 'Pricing' },
@@ -28,7 +36,7 @@ const navLinks = [
 export async function Header() {
   const supabase = await createClient()
   const { data } = await supabase.auth.getClaims()
-  const user = data?.claims
+  const user = data?.claims as UserClaims | undefined
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,11 +68,11 @@ export async function Header() {
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar size="sm">
                     <AvatarImage
-                      src={(user as Record<string, unknown>).user_metadata?.avatar_url as string | undefined}
-                      alt={(user as Record<string, unknown>).email as string || ''}
+                      src={user.user_metadata?.avatar_url}
+                      alt={user.email || ''}
                     />
                     <AvatarFallback>
-                      {((user as Record<string, unknown>).email as string)?.charAt(0).toUpperCase() || 'U'}
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -73,19 +81,19 @@ export async function Header() {
                 <div className="flex items-center gap-2 p-2">
                   <Avatar size="sm">
                     <AvatarImage
-                      src={(user as Record<string, unknown>).user_metadata?.avatar_url as string | undefined}
-                      alt={(user as Record<string, unknown>).email as string || ''}
+                      src={user.user_metadata?.avatar_url}
+                      alt={user.email || ''}
                     />
                     <AvatarFallback>
-                      {((user as Record<string, unknown>).email as string)?.charAt(0).toUpperCase() || 'U'}
+                      {user.email?.charAt(0).toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
                     <span className="text-sm font-medium">
-                      {(user as Record<string, unknown>).user_metadata?.full_name as string || 'User'}
+                      {user.user_metadata?.full_name || 'User'}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {(user as Record<string, unknown>).email as string}
+                      {user.email}
                     </span>
                   </div>
                 </div>
