@@ -12,8 +12,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card'
-import { Shield, Loader2 } from 'lucide-react'
+import { Shield, Loader2, LogOut } from 'lucide-react'
 
 export default function MFASetupPage() {
   const [factorId, setFactorId] = useState('')
@@ -38,7 +39,7 @@ export default function MFASetupPage() {
       }
 
       // Clean up any unverified factors from previous attempts
-      const unverifiedFactors = factors?.totp.filter(f => f.status === 'unverified') || []
+      const unverifiedFactors = factors?.totp.filter(f => (f.status as string) === 'unverified') || []
       for (const factor of unverifiedFactors) {
         await supabase.auth.mfa.unenroll({ factorId: factor.id })
       }
@@ -63,6 +64,12 @@ export default function MFASetupPage() {
 
     checkAndEnroll()
   }, [supabase, router])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,6 +187,12 @@ export default function MFASetupPage() {
             </Button>
           </form>
         </CardContent>
+        <CardFooter className="justify-center">
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign out
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   )
