@@ -1,137 +1,75 @@
-# CLAUDE.md - Chat Application
+# CLAUDE.md
 
-This document provides context for Claude Code when working in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
 A real-time chat application built with Next.js 16 and Supabase, featuring direct messages, group chats, file sharing, and mandatory MFA authentication.
 
-**SECURITY IS THE #1 PRIORITY** - All changes must prioritize security. Never make RLS policies more permissive, never bypass MFA requirements, and always validate on the server side.
+**SECURITY IS THE #1 PRIORITY** - Never make RLS policies more permissive, never bypass MFA requirements, always validate server-side.
+
+## Commands
+
+```bash
+npm run dev      # Start development server (http://localhost:3000)
+npm run build    # Production build
+npm run lint     # Run ESLint
+
+# Generate Supabase types after schema changes
+npx supabase gen types typescript --project-id <project-id> > lib/types/database.ts
+```
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.1.6 with App Router
-- **Runtime**: React 19.2.3
+- **Framework**: Next.js 16.1.6 (App Router), React 19.2.3, TypeScript 5
 - **Database**: Supabase (PostgreSQL with RLS)
 - **Auth**: Supabase Auth with mandatory TOTP MFA (AAL2)
-- **Real-time**: Supabase Realtime subscriptions
+- **Real-time**: Supabase Realtime (PostgreSQL changes + broadcast channels)
 - **Storage**: Supabase Storage (avatars, message-attachments buckets)
-- **Styling**: Tailwind CSS 4 with Radix UI components
-- **Theme**: next-themes for dark/light mode
+- **Styling**: Tailwind CSS 4, Radix UI components, next-themes
 
-## Project Structure
+## Architecture
 
-```
-app/
-  (protected)/           # Routes requiring authentication + MFA
-    chat/
-      layout.tsx         # Chat layout with sidebar
-      page.tsx           # Conversation list / empty state
-      [conversationId]/
-        page.tsx         # Active conversation view
-    settings/
-      page.tsx           # User settings (profile, avatar)
-  mfa/
-    setup/page.tsx       # MFA enrollment (required for new users)
-    verify/page.tsx      # MFA verification per session
-  login/page.tsx
-  signup/page.tsx
-  forgot-password/page.tsx
-  reset-password/page.tsx
-  logout/page.tsx
-  page.tsx               # Landing page
+### Authentication & MFA Flow
 
-components/
-  chat/                  # Chat-specific components
-    chat-layout.tsx      # Main layout wrapper
-    conversation-list.tsx
-    conversation-item.tsx
-    message-list.tsx
-    message-item.tsx
-    message-input.tsx
-    chat-header.tsx
-    typing-indicator.tsx
-    user-search-dialog.tsx
-    create-group-dialog.tsx
-    emoji-picker.tsx
-    file-upload-button.tsx
-    file-message.tsx
-    image-lightbox.tsx
-    reaction-picker.tsx
-    reaction-display.tsx
-    mention-list.tsx
-    mention-highlight.tsx
-    pinned-messages-bar.tsx
-    read-receipt-indicator.tsx
-    search-dialog.tsx
-    link-preview.tsx
-    unread-badge.tsx
-    notification-badge.tsx
-    empty-state.tsx
-  providers/
-    chat-provider.tsx    # Global chat state (conversations, messages, typing)
-    theme-provider.tsx   # Dark/light theme
-  auth/
-    mfa-enroll.tsx       # MFA setup component
-    mfa-unenroll.tsx     # MFA removal component
-  ui/                    # Reusable UI components (Radix-based)
-  landing/               # Landing page components
+The middleware in `lib/supabase/proxy.ts` enforces a strict authentication flow:
 
-lib/
-  supabase/
-    client.ts            # Browser Supabase client
-    server.ts            # Server-side Supabase client (with cookies)
-    proxy.ts             # Middleware for auth/MFA enforcement
-  actions/
-    conversations.ts     # Server actions for secure operations
-  utils/
-    scan-file.ts         # ClamAV virus scanning utility
-  types/
-    database.ts          # Generated Supabase TypeScript types
-  utils.ts               # Utility functions (cn, etc.)
+1. **Unauthenticated** → Redirect to `/login`
+2. **Authenticated, no MFA enrolled** → Redirect to `/mfa/setup`
+3. **Authenticated, MFA not verified this session** → Redirect to `/mfa/verify`
+4. **Authenticated, AAL2** → Access granted to protected routes
+
+Key pattern: Always check `aalData?.currentLevel === 'aal2'` before sensitive operations.
+
+### State Management
+
+All chat state lives in `ChatProvider` (`components/providers/chat-provider.tsx`):
+
+```typescript
+const {
+  conversations,      // User's conversations with last_message, unread_count
+  activeConversation, // Currently selected conversation
+  messages,           // Messages for active conversation
+  notifications,      // User notifications
+  typingUsers,        // Map<conversationId, userId[]>
+  sendMessage,        // Send with optional file attachment
+  sendMessageWithMentions, // Send with @mentions and link previews
+  toggleReaction,     // Add/remove emoji reaction
+  pinMessage,         // Pin message to conversation
+} = useChat()
 ```
 
-## Database Schema
+### Real-time Subscriptions
 
-All tables have RLS (Row Level Security) enabled:
+Three subscription patterns in `chat-provider.tsx`:
 
-| Table | Purpose |
-|-------|---------|
-| `profiles` | User profiles (extends auth.users) |
-| `conversations` | Chat conversations (direct/group) |
-| `conversation_participants` | User-conversation membership |
-| `messages` | Chat messages with file support |
-| `message_reactions` | Emoji reactions on messages |
-| `message_mentions` | @mention tracking |
-| `message_read_receipts` | Read receipt tracking |
-| `notifications` | In-app notifications |
+1. **PostgreSQL Changes** - Messages, notifications, profile updates via `postgres_changes`
+2. **Broadcast Channels** - Typing indicators via `supabase.channel(`typing:${conversationId}`)`
+3. **Presence** - Online status tracked via profile `status` field updates
 
-### Key RLS Helper Function
+### Server Actions Pattern
 
-```sql
-public.is_conversation_participant(conv_id uuid) → boolean
-```
-
-## Edge Functions
-
-| Function | Purpose |
-|----------|---------|
-| `scan-file` | ClamAV virus scanning for uploads |
-| `get-link-preview` | Fetch URL metadata for link previews |
-
-## Authentication Flow
-
-1. User signs up/logs in
-2. **MFA Setup Required**: New users must enroll TOTP authenticator
-3. **MFA Verify Required**: Each session requires TOTP verification
-4. Only after reaching AAL2 can users access `/chat/*` routes
-5. Middleware (`proxy.ts`) enforces this at the route level
-
-## Security Patterns
-
-### Server Actions for Sensitive Operations
-
-Use server actions (in `lib/actions/`) for database mutations:
+Use server actions (`lib/actions/`) for all database mutations. Required pattern:
 
 ```typescript
 'use server'
@@ -140,7 +78,7 @@ export async function createDirectConversation(otherUserId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  // Always verify MFA status
+  // ALWAYS verify MFA status
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { error: 'MFA verification required' }
@@ -149,27 +87,46 @@ export async function createDirectConversation(otherUserId: string) {
 }
 ```
 
-### File Upload Security
+### File Upload Flow
 
-1. Client-side: File type and size validation (50MB max)
-2. Server-side: ClamAV virus scanning via Edge Function
-3. Storage: Private bucket with signed URLs
+1. Client validates type/size (50MB max)
+2. `scanFile()` calls Edge Function for ClamAV virus scan
+3. Upload to `message-attachments` bucket
+4. Store public URL in message record
 
-## Common Commands
+## Database Schema
 
-```bash
-# Development
-npm run dev
+All tables have RLS enabled. Key tables:
 
-# Build
-npm run build
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User profiles (extends auth.users) |
+| `conversations` | Chat conversations (type: 'direct' or 'group') |
+| `conversation_participants` | User membership with role, last_read_at |
+| `messages` | Messages with file support, replies, pins |
+| `message_reactions` | Emoji reactions |
+| `message_mentions` | @mention tracking |
+| `message_read_receipts` | Read receipt tracking |
+| `notifications` | In-app notifications |
 
-# Lint
-npm run lint
+### RLS Helper Function
 
-# Generate Supabase types
-npx supabase gen types typescript --project-id <project-id> > lib/types/database.ts
+```sql
+public.is_conversation_participant(conv_id uuid) → boolean
 ```
+
+Used in RLS policies to check if current user is in a conversation.
+
+## Type System
+
+Types are generated from Supabase schema in `lib/types/database.ts`:
+
+```typescript
+import type { Profile, Message, Conversation } from '@/lib/types/database'
+import type { ConversationWithParticipants, MessageWithSender } from '@/lib/types/database'
+```
+
+Extended types include relations (e.g., `MessageWithSender` includes `sender: Profile`).
 
 ## Environment Variables
 
@@ -181,42 +138,30 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 Edge Function secrets (set via `supabase secrets set`):
 - `CLAMAV_API_URL` - Optional ClamAV REST API endpoint
 
-## Key Dependencies
+## Key Patterns
 
-- `@supabase/ssr` - Supabase SSR client
-- `@emoji-mart/react` - Emoji picker
-- `react-dropzone` - File upload
-- `next-themes` - Theme switching
-- `date-fns` - Date formatting
-- `use-debounce` - Search debouncing
-- `lucide-react` - Icons
+### Adding a New Feature to Messages
 
-## Features
+1. Add column to `messages` table in Supabase
+2. Regenerate types: `npx supabase gen types typescript ...`
+3. Update `MessageWithSender` type if needed
+4. Add to `fetchMessages()` query in chat-provider.tsx
+5. Update `sendMessage()` or create new action in lib/actions/
 
-1. **Direct Messages** - 1:1 private conversations
-2. **Group Chats** - Multi-user conversations with admin roles
-3. **Real-time Messaging** - Instant message delivery
-4. **Typing Indicators** - See when others are typing
-5. **Online Presence** - User status (online/offline/away)
-6. **File Sharing** - Images and files with virus scanning
-7. **Message Reactions** - Emoji reactions
-8. **Message Replies** - Reply to specific messages
-9. **Message Deletion** - Soft delete own messages
-10. **@Mentions** - Tag users in group chats
-11. **Pinned Messages** - Pin important messages
-12. **Read Receipts** - See who has read messages
-13. **Message Search** - Full-text search
-14. **Link Previews** - Auto-preview URLs
-15. **Unread Badges** - Per-conversation unread counts
-16. **Dark/Light Theme** - System preference detection
-17. **Avatar Upload** - Profile picture upload
-18. **Mandatory MFA** - TOTP authentication required
+### Adding Real-time Updates
 
-## Important Notes
+```typescript
+// PostgreSQL changes (for database triggers)
+supabase.channel('my-channel')
+  .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'my_table' }, handler)
+  .subscribe()
 
-- **Never** make RLS policies more permissive to fix bugs
-- **Always** verify MFA (AAL2) before sensitive operations
-- **Use** server actions for database mutations, not client-side queries
-- **Validate** user input on the server, not just the client
-- The middleware in `proxy.ts` handles auth flow and MFA enforcement
-- Real-time subscriptions are managed in `chat-provider.tsx`
+// Broadcast (for ephemeral state like typing)
+supabase.channel('my-channel')
+  .on('broadcast', { event: 'my-event' }, handler)
+  .subscribe()
+```
+
+### Protected Route Pattern
+
+All routes under `app/(protected)/` require authentication + AAL2 MFA. The layout at `app/(protected)/layout.tsx` handles the auth check.
