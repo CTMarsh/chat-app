@@ -313,11 +313,7 @@ export function MessageInput() {
           onChange={e => handleContentChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={activeConversation?.type === 'group' ? 'Type a message... (use @ to mention)' : 'Type a message...'}
-          className={cn(
-            "flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12",
-            "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5",
-            isEmojiOnly(content) ? "text-3xl leading-relaxed" : "text-base"
-          )}
+          className="flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12 text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
           rows={1}
           disabled={isSending}
         />

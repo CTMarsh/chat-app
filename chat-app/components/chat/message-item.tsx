@@ -225,7 +225,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             {message.content && (
               <p className={cn(
                 "whitespace-pre-wrap break-words",
-                isEmojiOnly(message.content) && !message.file_url ? "text-4xl leading-relaxed" : "text-sm"
+                isEmojiOnly(message.content) && !message.file_url ? "text-[44px] leading-tight" : "text-sm"
               )}>
                 <MentionHighlight content={message.content} currentUserId={currentUser?.id} />
               </p>
