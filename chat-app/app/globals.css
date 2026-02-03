@@ -277,10 +277,17 @@
   --user-accent-color: #3b82f6;
 }
 
-/* Apply user accent color to primary elements */
-[style*="--user-accent-color"] {
+/* Apply user accent color to primary elements when custom color is set */
+[data-accent-color="custom"] {
   --primary: var(--user-accent-color);
   --ring: color-mix(in oklch, var(--user-accent-color) 60%, transparent);
+}
+
+/* Also apply to dark mode */
+.dark[data-accent-color="custom"] {
+  --primary: var(--user-accent-color);
+  --ring: color-mix(in oklch, var(--user-accent-color) 60%, transparent);
+  --sidebar-primary: var(--user-accent-color);
 }
 
 /* Accessibility: Reduce Motion */

@@ -73,9 +73,13 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     // Message Density
     root.setAttribute('data-message-density', preferences.message_density)
 
-    // Accent Color - set CSS variable
-    if (preferences.accent_color) {
+    // Accent Color - set CSS variable and data attribute
+    if (preferences.accent_color && preferences.accent_color !== '#3b82f6') {
       root.style.setProperty('--user-accent-color', preferences.accent_color)
+      root.setAttribute('data-accent-color', 'custom')
+    } else {
+      root.style.removeProperty('--user-accent-color')
+      root.removeAttribute('data-accent-color')
     }
 
     // Accessibility: Reduce Motion

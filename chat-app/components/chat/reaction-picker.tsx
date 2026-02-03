@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { SmilePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,8 +8,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { useMessagePreferences } from '@/components/providers/preferences-provider'
 
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '😡']
+// Thumbs up with skin tone variants
+const THUMBS_UP_VARIANTS: Record<string, string> = {
+  'default': '👍',
+  'light': '👍🏻',
+  'medium-light': '👍🏼',
+  'medium': '👍🏽',
+  'medium-dark': '👍🏾',
+  'dark': '👍🏿',
+}
+
+// Base reactions (non-skin-tone emojis stay the same)
+const BASE_REACTIONS = ['❤️', '😂', '😮', '😢', '😡']
 
 interface ReactionPickerProps {
   onReact: (emoji: string) => void
@@ -18,6 +30,13 @@ interface ReactionPickerProps {
 
 export function ReactionPicker({ onReact, existingReactions = [] }: ReactionPickerProps) {
   const [open, setOpen] = useState(false)
+  const { emojiSkinTone } = useMessagePreferences()
+
+  // Build reactions with correct skin tone for thumbs up
+  const quickReactions = useMemo(() => {
+    const thumbsUp = THUMBS_UP_VARIANTS[emojiSkinTone] || '👍'
+    return [thumbsUp, ...BASE_REACTIONS]
+  }, [emojiSkinTone])
 
   const handleReact = (emoji: string) => {
     onReact(emoji)
@@ -37,7 +56,7 @@ export function ReactionPicker({ onReact, existingReactions = [] }: ReactionPick
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" side="top" align="start">
         <div className="flex gap-1">
-          {QUICK_REACTIONS.map((emoji) => (
+          {quickReactions.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleReact(emoji)}
