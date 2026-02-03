@@ -8,6 +8,19 @@ import { EmojiPicker } from './emoji-picker'
 import { FileUploadButton } from './file-upload-button'
 import { MentionList } from './mention-list'
 import type { Profile } from '@/lib/types/database'
+import { cn } from '@/lib/utils'
+
+// Check if a string contains only emoji characters (up to 5 emojis)
+function isEmojiOnly(text: string): boolean {
+  if (!text.trim()) return false
+  // Remove whitespace and check if remaining chars are all emojis
+  const trimmed = text.replace(/\s/g, '')
+  // Emoji regex pattern that matches most common emojis
+  const emojiRegex = /^(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?)+$/u
+  // Only apply big emoji style for 1-5 emojis
+  const emojiCount = [...trimmed].filter(char => /\p{Emoji_Presentation}|\p{Emoji}\uFE0F/u.test(char)).length
+  return emojiRegex.test(trimmed) && emojiCount <= 5
+}
 
 export function MessageInput() {
   const { activeConversation, currentUser, sendMessageWithMentions, setTyping } = useChat()
@@ -277,7 +290,10 @@ export function MessageInput() {
           onChange={e => handleContentChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={activeConversation?.type === 'group' ? 'Type a message... (use @ to mention)' : 'Type a message...'}
-          className="flex-1 resize-none rounded-lg border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className={cn(
+            "flex-1 resize-none rounded-xl border bg-background px-4 py-3 min-h-12 focus:outline-none focus:ring-2 focus:ring-ring",
+            isEmojiOnly(content) ? "text-3xl leading-relaxed" : "text-base"
+          )}
           rows={1}
           disabled={isSending}
         />
@@ -285,8 +301,9 @@ export function MessageInput() {
           type="submit"
           size="icon"
           disabled={(!content.trim() && !selectedFile) || isSending}
+          style={{ width: '48px', height: '48px' }}
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-5 w-5" />
         </Button>
       </div>
     </form>

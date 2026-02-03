@@ -21,6 +21,15 @@ import { ReadReceiptIndicator } from './read-receipt-indicator'
 import { LinkPreview, extractUrls } from './link-preview'
 import { useChat } from '@/components/providers/chat-provider'
 
+// Check if a string contains only emoji characters (up to 5 emojis)
+function isEmojiOnly(text: string): boolean {
+  if (!text.trim()) return false
+  const trimmed = text.replace(/\s/g, '')
+  const emojiRegex = /^(?:\p{Emoji_Presentation}|\p{Emoji}\uFE0F|\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?)+$/u
+  const emojiCount = [...trimmed].filter(char => /\p{Emoji_Presentation}|\p{Emoji}\uFE0F/u.test(char)).length
+  return emojiRegex.test(trimmed) && emojiCount <= 5
+}
+
 interface MessageItemProps {
   message: MessageWithSender
   isOwn: boolean
@@ -200,7 +209,10 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             )}
           >
             {message.content && (
-              <p className="whitespace-pre-wrap break-words text-sm">
+              <p className={cn(
+                "whitespace-pre-wrap break-words",
+                isEmojiOnly(message.content) && !message.file_url ? "text-4xl leading-relaxed" : "text-sm"
+              )}>
                 <MentionHighlight content={message.content} currentUserId={currentUser?.id} />
               </p>
             )}

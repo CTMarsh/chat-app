@@ -30,6 +30,7 @@ interface ChatContextType {
   markAllNotificationsRead: () => Promise<void>
   setTyping: (conversationId: string, isTyping: boolean) => void
   refreshConversations: () => Promise<void>
+  fetchConversationById: (conversationId: string) => Promise<ConversationWithParticipants | null>
   toggleReaction: (messageId: string, emoji: string) => Promise<void>
   deleteMessage: (messageId: string) => Promise<void>
   sendMessageWithMentions: (content: string, conversationId: string, mentionedUserIds: string[], file?: File) => Promise<void>
@@ -106,7 +107,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
           const [lastMessageResult, unreadCountResult] = await Promise.all([
             supabase
               .from('messages')
-              .select('*, sender:profiles(*)')
+              .select('*, sender:profiles!messages_sender_id_fkey(*)')
               .eq('conversation_id', conv.id)
               .is('deleted_at', null)
               .order('created_at', { ascending: false })
@@ -143,12 +144,18 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
   // Fetch messages for active conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('messages')
-      .select('*, sender:profiles(*), reply_to:messages(*, sender:profiles(*))')
+      .select('*, sender:profiles!messages_sender_id_fkey(*)')
       .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
       .order('created_at', { ascending: true })
       .limit(100)
+
+    if (error) {
+      console.error('Error fetching messages:', error)
+      return
+    }
 
     if (data) {
       // Fetch reactions and read receipts for all messages
@@ -188,7 +195,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     // Fetch pinned messages
     const { data: pinnedData } = await supabase
       .from('messages')
-      .select('*, sender:profiles(*)')
+      .select('*, sender:profiles!messages_sender_id_fkey(*)')
       .eq('conversation_id', conversationId)
       .eq('is_pinned', true)
       .is('deleted_at', null)
@@ -296,6 +303,10 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
 
+    // Create optimistic message data before insert
+    const optimisticId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
     const { error } = await supabase
       .from('messages')
       .insert({
@@ -312,6 +323,35 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     if (error) {
       console.error('Error sending message:', error)
       throw error
+    }
+
+    // Optimistic UI update - construct message locally without re-fetching
+    if (currentUser) {
+      const newMessage: MessageWithSender = {
+        id: optimisticId,
+        content,
+        conversation_id: conversationId,
+        sender_id: userId,
+        type: messageType,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_size: fileSize,
+        file_type: fileType,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+        deleted_by: null,
+        reply_to_id: null,
+        is_pinned: false,
+        pinned_at: null,
+        pinned_by: null,
+        link_previews: null,
+        is_edited: false,
+        sender: currentUser,
+        reactions: [],
+        read_receipts: [],
+      }
+      setMessages(prev => [...prev, newMessage])
     }
 
     // Update conversation timestamp
@@ -402,7 +442,11 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       linkPreviews = await Promise.all(previewPromises)
     }
 
-    const { data: messageData, error } = await supabase
+    // Create optimistic message data before insert
+    const optimisticId = crypto.randomUUID()
+    const now = new Date().toISOString()
+
+    const { error } = await supabase
       .from('messages')
       .insert({
         content,
@@ -415,22 +459,60 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         file_type: fileType,
         link_previews: linkPreviews.length > 0 ? linkPreviews : null,
       })
-      .select()
-      .single()
 
     if (error) {
       console.error('Error sending message:', error)
       throw error
     }
 
-    // Create mentions
-    if (mentionedUserIds.length > 0 && messageData) {
-      const mentions = mentionedUserIds.map(mentionedUserId => ({
-        message_id: messageData.id,
-        mentioned_user_id: mentionedUserId,
-      }))
+    // Optimistic UI update - construct message locally without re-fetching
+    if (currentUser) {
+      const newMessage: MessageWithSender = {
+        id: optimisticId,
+        content,
+        conversation_id: conversationId,
+        sender_id: userId,
+        type: messageType,
+        file_url: fileUrl,
+        file_name: fileName,
+        file_size: fileSize,
+        file_type: fileType,
+        created_at: now,
+        updated_at: now,
+        deleted_at: null,
+        deleted_by: null,
+        reply_to_id: null,
+        is_pinned: false,
+        pinned_at: null,
+        pinned_by: null,
+        link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+        is_edited: false,
+        sender: currentUser,
+        reactions: [],
+        read_receipts: [],
+      }
+      setMessages(prev => [...prev, newMessage])
+    }
 
-      await supabase.from('message_mentions').insert(mentions)
+    // Create mentions - fetch the actual message ID from DB
+    if (mentionedUserIds.length > 0) {
+      // Get the message we just inserted
+      const { data: insertedMsg } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('conversation_id', conversationId)
+        .eq('sender_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (insertedMsg) {
+        const mentions = mentionedUserIds.map(mentionedUserId => ({
+          message_id: insertedMsg.id,
+          mentioned_user_id: mentionedUserId,
+        }))
+        await supabase.from('message_mentions').insert(mentions)
+      }
     }
 
     // Update conversation timestamp
@@ -486,6 +568,52 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const refreshConversations = useCallback(async () => {
     await fetchConversations()
   }, [fetchConversations])
+
+  // Fetch a single conversation by ID (for immediate navigation)
+  const fetchConversationById = useCallback(async (conversationId: string): Promise<ConversationWithParticipants | null> => {
+    // First check if we already have it
+    const existing = conversations.find(c => c.id === conversationId)
+    if (existing) return existing
+
+    // Fetch from database
+    const { data: convData } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        participants:conversation_participants(
+          *,
+          profile:profiles(*)
+        )
+      `)
+      .eq('id', conversationId)
+      .single()
+
+    if (!convData) return null
+
+    // Fetch last message
+    const { data: lastMessage } = await supabase
+      .from('messages')
+      .select('*, sender:profiles!messages_sender_id_fkey(*)')
+      .eq('conversation_id', conversationId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    const conversationWithDetails: ConversationWithParticipants = {
+      ...convData,
+      last_message: lastMessage || undefined,
+      unread_count: 0,
+    }
+
+    // Add to conversations list if not present
+    setConversations(prev => {
+      if (prev.find(c => c.id === conversationId)) return prev
+      return [conversationWithDetails, ...prev]
+    })
+
+    return conversationWithDetails
+  }, [supabase, conversations])
 
   // Delete message (soft delete)
   const deleteMessage = useCallback(async (messageId: string) => {
@@ -575,14 +703,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
             // Fetch the complete message with sender
             const { data } = await supabase
               .from('messages')
-              .select('*, sender:profiles(*)')
+              .select('*, sender:profiles!messages_sender_id_fkey(*)')
               .eq('id', payload.new.id)
               .single()
 
             if (data) {
               // Add to messages if it's for the active conversation
               if (activeConversation?.id === data.conversation_id) {
-                setMessages(prev => [...prev, data as MessageWithSender])
+                // Only add if not already present (prevents duplicates from optimistic updates)
+                setMessages(prev => {
+                  if (prev.some(m => m.id === data.id)) {
+                    return prev
+                  }
+                  return [...prev, data as MessageWithSender]
+                })
               }
 
               // Refresh conversations to update last message
@@ -716,6 +850,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         markAllNotificationsRead,
         setTyping,
         refreshConversations,
+        fetchConversationById,
         toggleReaction,
         deleteMessage,
         sendMessageWithMentions,

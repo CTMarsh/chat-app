@@ -41,7 +41,7 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('*, sender:profiles(*)')
+        .select('*, sender:profiles!messages_sender_id_fkey(*)')
         .eq('conversation_id', activeConversation.id)
         .is('deleted_at', null)
         .ilike('content', `%${searchQuery}%`)
@@ -136,7 +136,7 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
 
             {!isLoading && query && results.length === 0 && (
               <div className="py-8 text-center text-muted-foreground">
-                No messages found for "{query}"
+                No messages found for &ldquo;{query}&rdquo;
               </div>
             )}
 

@@ -45,12 +45,12 @@ export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onCl
         size="icon"
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading || !!selectedFile}
-        className="h-9 w-9"
+        style={{ width: '48px', height: '48px' }}
       >
         {isUploading ? (
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         ) : (
-          <Paperclip className="h-5 w-5 text-muted-foreground" />
+          <Paperclip className="h-6 w-6 text-muted-foreground" />
         )}
       </Button>
 

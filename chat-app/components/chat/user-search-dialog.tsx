@@ -125,9 +125,11 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
       }
 
       if (result.conversationId) {
-        await refreshConversations()
+        // Navigate immediately for better UX, refresh in background
         router.push(`/chat/${result.conversationId}`)
         onOpenChange(false)
+        // Refresh conversations list in background (don't await)
+        refreshConversations()
       }
     } catch (error) {
       console.error('Error creating conversation:', error)

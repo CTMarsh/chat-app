@@ -48,15 +48,15 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-9 w-9"
+        style={{ width: '48px', height: '48px' }}
       >
-        <Smile className="h-5 w-5 text-muted-foreground" />
+        <Smile className="h-6 w-6 text-muted-foreground" />
       </Button>
 
       {isOpen && (
         <div
           ref={pickerRef}
-          className="absolute bottom-12 right-0 z-50"
+          className="absolute bottom-12 left-0 z-50"
         >
           <Picker
             data={data}
@@ -65,6 +65,8 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
             previewPosition="none"
             skinTonePosition="none"
             maxFrequentRows={2}
+            emojiSize={28}
+            emojiButtonSize={36}
           />
         </div>
       )}
