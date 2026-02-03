@@ -50,20 +50,6 @@ export function Hero() {
               </Button>
             </div>
 
-            <div className="flex items-center gap-4 pt-4">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="h-9 w-9 rounded-full border-2 border-background bg-gradient-to-br from-primary/20 to-primary/5 ring-2 ring-primary/10"
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">1,000+</span>{' '}
-                users already chatting
-              </p>
-            </div>
           </div>
 
           {/* Right Column - Image */}
