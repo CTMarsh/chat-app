@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Play, MessageSquare } from 'lucide-react'
+import { ArrowRight, Play } from 'lucide-react'
+import { ChatPreview } from './chat-preview'
 
 export function Hero() {
   return (
@@ -70,17 +71,7 @@ export function Hero() {
             <div className="relative rounded-2xl border border-border/50 bg-gradient-to-b from-card/80 to-card p-2 shadow-2xl shadow-primary/10 backdrop-blur-sm">
               <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
               <div className="aspect-[4/3] rounded-xl bg-background/80 overflow-hidden">
-                {/* Placeholder for app screenshot */}
-                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
-                  <div className="text-center p-8">
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent shadow-xl shadow-primary/10">
-                      <MessageSquare className="h-10 w-10 text-primary" />
-                    </div>
-                    <p className="mt-4 text-sm font-medium text-muted-foreground">
-                      App Screenshot Placeholder
-                    </p>
-                  </div>
-                </div>
+                <ChatPreview />
               </div>
             </div>
             {/* Decorative elements */}
