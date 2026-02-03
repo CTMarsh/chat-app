@@ -6,6 +6,7 @@ import type { Profile, ConversationWithParticipants, MessageWithSender, Notifica
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { scanFile } from '@/lib/utils/scan-file'
 import { getPreferences } from '@/lib/actions/settings'
+import { endConversation as endConversationAction } from '@/lib/actions/conversations'
 
 interface FileAttachment {
   file: File
@@ -39,6 +40,7 @@ interface ChatContextType {
   pinMessage: (messageId: string) => Promise<void>
   unpinMessage: (messageId: string) => Promise<void>
   updateUserStatus: (status: string) => Promise<void>
+  endConversation: (conversationId: string) => Promise<{ error: string | null }>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -299,6 +301,31 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     // Update local state immediately
     setCurrentUser(prev => prev ? { ...prev, status: dbStatus } : null)
   }, [supabase, userId])
+
+  // End a widget conversation
+  const endConversation = useCallback(async (conversationId: string): Promise<{ error: string | null }> => {
+    const result = await endConversationAction(conversationId)
+
+    if (!result.error) {
+      // Update local state
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === conversationId
+            ? { ...c, ended_at: new Date().toISOString() }
+            : c
+        )
+      )
+
+      // Update active conversation if it's the one that was ended
+      if (activeConversation?.id === conversationId) {
+        setActiveConversation(prev =>
+          prev ? { ...prev, ended_at: new Date().toISOString() } : null
+        )
+      }
+    }
+
+    return result
+  }, [activeConversation?.id])
 
   // Send message
   const sendMessage = useCallback(async (content: string, conversationId: string, file?: File) => {
@@ -906,6 +933,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         pinMessage,
         unpinMessage,
         updateUserStatus,
+        endConversation,
       }}
     >
       {children}

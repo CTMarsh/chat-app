@@ -7,12 +7,14 @@ interface WidgetMessageInputProps {
   onSend: (content: string) => Promise<void>
   isSending: boolean
   primaryColor: string
+  disabled?: boolean
 }
 
 export function WidgetMessageInput({
   onSend,
   isSending,
   primaryColor,
+  disabled = false,
 }: WidgetMessageInputProps) {
   const [message, setMessage] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -27,7 +29,7 @@ export function WidgetMessageInput({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || isSending) return
+    if (!message.trim() || isSending || disabled) return
 
     const content = message.trim()
     setMessage('')

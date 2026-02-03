@@ -25,6 +25,20 @@ function isEmojiOnly(text: string): boolean {
 
 export function MessageInput() {
   const { activeConversation, currentUser, sendMessageWithMentions, setTyping } = useChat()
+
+  // Check if conversation is ended (widget only)
+  const isEnded = activeConversation?.type === 'widget' && !!activeConversation.ended_at
+
+  // If conversation is ended, show a message instead of input
+  if (isEnded) {
+    return (
+      <div className="border-t bg-muted/30 p-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          This conversation has been ended
+        </p>
+      </div>
+    )
+  }
   const [content, setContent] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)

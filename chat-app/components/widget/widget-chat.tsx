@@ -19,6 +19,10 @@ interface WidgetConfig {
   agentsOnline: boolean
 }
 
+interface ConversationStatus {
+  ended_at: string | null
+}
+
 interface WidgetSession {
   sessionToken: string
   sessionId: string
@@ -50,6 +54,8 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [isEnded, setIsEnded] = useState(false)
+  const [showEndedUI, setShowEndedUI] = useState(false)
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageTimeRef = useRef<string | null>(null)
 
@@ -192,15 +198,91 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
     }
   }, [supabaseUrl])
 
+  // Check if conversation is ended
+  const checkConversationStatus = useCallback(async (convId: string) => {
+    try {
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/visitor-messages?sessionToken=${session?.sessionToken}&conversationId=${convId}&statusOnly=true`,
+        { method: 'GET' }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.ended_at && !isEnded) {
+          setIsEnded(true)
+          setShowEndedUI(true)
+          // Clear polling when ended
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current)
+            pollingRef.current = null
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check conversation status:', err)
+    }
+  }, [supabaseUrl, session?.sessionToken, isEnded])
+
+  // Generate and download transcript
+  const downloadTranscript = () => {
+    if (!messages.length || !session) return
+
+    const lines = [
+      `Chat Transcript`,
+      `===============`,
+      `Date: ${new Date().toLocaleDateString()}`,
+      `Visitor: ${session.name} (${session.email})`,
+      ``,
+      `Messages:`,
+      `---------------`,
+      '',
+    ]
+
+    messages.forEach(msg => {
+      const time = new Date(msg.createdAt).toLocaleTimeString()
+      const sender = msg.isFromVisitor ? session.name : (msg.sender?.displayName || 'Support Agent')
+      lines.push(`[${time}] ${sender}:`)
+      lines.push(msg.content)
+      lines.push('')
+    })
+
+    lines.push('---------------')
+    lines.push('End of transcript')
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `chat-transcript-${new Date().toISOString().split('T')[0]}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Start new chat (reset session)
+  const startNewChat = () => {
+    // Clear localStorage
+    localStorage.removeItem(`widget_session_${embedToken}`)
+    // Reset all state
+    setSession(null)
+    setMessages([])
+    setConversationId(null)
+    setIsEnded(false)
+    setShowEndedUI(false)
+    lastMessageTimeRef.current = null
+  }
+
   // Polling for new messages
   useEffect(() => {
-    if (session?.sessionToken && conversationId) {
+    if (session?.sessionToken && conversationId && !isEnded) {
       // Initial load
       loadMessages(session.sessionToken, conversationId)
 
       // Start polling
       pollingRef.current = setInterval(() => {
         loadMessages(session.sessionToken, conversationId, true)
+        checkConversationStatus(conversationId)
       }, 3000) // Poll every 3 seconds
 
       return () => {
@@ -209,7 +291,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         }
       }
     }
-  }, [session?.sessionToken, conversationId, loadMessages])
+  }, [session?.sessionToken, conversationId, loadMessages, checkConversationStatus, isEnded])
 
   // Send message
   const sendMessage = async (content: string) => {
@@ -302,6 +384,8 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         title={config.name}
         agentsOnline={config.agentsOnline}
         primaryColor={primaryColor}
+        isEnded={showEndedUI}
+        onClose={startNewChat}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -314,6 +398,54 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
             primaryColor={primaryColor}
             onSubmit={createSession}
           />
+        ) : showEndedUI ? (
+          // Show full-screen ended conversation UI
+          <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gray-50">
+            {/* Checkmark icon */}
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+              style={{ backgroundColor: `${primaryColor}20` }}
+            >
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke={primaryColor}
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            {/* Title and description */}
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Conversation Ended</h2>
+            <p className="text-sm text-gray-500 text-center mb-8 max-w-xs">
+              Thank you for chatting with us! You can download a transcript of this conversation.
+            </p>
+
+            {/* Action buttons */}
+            <div className="w-full max-w-xs space-y-3">
+              <button
+                onClick={downloadTranscript}
+                className="w-full py-3 px-4 text-sm font-medium rounded-xl border-2 border-gray-200 text-gray-700 hover:bg-gray-100 hover:border-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Transcript
+              </button>
+              <button
+                onClick={startNewChat}
+                className="w-full py-3 px-4 text-sm font-medium rounded-xl text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ backgroundColor: primaryColor }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Close
+              </button>
+            </div>
+          </div>
         ) : !config.agentsOnline && messages.length === 0 ? (
           // Show offline message if no agents and no existing conversation
           <WidgetOffline
@@ -332,6 +464,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
               onSend={sendMessage}
               isSending={isSending}
               primaryColor={primaryColor}
+              disabled={isEnded}
             />
           </>
         )}

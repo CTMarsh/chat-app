@@ -1,14 +1,16 @@
 'use client'
 
-import { MessageCircle } from 'lucide-react'
+import { MessageCircle, X } from 'lucide-react'
 
 interface WidgetHeaderProps {
   title: string
   agentsOnline: boolean
   primaryColor: string
+  isEnded?: boolean
+  onClose?: () => void
 }
 
-export function WidgetHeader({ title, agentsOnline, primaryColor }: WidgetHeaderProps) {
+export function WidgetHeader({ title, agentsOnline, primaryColor, isEnded, onClose }: WidgetHeaderProps) {
   return (
     <div
       className="px-4 py-3 flex items-center gap-3 shadow-sm"
@@ -20,16 +22,31 @@ export function WidgetHeader({ title, agentsOnline, primaryColor }: WidgetHeader
       <div className="flex-1">
         <h1 className="text-white font-semibold">{title}</h1>
         <div className="flex items-center gap-1.5">
-          <span
-            className={`w-2 h-2 rounded-full ${
-              agentsOnline ? 'bg-green-400' : 'bg-gray-300'
-            }`}
-          />
-          <span className="text-white/80 text-xs">
-            {agentsOnline ? 'Online' : 'Offline'}
-          </span>
+          {isEnded ? (
+            <span className="text-white/80 text-xs">Conversation ended</span>
+          ) : (
+            <>
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  agentsOnline ? 'bg-green-400' : 'bg-gray-300'
+                }`}
+              />
+              <span className="text-white/80 text-xs">
+                {agentsOnline ? 'Online' : 'Offline'}
+              </span>
+            </>
+          )}
         </div>
       </div>
+      {isEnded && onClose && (
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
+      )}
     </div>
   )
 }
