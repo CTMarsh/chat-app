@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { SettingSection } from '@/components/settings/setting-section'
@@ -16,6 +17,7 @@ import { useAppearancePreferences } from '@/components/providers/preferences-pro
 import { cn } from '@/lib/utils'
 
 export default function AppearanceSettingsPage() {
+  const [mounted, setMounted] = useState(false)
   const { theme, setTheme: setNextTheme } = useTheme()
   const {
     uiScale,
@@ -29,10 +31,18 @@ export default function AppearanceSettingsPage() {
     setMessageDensity,
   } = useAppearancePreferences()
 
+  // Avoid hydration mismatch - theme is undefined on server
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
     setNextTheme(newTheme)
     await setTheme(newTheme)
   }
+
+  // Use safe theme value that won't cause hydration mismatch
+  const currentTheme = mounted ? theme : undefined
 
   return (
     <div className="space-y-10">
@@ -47,13 +57,13 @@ export default function AppearanceSettingsPage() {
       {/* 3-column grid */}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {/* Theme Cards - each theme is its own card */}
-        <SettingSection title="Light Theme" description="Bright and clean" accent={theme === 'light'}>
+        <SettingSection title="Light Theme" description="Bright and clean" accent={currentTheme === 'light'}>
           <button
             type="button"
             onClick={() => handleThemeChange('light')}
             className={cn(
               'flex w-full flex-col items-center gap-4 rounded-xl border-2 p-6 transition-all duration-200',
-              theme === 'light'
+              currentTheme === 'light'
                 ? 'border-primary bg-primary/10 shadow-md'
                 : 'border-transparent bg-muted/50 hover:bg-muted hover:border-border'
             )}
@@ -61,21 +71,21 @@ export default function AppearanceSettingsPage() {
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
               'bg-gradient-to-br from-amber-100 to-orange-100',
-              theme === 'light' && 'scale-110 shadow-lg'
+              currentTheme === 'light' && 'scale-110 shadow-lg'
             )}>
               <Sun className="h-8 w-8 text-amber-600" />
             </div>
-            <span className="font-medium">{theme === 'light' ? 'Active' : 'Select'}</span>
+            <span className="font-medium">{currentTheme === 'light' ? 'Active' : 'Select'}</span>
           </button>
         </SettingSection>
 
-        <SettingSection title="Dark Theme" description="Easy on the eyes" accent={theme === 'dark'}>
+        <SettingSection title="Dark Theme" description="Easy on the eyes" accent={currentTheme === 'dark'}>
           <button
             type="button"
             onClick={() => handleThemeChange('dark')}
             className={cn(
               'flex w-full flex-col items-center gap-4 rounded-xl border-2 p-6 transition-all duration-200',
-              theme === 'dark'
+              currentTheme === 'dark'
                 ? 'border-primary bg-primary/10 shadow-md'
                 : 'border-transparent bg-muted/50 hover:bg-muted hover:border-border'
             )}
@@ -83,21 +93,21 @@ export default function AppearanceSettingsPage() {
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
               'bg-gradient-to-br from-slate-700 to-slate-900',
-              theme === 'dark' && 'scale-110 shadow-lg'
+              currentTheme === 'dark' && 'scale-110 shadow-lg'
             )}>
               <Moon className="h-8 w-8 text-slate-300" />
             </div>
-            <span className="font-medium">{theme === 'dark' ? 'Active' : 'Select'}</span>
+            <span className="font-medium">{currentTheme === 'dark' ? 'Active' : 'Select'}</span>
           </button>
         </SettingSection>
 
-        <SettingSection title="System Theme" description="Match your device" accent={theme === 'system'}>
+        <SettingSection title="System Theme" description="Match your device" accent={currentTheme === 'system'}>
           <button
             type="button"
             onClick={() => handleThemeChange('system')}
             className={cn(
               'flex w-full flex-col items-center gap-4 rounded-xl border-2 p-6 transition-all duration-200',
-              theme === 'system'
+              currentTheme === 'system'
                 ? 'border-primary bg-primary/10 shadow-md'
                 : 'border-transparent bg-muted/50 hover:bg-muted hover:border-border'
             )}
@@ -105,11 +115,11 @@ export default function AppearanceSettingsPage() {
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
               'bg-gradient-to-br from-amber-100 to-slate-800',
-              theme === 'system' && 'scale-110 shadow-lg'
+              currentTheme === 'system' && 'scale-110 shadow-lg'
             )}>
               <Monitor className="h-8 w-8 text-white" />
             </div>
-            <span className="font-medium">{theme === 'system' ? 'Active' : 'Select'}</span>
+            <span className="font-medium">{currentTheme === 'system' ? 'Active' : 'Select'}</span>
           </button>
         </SettingSection>
 

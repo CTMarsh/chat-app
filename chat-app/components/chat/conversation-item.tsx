@@ -2,11 +2,13 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
+import { Circle, Clock, MinusCircle, EyeOff } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useChat } from '@/components/providers/chat-provider'
 import type { ConversationWithParticipants } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
 import { UnreadBadge } from './unread-badge'
+import { ProfilePopover } from './profile-popover'
 
 interface ConversationItemProps {
   conversation: ConversationWithParticipants
@@ -35,6 +37,21 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
       : otherParticipant?.profile.avatar_url
 
   const status = otherParticipant?.profile.status
+
+  const getStatusConfig = (status: string | null | undefined) => {
+    switch (status) {
+      case 'online':
+        return { icon: Circle, bgColor: 'bg-green-500', bgColorActive: 'bg-green-400', hasIcon: true }
+      case 'away':
+        return { icon: Clock, bgColor: 'bg-yellow-500', bgColorActive: 'bg-yellow-400', hasIcon: true }
+      case 'dnd':
+        return { icon: MinusCircle, bgColor: 'bg-red-500', bgColorActive: 'bg-red-400', hasIcon: true }
+      case 'invisible':
+        return { icon: EyeOff, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: true }
+      default:
+        return { icon: Circle, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: false }
+    }
+  }
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?'
@@ -82,27 +99,56 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
       )}
     >
       <div className="relative shrink-0">
-        <Avatar className={cn(
-          'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
-          isActive && 'ring-2 ring-primary-foreground/30'
-        )}>
-          <AvatarImage src={avatarUrl || undefined} />
-          <AvatarFallback className={cn(
-            'text-sm font-medium',
-            isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
+        {conversation.type === 'direct' && otherParticipant?.profile ? (
+          <ProfilePopover profile={otherParticipant.profile} side="right" align="start">
+            <div
+              role="button"
+              tabIndex={0}
+              className="relative cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.key === 'Enter' && e.stopPropagation()}
+            >
+              <Avatar className={cn(
+                'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
+                isActive && 'ring-2 ring-primary-foreground/30'
+              )}>
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className={cn(
+                  'text-sm font-medium',
+                  isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
+                )}>
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
+              {(() => {
+                const statusConfig = getStatusConfig(status)
+                const StatusIcon = statusConfig.icon
+                return (
+                  <span className={cn(
+                    'absolute bottom-0 right-0 flex items-center justify-center rounded-full border-2',
+                    isActive ? 'border-primary' : 'border-background',
+                    isActive ? statusConfig.bgColorActive : statusConfig.bgColor,
+                    statusConfig.hasIcon ? 'h-5 w-5' : 'h-3.5 w-3.5'
+                  )}>
+                    {statusConfig.hasIcon && <StatusIcon className="h-3 w-3 text-white" />}
+                  </span>
+                )
+              })()}
+            </div>
+          </ProfilePopover>
+        ) : (
+          <Avatar className={cn(
+            'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
+            isActive && 'ring-2 ring-primary-foreground/30'
           )}>
-            {getInitials(displayName)}
-          </AvatarFallback>
-        </Avatar>
-        {conversation.type === 'direct' && (
-          <span className={cn(
-            'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2',
-            isActive ? 'border-primary' : 'border-background',
-            status === 'online' && (isActive ? 'bg-green-400' : 'bg-green-500'),
-            status === 'away' && (isActive ? 'bg-yellow-400' : 'bg-yellow-500'),
-            status === 'dnd' && (isActive ? 'bg-red-400' : 'bg-red-500'),
-            (!status || status === 'offline') && (isActive ? 'bg-gray-300' : 'bg-gray-400')
-          )} />
+            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarFallback className={cn(
+              'text-sm font-medium',
+              isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
+            )}>
+              {getInitials(displayName)}
+            </AvatarFallback>
+          </Avatar>
         )}
       </div>
 

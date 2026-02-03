@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor } from 'lucide-react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor, Circle, Clock, MinusCircle, EyeOff } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,7 +17,9 @@ import { ConversationItem } from './conversation-item'
 import { UserSearchDialog } from './user-search-dialog'
 import { CreateGroupDialog } from './create-group-dialog'
 import { NotificationBadge } from './notification-badge'
+import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
+import { usePreferences } from '@/components/providers/preferences-provider'
 import { createClient } from '@/lib/supabase/client'
 import { useTheme } from 'next-themes'
 
@@ -33,6 +35,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
+  const { preferences } = usePreferences()
 
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery) return true
@@ -66,6 +69,21 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       .slice(0, 2)
   }
 
+  const getStatusConfig = (status: string | null | undefined) => {
+    switch (status) {
+      case 'online':
+        return { icon: Circle, bgColor: 'bg-green-500', textColor: 'text-white' }
+      case 'away':
+        return { icon: Clock, bgColor: 'bg-yellow-500', textColor: 'text-white' }
+      case 'dnd':
+        return { icon: MinusCircle, bgColor: 'bg-red-500', textColor: 'text-white' }
+      case 'invisible':
+        return { icon: EyeOff, bgColor: 'bg-gray-400', textColor: 'text-white' }
+      default:
+        return { icon: Circle, bgColor: 'bg-gray-400', textColor: 'text-white' }
+    }
+  }
+
   return (
     <div className="flex h-full flex-col bg-card/50 backdrop-blur-sm">
       {/* Header with gradient accent */}
@@ -73,19 +91,28 @@ export function ConversationList({ onSelect }: ConversationListProps) {
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
         <div className="flex items-center justify-between border-b px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
-                <AvatarImage src={currentUser?.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                  {getInitials(currentUser?.display_name)}
-                </AvatarFallback>
-              </Avatar>
-              <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background ${
-                currentUser?.status === 'online' ? 'bg-green-500' :
-                currentUser?.status === 'away' ? 'bg-yellow-500' :
-                currentUser?.status === 'dnd' ? 'bg-red-500' : 'bg-gray-400'
-              }`} />
-            </div>
+            {currentUser && (
+              <ProfilePopover profile={currentUser} isCurrentUser side="bottom" align="start">
+                <button className="relative cursor-pointer">
+                  <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
+                    <AvatarImage src={currentUser?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                      {getInitials(currentUser?.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  {(() => {
+                    const currentStatus = preferences?.online_status_preference || currentUser?.status || 'offline'
+                    const statusConfig = getStatusConfig(currentStatus)
+                    const StatusIcon = statusConfig.icon
+                    return (
+                      <span className={`absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background ${statusConfig.bgColor}`}>
+                        <StatusIcon className={`h-3 w-3 ${statusConfig.textColor}`} />
+                      </span>
+                    )
+                  })()}
+                </button>
+              </ProfilePopover>
+            )}
             <div className="flex flex-col">
               <span className="font-semibold">{currentUser?.display_name || currentUser?.username}</span>
               <span className="text-xs text-muted-foreground">@{currentUser?.username}</span>
@@ -101,8 +128,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                   <Settings className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+              <DropdownMenuContent side="bottom" align="end" className="w-48">
+                <DropdownMenuItem onClick={() => router.push('/chat/settings')} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>

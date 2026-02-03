@@ -38,6 +38,7 @@ interface ChatContextType {
   pinnedMessages: MessageWithSender[]
   pinMessage: (messageId: string) => Promise<void>
   unpinMessage: (messageId: string) => Promise<void>
+  updateUserStatus: (status: string) => Promise<void>
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -277,6 +278,25 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       prev.map(m => m.id === messageId ? { ...m, is_pinned: false, pinned_at: null, pinned_by: null } : m)
     )
   }, [supabase])
+
+  // Update user status (both in DB and local state)
+  const updateUserStatus = useCallback(async (status: string) => {
+    // Map 'invisible' to 'offline' for the profiles table
+    const dbStatus = status === 'invisible' ? 'offline' : status
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ status: dbStatus })
+      .eq('id', userId)
+
+    if (error) {
+      console.error('Error updating status:', error)
+      throw error
+    }
+
+    // Update local state immediately
+    setCurrentUser(prev => prev ? { ...prev, status: dbStatus } : null)
+  }, [supabase, userId])
 
   // Send message
   const sendMessage = useCallback(async (content: string, conversationId: string, file?: File) => {
@@ -879,6 +899,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         pinnedMessages,
         pinMessage,
         unpinMessage,
+        updateUserStatus,
       }}
     >
       {children}
