@@ -1,0 +1,6 @@
+export { WidgetChat } from './widget-chat'
+export { WidgetHeader } from './widget-header'
+export { WidgetForm } from './widget-form'
+export { WidgetMessageList } from './widget-message-list'
+export { WidgetMessageInput } from './widget-message-input'
+export { WidgetOffline } from './widget-offline'

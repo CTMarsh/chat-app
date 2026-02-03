@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor, Circle, Clock, MinusCircle, EyeOff } from 'lucide-react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,19 +27,40 @@ interface ConversationListProps {
   onSelect?: () => void
 }
 
+type ConversationFilter = 'all' | 'chats' | 'inbox'
+
 export function ConversationList({ onSelect }: ConversationListProps) {
   const router = useRouter()
   const { currentUser, conversations, unreadCount } = useChat()
   const [searchQuery, setSearchQuery] = useState('')
+  const [filter, setFilter] = useState<ConversationFilter>('all')
   const [userSearchOpen, setUserSearchOpen] = useState(false)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const supabase = createClient()
   const { theme, setTheme } = useTheme()
   const { preferences } = usePreferences()
 
+  // Count widget conversations for the inbox badge
+  const widgetConversations = conversations.filter(c => c.type === 'widget')
+  const widgetUnreadCount = widgetConversations.filter(c => (c.unread_count || 0) > 0).length
+
   const filteredConversations = conversations.filter(conv => {
+    // Filter by type
+    if (filter === 'chats' && conv.type === 'widget') return false
+    if (filter === 'inbox' && conv.type !== 'widget') return false
+
+    // Filter by search query
     if (!searchQuery) return true
     const searchLower = searchQuery.toLowerCase()
+
+    if (conv.type === 'widget') {
+      // Search by visitor name/email
+      return (
+        conv.visitor_session?.name?.toLowerCase().includes(searchLower) ||
+        conv.visitor_session?.email?.toLowerCase().includes(searchLower) ||
+        conv.name?.toLowerCase().includes(searchLower)
+      )
+    }
 
     if (conv.type === 'group') {
       return conv.name?.toLowerCase().includes(searchLower)
@@ -161,7 +182,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       </div>
 
       {/* Search */}
-      <div className="p-4">
+      <div className="p-4 pb-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -172,6 +193,44 @@ export function ConversationList({ onSelect }: ConversationListProps) {
           />
         </div>
       </div>
+
+      {/* Filter tabs */}
+      {widgetConversations.length > 0 && (
+        <div className="flex gap-1 px-4 pb-2">
+          <Button
+            variant={filter === 'all' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1"
+            onClick={() => setFilter('all')}
+          >
+            <MessagesSquare className="mr-1.5 h-3.5 w-3.5" />
+            All
+          </Button>
+          <Button
+            variant={filter === 'chats' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1"
+            onClick={() => setFilter('chats')}
+          >
+            <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+            Chats
+          </Button>
+          <Button
+            variant={filter === 'inbox' ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 flex-1 relative"
+            onClick={() => setFilter('inbox')}
+          >
+            <Headphones className="mr-1.5 h-3.5 w-3.5" />
+            Inbox
+            {widgetUnreadCount > 0 && (
+              <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-medium text-destructive-foreground">
+                {widgetUnreadCount}
+              </span>
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* New chat buttons */}
       <div className="flex gap-2 px-4 pb-4">

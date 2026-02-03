@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
-import { Circle, Clock, MinusCircle, EyeOff } from 'lucide-react'
+import { Circle, Clock, MinusCircle, EyeOff, Headphones, Building2 } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useChat } from '@/components/providers/chat-provider'
 import type { ConversationWithParticipants } from '@/lib/types/database'
@@ -21,22 +21,26 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
   const { currentUser } = useChat()
 
   const isActive = params.conversationId === conversation.id
+  const isWidget = conversation.type === 'widget'
 
   const otherParticipant = conversation.participants.find(
     p => p.user_id !== currentUser?.id
   )
 
-  const displayName =
-    conversation.type === 'group'
+  // For widget conversations, show visitor name from session or last message
+  const displayName = isWidget
+    ? conversation.visitor_session?.name || conversation.name || 'Visitor'
+    : conversation.type === 'group'
       ? conversation.name
       : otherParticipant?.profile.display_name || otherParticipant?.profile.username
 
-  const avatarUrl =
-    conversation.type === 'group'
+  const avatarUrl = isWidget
+    ? null // Visitors don't have avatars
+    : conversation.type === 'group'
       ? conversation.avatar_url
       : otherParticipant?.profile.avatar_url
 
-  const status = otherParticipant?.profile.status
+  const status = isWidget ? null : otherParticipant?.profile.status
 
   const getStatusConfig = (status: string | null | undefined) => {
     switch (status) {
@@ -79,12 +83,16 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
 
   const lastMessage = conversation.last_message
   const lastMessagePreview = lastMessage
-    ? lastMessage.sender_id === currentUser?.id
-      ? `You: ${lastMessage.content}`
-      : lastMessage.content
-    : conversation.type === 'group'
-    ? 'No messages yet'
-    : 'Start a conversation'
+    ? lastMessage.visitor_name
+      ? `${lastMessage.visitor_name}: ${lastMessage.content}` // Visitor message
+      : lastMessage.sender_id === currentUser?.id
+        ? `You: ${lastMessage.content}`
+        : lastMessage.content
+    : isWidget
+      ? 'New support chat'
+      : conversation.type === 'group'
+        ? 'No messages yet'
+        : 'Start a conversation'
 
   const hasUnread = conversation.unread_count && conversation.unread_count > 0
 
@@ -99,7 +107,28 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
       )}
     >
       <div className="relative shrink-0">
-        {conversation.type === 'direct' && otherParticipant?.profile ? (
+        {isWidget ? (
+          // Widget conversation - show headphones icon with visitor initials
+          <div className="relative">
+            <Avatar className={cn(
+              'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
+              isActive && 'ring-2 ring-primary-foreground/30'
+            )}>
+              <AvatarFallback className={cn(
+                'text-sm font-medium',
+                isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-indigo-100 text-indigo-600'
+              )}>
+                {getInitials(displayName)}
+              </AvatarFallback>
+            </Avatar>
+            <span className={cn(
+              'absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2',
+              isActive ? 'border-primary bg-indigo-400' : 'border-background bg-indigo-500'
+            )}>
+              <Headphones className="h-3 w-3 text-white" />
+            </span>
+          </div>
+        ) : conversation.type === 'direct' && otherParticipant?.profile ? (
           <ProfilePopover profile={otherParticipant.profile} side="right" align="start">
             <div
               role="button"
@@ -184,6 +213,21 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
           </p>
           {!isActive && <UnreadBadge count={conversation.unread_count || 0} />}
         </div>
+        {/* Workspace name for widget conversations */}
+        {isWidget && conversation.widget?.workspace?.name && (
+          <div className="flex items-center gap-1.5 mt-1">
+            <Building2 className={cn(
+              'h-3 w-3 shrink-0',
+              isActive ? 'text-primary-foreground/60' : 'text-muted-foreground/70'
+            )} />
+            <span className={cn(
+              'text-xs truncate',
+              isActive ? 'text-primary-foreground/60' : 'text-muted-foreground/70'
+            )}>
+              {conversation.widget.workspace.name}
+            </span>
+          </div>
+        )}
       </div>
     </button>
   )

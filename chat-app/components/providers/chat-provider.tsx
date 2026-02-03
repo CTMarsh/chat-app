@@ -112,7 +112,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         participants:conversation_participants(
           *,
           profile:profiles(*)
-        )
+        ),
+        visitor_session:visitor_sessions(*),
+        widget:widgets(*, workspace:workspaces(*))
       `)
       .in('id', conversationIds)
       .order('updated_at', { ascending: false })
@@ -124,7 +126,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
           const [lastMessageResult, unreadCountResult] = await Promise.all([
             supabase
               .from('messages')
-              .select('*, sender:profiles!messages_sender_id_fkey(*)')
+              .select('*, sender:profiles!messages_sender_id_fkey(*), visitor_name, visitor_email')
               .eq('conversation_id', conv.id)
               .is('deleted_at', null)
               .order('created_at', { ascending: false })
@@ -389,6 +391,8 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         pinned_by: null,
         link_previews: null,
         is_edited: false,
+        visitor_name: null,
+        visitor_email: null,
         sender: currentUser,
         reactions: [],
         read_receipts: [],
@@ -401,7 +405,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
-  }, [supabase, userId])
+  }, [supabase, userId, currentUser])
 
   // Send message with mentions
   const sendMessageWithMentions = useCallback(async (
@@ -529,6 +533,8 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         pinned_by: null,
         link_previews: linkPreviews.length > 0 ? linkPreviews : null,
         is_edited: false,
+        visitor_name: null,
+        visitor_email: null,
         sender: currentUser,
         reactions: [],
         read_receipts: [],

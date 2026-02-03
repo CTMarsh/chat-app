@@ -1,0 +1,348 @@
+'use client'
+
+import { useState, useEffect, use } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Copy, Check, RefreshCw, ExternalLink } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { getWidget, updateWidget } from '@/lib/actions/widgets'
+import type { WidgetWithWorkspace } from '@/lib/types/database'
+
+interface PageProps {
+  params: Promise<{ widgetId: string }>
+}
+
+export default function WidgetConfigPage({ params }: PageProps) {
+  const resolvedParams = use(params)
+  const router = useRouter()
+  const [widget, setWidget] = useState<WidgetWithWorkspace | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  // Form state
+  const [name, setName] = useState('')
+  const [primaryColor, setPrimaryColor] = useState('#6366f1')
+  const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [offlineMessage, setOfflineMessage] = useState('')
+  const [requireEmail, setRequireEmail] = useState(true)
+  const [collectName, setCollectName] = useState(true)
+  const [isActive, setIsActive] = useState(true)
+  const [allowedOrigins, setAllowedOrigins] = useState('')
+
+  useEffect(() => {
+    const loadWidget = async () => {
+      setIsLoading(true)
+      const { data, error } = await getWidget(resolvedParams.widgetId)
+
+      if (error) {
+        setError(error)
+      } else if (data) {
+        setWidget(data)
+        setName(data.name)
+        setPrimaryColor(data.primary_color || '#6366f1')
+        setPosition((data.position as 'bottom-right' | 'bottom-left') || 'bottom-right')
+        setWelcomeMessage(data.welcome_message || '')
+        setOfflineMessage(data.offline_message || '')
+        setRequireEmail(data.require_email ?? true)
+        setCollectName(data.collect_name ?? true)
+        setIsActive(data.is_active ?? true)
+        setAllowedOrigins((data.allowed_origins || []).join('\n'))
+      }
+
+      setIsLoading(false)
+    }
+
+    loadWidget()
+  }, [resolvedParams.widgetId])
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    setError(null)
+
+    const origins = allowedOrigins
+      .split('\n')
+      .map(o => o.trim())
+      .filter(o => o.length > 0)
+
+    const { error } = await updateWidget(resolvedParams.widgetId, {
+      name,
+      primaryColor,
+      position,
+      welcomeMessage,
+      offlineMessage,
+      requireEmail,
+      collectName,
+      isActive,
+      allowedOrigins: origins,
+    })
+
+    if (error) {
+      setError(error)
+    } else {
+      // Refresh widget data
+      const { data } = await getWidget(resolvedParams.widgetId)
+      if (data) setWidget(data)
+    }
+
+    setIsSaving(false)
+  }
+
+  const copyEmbedCode = () => {
+    if (!widget) return
+
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const embedCode = `<script src="${baseUrl}/widget/loader.js"></script>
+<script>
+  ChatWidget.init({
+    embedToken: '${widget.embed_token}'
+  });
+</script>`
+
+    navigator.clipboard.writeText(embedCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+  }
+
+  if (!widget) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">Widget not found</p>
+        <Button variant="outline" className="mt-4" asChild>
+          <Link href="/chat/settings/widgets">Back to Widgets</Link>
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/chat/settings/widgets">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">{widget.name}</h2>
+          <p className="text-muted-foreground">
+            Configure your widget settings and appearance.
+          </p>
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
+      {/* Embed Code Section */}
+      <div className="rounded-lg border p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium">Embed Code</h3>
+            <p className="text-sm text-muted-foreground">
+              Add this code to your website to display the chat widget.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/widget?token=${widget.embed_token}`} target="_blank">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Preview
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" onClick={copyEmbedCode}>
+              {copied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Code
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        <pre className="rounded-lg bg-muted p-4 text-sm overflow-x-auto">
+          <code>{`<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget/loader.js"></script>
+<script>
+  ChatWidget.init({
+    embedToken: '${widget.embed_token}'
+  });
+</script>`}</code>
+        </pre>
+      </div>
+
+      {/* General Settings */}
+      <div className="rounded-lg border p-6 space-y-6">
+        <h3 className="font-medium">General Settings</h3>
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Widget Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="My Widget"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="position">Position</Label>
+            <Select value={position} onValueChange={(v) => setPosition(v as 'bottom-right' | 'bottom-left')}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                <SelectItem value="bottom-left">Bottom Left</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="color">Primary Color</Label>
+            <div className="flex gap-2">
+              <Input
+                id="color"
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-16 h-10 p-1 cursor-pointer"
+              />
+              <Input
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                placeholder="#6366f1"
+                className="flex-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Widget Active</Label>
+              <p className="text-sm text-muted-foreground">
+                Enable or disable the widget
+              </p>
+            </div>
+            <Switch checked={isActive} onCheckedChange={setIsActive} />
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="rounded-lg border p-6 space-y-6">
+        <h3 className="font-medium">Messages</h3>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="welcome">Welcome Message</Label>
+            <Textarea
+              id="welcome"
+              value={welcomeMessage}
+              onChange={(e) => setWelcomeMessage(e.target.value)}
+              placeholder="Hi! How can we help you today?"
+              rows={2}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="offline">Offline Message</Label>
+            <Textarea
+              id="offline"
+              value={offlineMessage}
+              onChange={(e) => setOfflineMessage(e.target.value)}
+              placeholder="We're currently offline. Leave a message and we'll get back to you!"
+              rows={2}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Visitor Settings */}
+      <div className="rounded-lg border p-6 space-y-6">
+        <h3 className="font-medium">Visitor Settings</h3>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Require Email</Label>
+              <p className="text-sm text-muted-foreground">
+                Visitors must provide their email before chatting
+              </p>
+            </div>
+            <Switch checked={requireEmail} onCheckedChange={setRequireEmail} />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label>Collect Name</Label>
+              <p className="text-sm text-muted-foreground">
+                Ask visitors for their name
+              </p>
+            </div>
+            <Switch checked={collectName} onCheckedChange={setCollectName} />
+          </div>
+        </div>
+      </div>
+
+      {/* Security */}
+      <div className="rounded-lg border p-6 space-y-6">
+        <h3 className="font-medium">Security</h3>
+
+        <div className="space-y-2">
+          <Label htmlFor="origins">Allowed Origins</Label>
+          <p className="text-sm text-muted-foreground mb-2">
+            Restrict which domains can embed this widget. Leave empty to allow all domains.
+            Enter one domain per line (e.g., https://example.com).
+          </p>
+          <Textarea
+            id="origins"
+            value={allowedOrigins}
+            onChange={(e) => setAllowedOrigins(e.target.value)}
+            placeholder="https://example.com&#10;https://www.example.com"
+            rows={3}
+          />
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" asChild>
+          <Link href="/chat/settings/widgets">Cancel</Link>
+        </Button>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+    </div>
+  )
+}

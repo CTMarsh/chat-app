@@ -12,6 +12,8 @@ import {
   Accessibility,
   ArrowLeft,
   Settings,
+  Building2,
+  Code,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,6 +26,8 @@ const settingsNavItems = [
   { title: 'Privacy', href: '/chat/settings/privacy', icon: Lock },
   { title: 'Security', href: '/chat/settings/security', icon: Shield },
   { title: 'Accessibility', href: '/chat/settings/accessibility', icon: Accessibility },
+  { title: 'Workspaces', href: '/chat/settings/workspaces', icon: Building2 },
+  { title: 'Widgets', href: '/chat/settings/widgets', icon: Code },
 ]
 
 export default function SettingsLayout({
