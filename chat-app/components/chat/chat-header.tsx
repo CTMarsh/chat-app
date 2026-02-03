@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useChat } from '@/components/providers/chat-provider'
 import { SearchDialog } from './search-dialog'
+import { ProfilePopover } from './profile-popover'
 import { cn } from '@/lib/utils'
 
 export function ChatHeader() {
@@ -68,21 +69,35 @@ export function ChatHeader() {
           <div className="w-10" />
         </div>
 
-        <div className="relative">
-          <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
-            <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
-          </Avatar>
-          {activeConversation.type === 'direct' && (
-            <span className={cn(
-              'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
-              status === 'online' && 'bg-green-500',
-              status === 'away' && 'bg-yellow-500',
-              status === 'dnd' && 'bg-red-500',
-              (!status || status === 'offline') && 'bg-gray-400'
-            )} />
-          )}
-        </div>
+        {activeConversation.type === 'direct' && otherParticipant?.profile ? (
+          <ProfilePopover
+            profile={otherParticipant.profile}
+            isCurrentUser={false}
+            side="bottom"
+            align="start"
+          >
+            <button className="relative cursor-pointer">
+              <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
+              </Avatar>
+              <span className={cn(
+                'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
+                status === 'online' && 'bg-green-500',
+                status === 'away' && 'bg-yellow-500',
+                status === 'dnd' && 'bg-red-500',
+                (!status || status === 'offline') && 'bg-gray-400'
+              )} />
+            </button>
+          </ProfilePopover>
+        ) : (
+          <div className="relative">
+            <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
+              <AvatarImage src={avatarUrl || undefined} />
+              <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
+            </Avatar>
+          </div>
+        )}
 
         <div>
           <h2 className="font-semibold">{displayName}</h2>

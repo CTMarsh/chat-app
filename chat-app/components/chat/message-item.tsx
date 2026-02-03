@@ -19,6 +19,7 @@ import { ReactionDisplay } from './reaction-display'
 import { MentionHighlight } from './mention-highlight'
 import { ReadReceiptIndicator } from './read-receipt-indicator'
 import { LinkPreview, extractUrls } from './link-preview'
+import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
 import { useMessagePreferences } from '@/components/providers/preferences-provider'
 
@@ -165,12 +166,21 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
       )}
     >
       {showAvatar ? (
-        <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all duration-200 group-hover:ring-primary/20">
-          <AvatarImage src={message.sender.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
-            {getInitials(message.sender.display_name)}
-          </AvatarFallback>
-        </Avatar>
+        <ProfilePopover
+          profile={message.sender}
+          isCurrentUser={isOwn}
+          side={isOwn ? 'left' : 'right'}
+          align="start"
+        >
+          <button className="cursor-pointer">
+            <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all duration-200 hover:ring-primary/30">
+              <AvatarImage src={message.sender.avatar_url || undefined} />
+              <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
+                {getInitials(message.sender.display_name)}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </ProfilePopover>
       ) : (
         <div className="w-8 flex-shrink-0" />
       )}
