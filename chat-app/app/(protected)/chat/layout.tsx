@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ChatProvider } from '@/components/providers/chat-provider'
 import { ChatLayout } from '@/components/chat/chat-layout'
+import { NotificationHandler } from '@/components/providers/notification-handler'
 
 export default async function ChatRootLayout({
   children,
@@ -17,6 +18,7 @@ export default async function ChatRootLayout({
 
   return (
     <ChatProvider userId={user.id}>
+      <NotificationHandler />
       <ChatLayout>{children}</ChatLayout>
     </ChatProvider>
   )

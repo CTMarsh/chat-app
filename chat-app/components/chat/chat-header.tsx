@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useChat } from '@/components/providers/chat-provider'
 import { SearchDialog } from './search-dialog'
+import { cn } from '@/lib/utils'
 
 export function ChatHeader() {
   const { activeConversation, currentUser } = useChat()
@@ -50,21 +51,38 @@ export function ChatHeader() {
     if (activeConversation.type === 'group') {
       return `${participantCount} members`
     }
-    return status === 'online' ? 'Online' : 'Offline'
+    switch (status) {
+      case 'online': return 'Online'
+      case 'away': return 'Away'
+      case 'dnd': return 'Do Not Disturb'
+      default: return 'Offline'
+    }
   }
 
   return (
-    <header className="flex items-center justify-between border-b px-4 py-3">
+    <header className="relative flex items-center justify-between border-b bg-card/30 px-4 py-3 backdrop-blur-sm">
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-3">
         <div className="relative md:hidden">
           {/* Spacer for mobile menu button */}
           <div className="w-10" />
         </div>
 
-        <Avatar>
-          <AvatarImage src={avatarUrl || undefined} />
-          <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-        </Avatar>
+        <div className="relative">
+          <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
+            <AvatarImage src={avatarUrl || undefined} />
+            <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
+          </Avatar>
+          {activeConversation.type === 'direct' && (
+            <span className={cn(
+              'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
+              status === 'online' && 'bg-green-500',
+              status === 'away' && 'bg-yellow-500',
+              status === 'dnd' && 'bg-red-500',
+              (!status || status === 'offline') && 'bg-gray-400'
+            )} />
+          )}
+        </div>
 
         <div>
           <h2 className="font-semibold">{displayName}</h2>
@@ -75,19 +93,19 @@ export function ChatHeader() {
       <div className="flex items-center gap-1">
         <SearchDialog
           trigger={
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
               <Search className="h-5 w-5" />
             </Button>
           }
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
               <MoreVertical className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+          <DropdownMenuContent align="end" className="shadow-lg shadow-primary/5">
+            <DropdownMenuItem className="cursor-pointer">
               <Info className="mr-2 h-4 w-4" />
               View Info
             </DropdownMenuItem>

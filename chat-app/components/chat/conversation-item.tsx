@@ -20,12 +20,10 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
 
   const isActive = params.conversationId === conversation.id
 
-  // Get the other participant for direct chats
   const otherParticipant = conversation.participants.find(
     p => p.user_id !== currentUser?.id
   )
 
-  // Determine display name and avatar
   const displayName =
     conversation.type === 'group'
       ? conversation.name
@@ -62,7 +60,6 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
     onSelect?.()
   }
 
-  // Get last message preview
   const lastMessage = conversation.last_message
   const lastMessagePreview = lastMessage
     ? lastMessage.sender_id === currentUser?.id
@@ -72,48 +69,74 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
     ? 'No messages yet'
     : 'Start a conversation'
 
+  const hasUnread = conversation.unread_count && conversation.unread_count > 0
+
   return (
     <button
       onClick={handleClick}
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent',
-        isActive && 'bg-accent'
+        'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200',
+        isActive
+          ? 'bg-primary text-primary-foreground shadow-md'
+          : 'hover:bg-muted/80'
       )}
     >
-      <div className="relative">
-        <Avatar>
+      <div className="relative shrink-0">
+        <Avatar className={cn(
+          'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
+          isActive && 'ring-2 ring-primary-foreground/30'
+        )}>
           <AvatarImage src={avatarUrl || undefined} />
-          <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+          <AvatarFallback className={cn(
+            'text-sm font-medium',
+            isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
+          )}>
+            {getInitials(displayName)}
+          </AvatarFallback>
         </Avatar>
-        {conversation.type === 'direct' && status === 'online' && (
-          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
+        {conversation.type === 'direct' && (
+          <span className={cn(
+            'absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2',
+            isActive ? 'border-primary' : 'border-background',
+            status === 'online' && (isActive ? 'bg-green-400' : 'bg-green-500'),
+            status === 'away' && (isActive ? 'bg-yellow-400' : 'bg-yellow-500'),
+            status === 'dnd' && (isActive ? 'bg-red-400' : 'bg-red-500'),
+            (!status || status === 'offline') && (isActive ? 'bg-gray-300' : 'bg-gray-400')
+          )} />
         )}
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <span className={cn(
             'font-medium truncate',
-            conversation.unread_count && conversation.unread_count > 0 && 'font-semibold'
-          )}>{displayName}</span>
-          <div className="flex items-center gap-2">
+            hasUnread && !isActive && 'font-semibold'
+          )}>
+            {displayName}
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
             {lastMessage?.created_at && (
-              <span className="text-xs text-muted-foreground">
+              <span className={cn(
+                'text-xs',
+                isActive ? 'text-primary-foreground/70' : 'text-muted-foreground'
+              )}>
                 {formatTime(lastMessage.created_at)}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 mt-0.5">
           <p className={cn(
             'truncate text-sm',
-            conversation.unread_count && conversation.unread_count > 0
-              ? 'font-medium text-foreground'
-              : 'text-muted-foreground'
+            isActive
+              ? 'text-primary-foreground/80'
+              : hasUnread
+                ? 'font-medium text-foreground'
+                : 'text-muted-foreground'
           )}>
             {lastMessagePreview}
           </p>
-          <UnreadBadge count={conversation.unread_count || 0} />
+          {!isActive && <UnreadBadge count={conversation.unread_count || 0} />}
         </div>
       </div>
     </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react'
 import { Send, AlertTriangle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useChat } from '@/components/providers/chat-provider'
@@ -9,6 +9,7 @@ import { FileUploadButton } from './file-upload-button'
 import { MentionList } from './mention-list'
 import type { Profile } from '@/lib/types/database'
 import { cn } from '@/lib/utils'
+import { getPreferences } from '@/lib/actions/settings'
 
 // Check if a string contains only emoji characters (up to 5 emojis)
 function isEmojiOnly(text: string): boolean {
@@ -32,8 +33,22 @@ export function MessageInput() {
   const [mentionSelectedIndex, setMentionSelectedIndex] = useState(0)
   const [mentionedUsers, setMentionedUsers] = useState<Profile[]>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [enterKeyBehavior, setEnterKeyBehavior] = useState<'send' | 'newline'>('send')
+  const [sendTypingIndicators, setSendTypingIndicators] = useState(true)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout>(null)
+
+  // Load preferences
+  useEffect(() => {
+    const loadPreferences = async () => {
+      const { data } = await getPreferences()
+      if (data) {
+        setEnterKeyBehavior(data.enter_key_behavior)
+        setSendTypingIndicators(data.send_typing_indicators)
+      }
+    }
+    loadPreferences()
+  }, [])
 
   // Get participants for mentions (only in group chats)
   const mentionableUsers = useMemo(() => {
@@ -70,7 +85,7 @@ export function MessageInput() {
 
   // Handle typing indicator
   const handleTyping = useCallback(() => {
-    if (!activeConversation) return
+    if (!activeConversation || !sendTypingIndicators) return
 
     setTyping(activeConversation.id, true)
 
@@ -83,7 +98,7 @@ export function MessageInput() {
     typingTimeoutRef.current = setTimeout(() => {
       setTyping(activeConversation.id, false)
     }, 2000)
-  }, [activeConversation, setTyping])
+  }, [activeConversation, setTyping, sendTypingIndicators])
 
   // Detect @ mentions while typing
   const handleContentChange = (newContent: string) => {
@@ -219,9 +234,17 @@ export function MessageInput() {
       }
     }
 
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
+    // Handle Enter key based on preference
+    if (e.key === 'Enter') {
+      if (enterKeyBehavior === 'send' && !e.shiftKey) {
+        e.preventDefault()
+        handleSubmit()
+      } else if (enterKeyBehavior === 'newline' && (e.ctrlKey || e.metaKey)) {
+        // When newline mode, Ctrl/Cmd+Enter sends
+        e.preventDefault()
+        handleSubmit()
+      }
+      // In newline mode with plain Enter, let it create a new line naturally
     }
   }
 
@@ -253,9 +276,9 @@ export function MessageInput() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="relative border-t p-4">
+    <form onSubmit={handleSubmit} className="relative border-t bg-card/30 p-4 backdrop-blur-sm">
       {uploadError && (
-        <div className="mb-2 flex items-center gap-2 rounded-md bg-destructive/15 p-2 text-sm text-destructive">
+        <div className="mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive shadow-sm">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
           <span className="flex-1">{uploadError}</span>
           <Button
@@ -291,7 +314,8 @@ export function MessageInput() {
           onKeyDown={handleKeyDown}
           placeholder={activeConversation?.type === 'group' ? 'Type a message... (use @ to mention)' : 'Type a message...'}
           className={cn(
-            "flex-1 resize-none rounded-xl border bg-background px-4 py-3 min-h-12 focus:outline-none focus:ring-2 focus:ring-ring",
+            "flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12",
+            "transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5",
             isEmojiOnly(content) ? "text-3xl leading-relaxed" : "text-base"
           )}
           rows={1}
@@ -301,7 +325,7 @@ export function MessageInput() {
           type="submit"
           size="icon"
           disabled={(!content.trim() && !selectedFile) || isSending}
-          style={{ width: '48px', height: '48px' }}
+          className="h-12 w-12 rounded-xl bg-primary shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 disabled:opacity-50 disabled:shadow-none disabled:scale-100"
         >
           <Send className="h-5 w-5" />
         </Button>

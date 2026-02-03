@@ -6,15 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
-import { Mail, Lock, Loader2, CheckCircle, User } from 'lucide-react'
+import { AuthCard, AuthInputWrapper } from '@/components/auth/auth-card'
+import { Mail, Lock, Loader2, CheckCircle, User, UserPlus } from 'lucide-react'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -41,7 +34,6 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    // Extract username from email (part before @)
     const username = email.split('@')[0]
 
     const supabase = createClient()
@@ -68,122 +60,130 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-              <CheckCircle className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl">Check your email</CardTitle>
-            <CardDescription>
-              We&apos;ve sent a confirmation link to <strong>{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Click the link in your email to confirm your account and sign in.
-            </p>
-          </CardContent>
-          <CardFooter className="justify-center">
-            <Link href="/login">
-              <Button variant="outline">Back to Login</Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
+      <AuthCard
+        title="Check your email"
+        description={
+          <>
+            We&apos;ve sent a confirmation link to <strong className="text-foreground">{email}</strong>
+          </>
+        }
+        icon={<CheckCircle className="h-7 w-7 text-green-500" />}
+        footer={
+          <Link href="/login">
+            <Button variant="outline" className="shadow-sm">
+              Back to Login
+            </Button>
+          </Link>
+        }
+      >
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Click the link in your email to confirm your account and sign in.
+          </p>
+        </div>
+      </AuthCard>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Create an account</CardTitle>
-          <CardDescription>Enter your details to get started</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSignup} className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name <span className="text-muted-foreground">(optional)</span></Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                />
-              </div>
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign Up
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link href="/login" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
-    </div>
+    <AuthCard
+      title="Create an account"
+      description="Enter your details to get started"
+      icon={<UserPlus className="h-7 w-7 text-primary" />}
+      footer={
+        <p className="text-sm text-muted-foreground">
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-primary hover:underline">
+            Sign in
+          </Link>
+        </p>
+      }
+    >
+      <form onSubmit={handleSignup} className="space-y-4">
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="name">
+            Name <span className="text-muted-foreground">(optional)</span>
+          </Label>
+          <AuthInputWrapper icon={<User className="h-4 w-4" />}>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-11 pl-10 transition-shadow focus:shadow-md"
+            />
+          </AuthInputWrapper>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <AuthInputWrapper icon={<Mail className="h-4 w-4" />}>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-11 pl-10 transition-shadow focus:shadow-md"
+              required
+            />
+          </AuthInputWrapper>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <AuthInputWrapper icon={<Lock className="h-4 w-4" />}>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Create password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 pl-10 transition-shadow focus:shadow-md"
+                required
+                minLength={6}
+              />
+            </AuthInputWrapper>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm</Label>
+            <AuthInputWrapper icon={<Lock className="h-4 w-4" />}>
+              <Input
+                id="confirmPassword"
+                type="password"
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-11 pl-10 transition-shadow focus:shadow-md"
+                required
+                minLength={6}
+              />
+            </AuthInputWrapper>
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          className="h-11 w-full text-base font-medium shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <UserPlus className="mr-2 h-4 w-4" />
+          )}
+          Create Account
+        </Button>
+      </form>
+    </AuthCard>
   )
 }

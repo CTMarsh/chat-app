@@ -6,15 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
-import { Shield, Loader2, LogOut } from 'lucide-react'
+import { AuthCard } from '@/components/auth/auth-card'
+import { Shield, Loader2, LogOut, ShieldCheck } from 'lucide-react'
 
 export default function MFAVerifyPage() {
   const [verifyCode, setVerifyCode] = useState('')
@@ -33,10 +26,8 @@ export default function MFAVerifyPage() {
         return
       }
 
-      // Get the first verified TOTP factor
       const totpFactor = data.totp.find(factor => factor.status === 'verified')
       if (!totpFactor) {
-        // No MFA set up, redirect to chat
         router.push('/chat')
         return
       }
@@ -61,7 +52,6 @@ export default function MFAVerifyPage() {
     setLoading(true)
 
     try {
-      // Create a challenge
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
         factorId,
       })
@@ -72,7 +62,6 @@ export default function MFAVerifyPage() {
         return
       }
 
-      // Verify the code
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId: challengeData.id,
@@ -85,7 +74,6 @@ export default function MFAVerifyPage() {
         return
       }
 
-      // Success - redirect to chat
       router.push('/chat')
       router.refresh()
     } catch (err) {
@@ -96,60 +84,72 @@ export default function MFAVerifyPage() {
 
   if (!factorId) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="relative flex min-h-screen items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Shield className="h-6 w-6 text-primary" />
+    <AuthCard
+      title="Two-Factor Authentication"
+      description="Enter the code from your authenticator app to continue"
+      icon={<ShieldCheck className="h-7 w-7 text-primary" />}
+      footer={
+        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </Button>
+      }
+    >
+      <form onSubmit={handleVerify} className="space-y-6">
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
           </div>
-          <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>
-          <CardDescription>
-            Enter the code from your authenticator app
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleVerify} className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="code">Verification Code</Label>
-              <Input
-                id="code"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                placeholder="000000"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
-                className="text-center text-2xl tracking-widest"
-                autoFocus
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading || verifyCode.length !== 6}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Verify
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+        )}
+
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+          <Shield className="mx-auto mb-2 h-8 w-8 text-primary/60" />
+          <p className="text-sm text-muted-foreground">
+            Open your authenticator app and enter the 6-digit code
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="code" className="text-center block">Verification Code</Label>
+          <Input
+            id="code"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            placeholder="000000"
+            value={verifyCode}
+            onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+            className="h-14 text-center text-3xl tracking-[0.5em] font-mono transition-shadow focus:shadow-md"
+            autoFocus
+            required
+          />
+        </div>
+
+        <Button
+          type="submit"
+          className="h-11 w-full text-base font-medium shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          disabled={loading || verifyCode.length !== 6}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <ShieldCheck className="mr-2 h-4 w-4" />
+          )}
+          Verify & Continue
+        </Button>
+      </form>
+    </AuthCard>
   )
 }

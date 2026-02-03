@@ -102,9 +102,15 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-h-[80vh] sm:max-w-[500px]">
+      <DialogContent className="max-h-[80vh] overflow-hidden border-border/50 bg-card/95 shadow-2xl shadow-primary/5 backdrop-blur-xl sm:max-w-[500px]">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
         <DialogHeader>
-          <DialogTitle>Search Messages</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Search className="h-4 w-4 text-primary" />
+            </div>
+            Search Messages
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -114,7 +120,7 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
               placeholder="Search in this conversation..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-9 pr-9"
+              className="border-border/50 bg-background/50 pl-9 pr-9 transition-all focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
               autoFocus
             />
             {query && (
@@ -146,12 +152,12 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
                   <button
                     key={message.id}
                     onClick={() => handleResultClick(message.id)}
-                    className="w-full rounded-lg border p-3 text-left transition-colors hover:bg-accent"
+                    className="w-full rounded-xl border border-border/50 bg-background/50 p-3 text-left transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:shadow-md"
                   >
                     <div className="flex items-start gap-3">
-                      <Avatar className="h-8 w-8">
+                      <Avatar className="h-8 w-8 ring-2 ring-primary/10 ring-offset-1 ring-offset-background">
                         <AvatarImage src={message.sender.avatar_url || undefined} />
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
                           {getInitials(message.sender.display_name)}
                         </AvatarFallback>
                       </Avatar>

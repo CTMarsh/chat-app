@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile, ConversationWithParticipants, MessageWithSender, Notification } from '@/lib/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { scanFile } from '@/lib/utils/scan-file'
+import { getPreferences } from '@/lib/actions/settings'
 
 interface FileAttachment {
   file: File
@@ -65,12 +66,27 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .single()
 
     if (data) {
-      setCurrentUser(data)
-      // Update status to online
+      // Get user's status preference
+      const { data: prefs } = await getPreferences()
+      const statusPreference = prefs?.online_status_preference ?? 'online'
+      const showOnlineStatus = prefs?.show_online_status ?? true
+
+      // Determine the actual status to set
+      // 'invisible' preference maps to 'offline' in the profiles table
+      // If show_online_status is false, also appear offline
+      let actualStatus: string = statusPreference
+      if (statusPreference === 'invisible' || !showOnlineStatus) {
+        actualStatus = 'offline'
+      }
+
+      // Update status based on user preference
       await supabase
         .from('profiles')
-        .update({ status: 'online', last_seen_at: new Date().toISOString() })
+        .update({ status: actualStatus, last_seen_at: new Date().toISOString() })
         .eq('id', userId)
+
+      // Set currentUser with the correct status
+      setCurrentUser({ ...data, status: actualStatus })
     }
   }, [supabase, userId])
 
@@ -179,16 +195,22 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
       setMessages(messagesWithData as MessageWithSender[])
 
-      // Mark messages as read
+      // Mark messages as read - but only if user has send_read_receipts enabled
       const unreadMessages = data.filter(m => m.sender_id !== userId)
       if (unreadMessages.length > 0) {
-        const receipts = unreadMessages.map(m => ({
-          message_id: m.id,
-          user_id: userId,
-        }))
-        await supabase
-          .from('message_read_receipts')
-          .upsert(receipts, { onConflict: 'message_id,user_id' })
+        // Check user's preference before sending read receipts
+        const { data: prefs } = await getPreferences()
+        const sendReadReceipts = prefs?.send_read_receipts ?? true
+
+        if (sendReadReceipts) {
+          const receipts = unreadMessages.map(m => ({
+            message_id: m.id,
+            user_id: userId,
+          }))
+          await supabase
+            .from('message_read_receipts')
+            .upsert(receipts, { onConflict: 'message_id,user_id' })
+        }
       }
     }
 

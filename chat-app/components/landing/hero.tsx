@@ -5,11 +5,17 @@ import { ArrowRight, Play, MessageSquare } from 'lucide-react'
 export function Hero() {
   return (
     <section className="relative overflow-hidden py-20 md:py-32">
-      <div className="container mx-auto px-4">
+      {/* Background decorations */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
+      </div>
+      <div className="container mx-auto px-4 relative">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
           {/* Left Column - Content */}
           <div className="flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary w-fit">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary shadow-lg shadow-primary/10 w-fit backdrop-blur-sm">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -48,7 +54,7 @@ export function Hero() {
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="h-8 w-8 rounded-full border-2 border-background bg-muted"
+                    className="h-9 w-9 rounded-full border-2 border-background bg-gradient-to-br from-primary/20 to-primary/5 ring-2 ring-primary/10"
                   />
                 ))}
               </div>
@@ -61,13 +67,16 @@ export function Hero() {
 
           {/* Right Column - Image */}
           <div className="relative lg:ml-auto">
-            <div className="relative rounded-2xl border bg-gradient-to-b from-muted/50 to-muted p-2 shadow-2xl">
-              <div className="aspect-[4/3] rounded-xl bg-background overflow-hidden">
+            <div className="relative rounded-2xl border border-border/50 bg-gradient-to-b from-card/80 to-card p-2 shadow-2xl shadow-primary/10 backdrop-blur-sm">
+              <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
+              <div className="aspect-[4/3] rounded-xl bg-background/80 overflow-hidden">
                 {/* Placeholder for app screenshot */}
-                <div className="h-full w-full flex items-center justify-center bg-muted/30">
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-muted/30 to-muted/10">
                   <div className="text-center p-8">
-                    <MessageSquare className="mx-auto h-16 w-16 text-muted-foreground/50" />
-                    <p className="mt-4 text-sm text-muted-foreground">
+                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent shadow-xl shadow-primary/10">
+                      <MessageSquare className="h-10 w-10 text-primary" />
+                    </div>
+                    <p className="mt-4 text-sm font-medium text-muted-foreground">
                       App Screenshot Placeholder
                     </p>
                   </div>
@@ -75,8 +84,8 @@ export function Hero() {
               </div>
             </div>
             {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-primary/20 blur-3xl" />
-            <div className="absolute -bottom-4 -left-4 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
+            <div className="absolute -top-6 -right-6 h-32 w-32 rounded-full bg-primary/20 blur-3xl" />
+            <div className="absolute -bottom-6 -left-6 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
           </div>
         </div>
       </div>

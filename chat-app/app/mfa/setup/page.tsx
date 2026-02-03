@@ -6,15 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
-import { Shield, Loader2, LogOut } from 'lucide-react'
+import { AuthCard } from '@/components/auth/auth-card'
+import { Shield, Loader2, LogOut, Smartphone } from 'lucide-react'
 
 export default function MFASetupPage() {
   const [factorId, setFactorId] = useState('')
@@ -29,22 +22,18 @@ export default function MFASetupPage() {
 
   useEffect(() => {
     const checkAndEnroll = async () => {
-      // Check if user already has MFA
       const { data: factors } = await supabase.auth.mfa.listFactors()
 
       if (factors?.totp.some(f => f.status === 'verified')) {
-        // Already has MFA, redirect to chat
         router.push('/chat')
         return
       }
 
-      // Clean up any unverified factors from previous attempts
       const unverifiedFactors = factors?.totp.filter(f => (f.status as string) === 'unverified') || []
       for (const factor of unverifiedFactors) {
         await supabase.auth.mfa.unenroll({ factorId: factor.id })
       }
 
-      // Start enrollment
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: 'Authenticator App',
@@ -79,7 +68,6 @@ export default function MFASetupPage() {
     setError('')
 
     try {
-      // Create challenge
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
         factorId,
       })
@@ -90,7 +78,6 @@ export default function MFASetupPage() {
         return
       }
 
-      // Verify
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId: challengeData.id,
@@ -103,7 +90,6 @@ export default function MFASetupPage() {
         return
       }
 
-      // Success - redirect to chat
       router.push('/chat')
       router.refresh()
     } catch {
@@ -114,86 +100,92 @@ export default function MFASetupPage() {
 
   if (enrolling) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="relative flex min-h-screen items-center justify-center">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Shield className="h-6 w-6 text-primary" />
+    <AuthCard
+      title="Set Up Two-Factor Authentication"
+      description="For your security, two-factor authentication is required"
+      icon={<Shield className="h-7 w-7 text-primary" />}
+      footer={
+        <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-muted-foreground">
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </Button>
+      }
+    >
+      <form onSubmit={handleVerify} className="space-y-6">
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            {error}
           </div>
-          <CardTitle className="text-2xl">Set Up Two-Factor Authentication</CardTitle>
-          <CardDescription>
-            For your security, two-factor authentication is required. Scan the QR code with your authenticator app.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleVerify} className="space-y-6">
-            {error && (
-              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                {error}
-              </div>
-            )}
+        )}
 
-            {/* QR Code */}
-            {qrCode && (
-              <div className="flex flex-col items-center gap-4">
-                <div className="rounded-lg border bg-white p-4">
-                  <img src={qrCode} alt="QR Code" className="h-48 w-48" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Can&apos;t scan? Enter this code manually:
-                  </p>
-                  <code className="mt-1 block rounded bg-muted px-2 py-1 text-xs font-mono break-all">
-                    {secret}
-                  </code>
-                </div>
-              </div>
-            )}
-
-            {/* Verification input */}
-            <div className="space-y-2">
-              <Label htmlFor="code">Verification Code</Label>
-              <Input
-                id="code"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                placeholder="000000"
-                value={verifyCode}
-                onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
-                className="text-center text-2xl tracking-widest"
-                autoFocus
-              />
-              <p className="text-xs text-muted-foreground text-center">
-                Enter the 6-digit code from your authenticator app
-              </p>
+        {/* QR Code */}
+        {qrCode && (
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative overflow-hidden rounded-2xl border-2 border-primary/20 bg-white p-4 shadow-lg">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <img src={qrCode} alt="QR Code" className="relative h-48 w-48" />
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || verifyCode.length !== 6}
-            >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Complete Setup
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="justify-center">
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Smartphone className="h-4 w-4" />
+              <span>Scan with your authenticator app</span>
+            </div>
+
+            <div className="w-full rounded-lg border bg-muted/30 p-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">
+                Can&apos;t scan? Enter this code manually:
+              </p>
+              <code className="block rounded bg-background px-3 py-2 text-xs font-mono break-all border">
+                {secret}
+              </code>
+            </div>
+          </div>
+        )}
+
+        {/* Verification input */}
+        <div className="space-y-3">
+          <Label htmlFor="code" className="text-center block">Verification Code</Label>
+          <Input
+            id="code"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={6}
+            placeholder="000000"
+            value={verifyCode}
+            onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+            className="h-14 text-center text-3xl tracking-[0.5em] font-mono transition-shadow focus:shadow-md"
+            autoFocus
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            Enter the 6-digit code from your authenticator app
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          className="h-11 w-full text-base font-medium shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          disabled={loading || verifyCode.length !== 6}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Shield className="mr-2 h-4 w-4" />
+          )}
+          Complete Setup
+        </Button>
+      </form>
+    </AuthCard>
   )
 }

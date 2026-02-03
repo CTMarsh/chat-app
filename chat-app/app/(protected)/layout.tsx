@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { PreferencesProvider } from '@/components/providers/preferences-provider'
 
 export default async function ProtectedLayout({
   children,
@@ -13,5 +14,9 @@ export default async function ProtectedLayout({
     redirect('/login')
   }
 
-  return <>{children}</>
+  return (
+    <PreferencesProvider>
+      {children}
+    </PreferencesProvider>
+  )
 }

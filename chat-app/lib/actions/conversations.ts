@@ -46,6 +46,9 @@ export async function createDirectConversation(otherUserId: string) {
     }
   }
 
+  // Debug: Log user ID being used for insert
+  console.log('Creating conversation with created_by:', user.id)
+
   // Create new conversation
   const { data: conversation, error: convError } = await supabase
     .from('conversations')
@@ -58,6 +61,8 @@ export async function createDirectConversation(otherUserId: string) {
 
   if (convError) {
     console.error('Error creating conversation:', convError)
+    console.error('User ID was:', user.id)
+    console.error('User email was:', user.email)
     return { error: convError.message }
   }
 

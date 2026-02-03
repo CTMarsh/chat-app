@@ -41,8 +41,10 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
 
   if (!expanded) {
     return (
-      <div className="flex items-center gap-2 border-b bg-muted/30 px-4 py-2">
-        <Pin className="h-4 w-4 text-primary" />
+      <div className="flex items-center gap-2 border-b border-primary/10 bg-primary/5 px-4 py-2 backdrop-blur-sm">
+        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+          <Pin className="h-3.5 w-3.5 text-primary" />
+        </div>
         <button
           onClick={() => onMessageClick(currentMessage.id)}
           className="flex-1 truncate text-left text-sm hover:underline"
@@ -78,10 +80,12 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
   }
 
   return (
-    <div className="border-b bg-muted/30">
+    <div className="border-b border-primary/10 bg-primary/5 backdrop-blur-sm">
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
-          <Pin className="h-4 w-4 text-primary" />
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10">
+            <Pin className="h-3.5 w-3.5 text-primary" />
+          </div>
           <span className="text-sm font-medium">Pinned Messages ({messages.length})</span>
         </div>
         <Button
@@ -97,11 +101,11 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
         {messages.map((message) => (
           <div
             key={message.id}
-            className="mb-2 flex items-start gap-2 rounded-lg bg-background p-2 last:mb-0"
+            className="mb-2 flex items-start gap-2 rounded-lg bg-background/80 p-2 shadow-sm transition-all duration-200 hover:bg-background hover:shadow-md last:mb-0"
           >
-            <Avatar className="h-6 w-6">
+            <Avatar className="h-6 w-6 ring-1 ring-primary/10">
               <AvatarImage src={message.sender.avatar_url || undefined} />
-              <AvatarFallback className="text-xs">
+              <AvatarFallback className="bg-primary/10 text-xs text-primary">
                 {getInitials(message.sender.display_name)}
               </AvatarFallback>
             </Avatar>

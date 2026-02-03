@@ -137,9 +137,17 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="overflow-hidden border-border/50 bg-card/95 shadow-2xl shadow-primary/5 backdrop-blur-xl sm:max-w-md">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              {step === 'members' ? (
+                <Search className="h-4 w-4 text-primary" />
+              ) : (
+                <Check className="h-4 w-4 text-primary" />
+              )}
+            </div>
             {step === 'members' ? 'Add Members' : 'Group Details'}
           </DialogTitle>
         </DialogHeader>
@@ -152,14 +160,14 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                 {selectedUsers.map(user => (
                   <div
                     key={user.id}
-                    className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-sm"
+                    className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm shadow-sm transition-all hover:shadow-md"
                   >
-                    <span>{user.display_name || user.username}</span>
+                    <span className="font-medium">{user.display_name || user.username}</span>
                     <button
                       onClick={() => toggleUser(user)}
-                      className="rounded-full p-0.5 hover:bg-primary/20"
+                      className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ))}
@@ -173,7 +181,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="border-border/50 bg-background/50 pl-9 transition-all focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
                 autoFocus
               />
             </div>
@@ -196,11 +204,11 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                       <button
                         key={user.id}
                         onClick={() => toggleUser(user)}
-                        className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent"
+                        className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 hover:bg-primary/5 hover:shadow-md"
                       >
-                        <Avatar>
+                        <Avatar className="ring-2 ring-primary/10 ring-offset-1 ring-offset-background">
                           <AvatarImage src={user.avatar_url || undefined} />
-                          <AvatarFallback>{getInitials(user.display_name)}</AvatarFallback>
+                          <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(user.display_name)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 overflow-hidden">
                           <p className="font-medium truncate">
@@ -211,7 +219,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                           </p>
                         </div>
                         {isSelected && (
-                          <div className="rounded-full bg-primary p-1">
+                          <div className="rounded-full bg-primary p-1 shadow-lg shadow-primary/30">
                             <Check className="h-3 w-3 text-primary-foreground" />
                           </div>
                         )}
@@ -264,17 +272,19 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
             <Button
               onClick={() => setStep('details')}
               disabled={selectedUsers.length === 0}
+              className="shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
             >
               Next
             </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setStep('members')}>
+              <Button variant="outline" onClick={() => setStep('members')} className="transition-all hover:bg-muted">
                 Back
               </Button>
               <Button
                 onClick={handleCreateGroup}
                 disabled={!groupName.trim() || isCreating}
+                className="shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
               >
                 {isCreating ? (
                   <>

@@ -303,6 +303,54 @@ export type MessageReadReceipt = {
   read_at: string | null
 }
 
+// User preferences for settings
+export type UserPreferences = {
+  id: string
+  user_id: string
+  // Profile
+  bio: string | null
+  online_status_preference: 'online' | 'away' | 'dnd' | 'invisible'
+  // Appearance
+  theme: 'light' | 'dark' | 'system'
+  ui_scale: 'compact' | 'comfortable' | 'spacious'
+  font_size: 'small' | 'medium' | 'large'
+  accent_color: string
+  message_density: 'compact' | 'default' | 'relaxed'
+  // Messages & Chat
+  enter_key_behavior: 'send' | 'newline'
+  link_previews_enabled: boolean
+  send_typing_indicators: boolean
+  send_read_receipts: boolean
+  emoji_skin_tone: 'default' | 'light' | 'medium-light' | 'medium' | 'medium-dark' | 'dark'
+  // Notifications
+  desktop_notifications: boolean
+  sound_notifications: boolean
+  dnd_enabled: boolean
+  dnd_start_time: string | null
+  dnd_end_time: string | null
+  // Privacy
+  show_online_status: boolean
+  show_read_receipts: boolean
+  show_typing_indicator: boolean
+  // Accessibility
+  reduce_motion: boolean
+  high_contrast: boolean
+  // Timestamps
+  created_at: string
+  updated_at: string
+}
+
+export type BlockedUser = {
+  id: string
+  user_id: string
+  blocked_user_id: string
+  created_at: string
+}
+
+export type BlockedUserWithProfile = BlockedUser & {
+  blocked_profile: Profile
+}
+
 // Extended types with relations
 export type ConversationWithParticipants = Conversation & {
   participants: (ConversationParticipant & { profile: Profile })[]

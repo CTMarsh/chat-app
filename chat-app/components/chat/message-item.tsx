@@ -20,6 +20,7 @@ import { MentionHighlight } from './mention-highlight'
 import { ReadReceiptIndicator } from './read-receipt-indicator'
 import { LinkPreview, extractUrls } from './link-preview'
 import { useChat } from '@/components/providers/chat-provider'
+import { useMessagePreferences } from '@/components/providers/preferences-provider'
 
 // Check if a string contains only emoji characters (up to 5 emojis)
 function isEmojiOnly(text: string): boolean {
@@ -38,6 +39,7 @@ interface MessageItemProps {
 
 export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
   const { currentUser, toggleReaction, deleteMessage, pinMessage, unpinMessage } = useChat()
+  const { linkPreviewsEnabled } = useMessagePreferences()
   const isDeleted = !!message.deleted_at
 
   const getInitials = (name: string | null | undefined) => {
@@ -113,6 +115,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
   if (isDeleted) {
     return (
       <div
+        data-slot="message-item"
         className={cn(
           'group flex gap-3',
           isOwn && 'flex-row-reverse'
@@ -155,15 +158,16 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
 
   return (
     <div
+      data-slot="message-item"
       className={cn(
         'group flex gap-3',
         isOwn && 'flex-row-reverse'
       )}
     >
       {showAvatar ? (
-        <Avatar className="h-8 w-8 flex-shrink-0">
+        <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all duration-200 group-hover:ring-primary/20">
           <AvatarImage src={message.sender.avatar_url || undefined} />
-          <AvatarFallback className="text-xs">
+          <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
             {getInitials(message.sender.display_name)}
           </AvatarFallback>
         </Avatar>
@@ -186,7 +190,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
         {message.reply_to && (
           <div
             className={cn(
-              'mb-1 rounded border-l-2 border-primary/50 bg-muted/50 px-2 py-1 text-xs',
+              'mb-1 rounded-lg border-l-2 border-primary/50 bg-muted/30 px-3 py-1.5 text-xs backdrop-blur-sm transition-colors hover:bg-muted/50',
               isOwn && 'text-right'
             )}
           >
@@ -202,10 +206,10 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
         <div className={cn('flex items-start gap-1', isOwn && 'flex-row-reverse')}>
           <div
             className={cn(
-              'rounded-2xl px-4 py-2',
+              'rounded-2xl px-4 py-2 transition-all duration-200',
               isOwn
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                : 'bg-muted/80 shadow-sm hover:shadow-md'
             )}
           >
             {message.content && (
@@ -224,8 +228,8 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 fileType={message.file_type}
               />
             )}
-            {/* Link Previews */}
-            {message.link_previews && Array.isArray(message.link_previews) && message.link_previews.length > 0 && (
+            {/* Link Previews - Only show if preference is enabled */}
+            {linkPreviewsEnabled && message.link_previews && Array.isArray(message.link_previews) && message.link_previews.length > 0 && (
               <div className="mt-2 space-y-2">
                 {(message.link_previews as Array<{url: string; title?: string; description?: string; image?: string; siteName?: string}>).map((preview, index) => (
                   <LinkPreview key={index} preview={preview} />

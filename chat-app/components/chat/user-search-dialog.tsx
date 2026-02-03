@@ -140,9 +140,15 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="overflow-hidden border-border/50 bg-card/95 shadow-2xl shadow-primary/5 backdrop-blur-xl sm:max-w-md">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
         <DialogHeader>
-          <DialogTitle>New Chat</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <Search className="h-4 w-4 text-primary" />
+            </div>
+            New Chat
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -152,7 +158,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
               placeholder="Search by name, username, or email..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="border-border/50 bg-background/50 pl-9 transition-all focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
               autoFocus
             />
           </div>
@@ -173,11 +179,11 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                     key={user.id}
                     onClick={() => handleSelectUser(user)}
                     disabled={isCreating}
-                    className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-accent disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 hover:bg-primary/5 hover:shadow-md disabled:opacity-50"
                   >
-                    <Avatar>
+                    <Avatar className="ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all group-hover:ring-primary/20">
                       <AvatarImage src={user.avatar_url || undefined} />
-                      <AvatarFallback>{getInitials(user.display_name)}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(user.display_name)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 overflow-hidden">
                       <p className="font-medium truncate">
@@ -189,7 +195,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                       </p>
                     </div>
                     {user.status === 'online' && (
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50" />
                     )}
                   </button>
                 ))}

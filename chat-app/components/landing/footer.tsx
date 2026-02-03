@@ -34,27 +34,30 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30">
+    <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-sm">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="container mx-auto px-4 py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           {/* Brand Column */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <MessageSquare className="h-6 w-6 text-primary" />
+            <Link href="/" className="flex items-center gap-2.5 mb-4 w-fit transition-transform hover:scale-105">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
+                <MessageSquare className="h-5 w-5 text-primary-foreground" />
+              </div>
               <span className="text-xl font-bold">ChatApp</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs">
               Connect with anyone, anywhere. The modern messaging platform for
               teams and individuals.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-primary/10 hover:text-primary"
                   aria-label={social.label}
                 >
                   <social.icon className="h-5 w-5" />
@@ -133,7 +136,8 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="mt-12 pt-8 border-t">
+        <div className="relative mt-12 pt-8 border-t border-border/50">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
           <p className="text-sm text-muted-foreground text-center">
             &copy; {new Date().getFullYear()} ChatApp. All rights reserved.
           </p>
