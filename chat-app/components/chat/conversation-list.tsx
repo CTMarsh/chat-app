@@ -128,7 +128,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                   <Settings className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="bottom" align="end" className="w-48">
+              <DropdownMenuContent side="bottom" align="start" className="w-48">
                 <DropdownMenuItem onClick={() => router.push('/chat/settings')} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
