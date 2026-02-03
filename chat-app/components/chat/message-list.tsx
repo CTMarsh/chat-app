@@ -68,11 +68,17 @@ export function MessageList() {
               const showAvatar =
                 !previousMessage || previousMessage.sender_id !== message.sender_id
 
+              // For widget conversations, visitor messages have visitor_name set
+              // even though sender_id might be the workspace owner (for FK constraint)
+              // So we check: it's "own" only if sender_id matches AND it's not a visitor message
+              const isFromVisitor = !!message.visitor_name
+              const isOwn = message.sender_id === currentUser?.id && !isFromVisitor
+
               return (
                 <div key={message.id} id={`message-${message.id}`} className="transition-colors duration-500">
                   <MessageItem
                     message={message}
-                    isOwn={message.sender_id === currentUser?.id}
+                    isOwn={isOwn}
                     showAvatar={showAvatar}
                   />
                 </div>
