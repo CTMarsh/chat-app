@@ -7,6 +7,20 @@
     return;
   }
 
+  // Derive base URL from where this script was loaded
+  // This ensures the widget works in production regardless of where it's embedded
+  var scriptUrl = document.currentScript && document.currentScript.src;
+  var defaultBaseUrl = 'http://localhost:3000'; // Fallback for dev
+
+  if (scriptUrl) {
+    try {
+      var url = new URL(scriptUrl);
+      defaultBaseUrl = url.origin;
+    } catch (e) {
+      console.warn('ChatWidget: Could not parse script URL, using fallback');
+    }
+  }
+
   var ChatWidget = {
     config: null,
     iframe: null,
@@ -21,7 +35,7 @@
 
       this.config = Object.assign({
         position: 'bottom-right',
-        baseUrl: window.location.origin,
+        baseUrl: defaultBaseUrl,
         buttonColor: '#6366f1',
         buttonSize: 60,
         zIndex: 999999
