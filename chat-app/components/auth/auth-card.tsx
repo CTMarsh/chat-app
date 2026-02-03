@@ -16,7 +16,7 @@ import { MessageSquare } from 'lucide-react'
 interface AuthCardProps {
   children: ReactNode
   title: string
-  description?: string
+  description?: ReactNode
   footer?: ReactNode
   icon?: ReactNode
   className?: string

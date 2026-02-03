@@ -56,8 +56,42 @@ const {
   sendMessageWithMentions, // Send with @mentions and link previews
   toggleReaction,     // Add/remove emoji reaction
   pinMessage,         // Pin message to conversation
+  updateUserStatus,   // Update user's online status (online, away, dnd, invisible)
 } = useChat()
 ```
+
+### User Preferences
+
+User preferences are managed by `PreferencesProvider` (`components/providers/preferences-provider.tsx`):
+
+```typescript
+const {
+  preferences,        // Current user's preferences from user_preferences table
+  updatePreference,   // Update a single preference: updatePreference('theme', 'dark')
+  updatePreferences,  // Update multiple preferences at once
+} = usePreferences()
+```
+
+### User Status System
+
+Status values and their meanings:
+
+| Status | Display | Database Value | Visibility |
+|--------|---------|----------------|------------|
+| `online` | Green circle | `online` | Visible to others |
+| `away` | Yellow clock | `away` | Visible to others |
+| `dnd` | Red minus | `dnd` | Visible to others |
+| `invisible` | Grey eye-off | `offline` | Appears offline to others |
+| `offline` | Grey dot (no icon) | `offline` | Actual offline state |
+
+Key pattern: When user selects "invisible", store `offline` in database but preserve `invisible` in `user_preferences.online_status_preference` for UI display.
+
+### ProfilePopover Component
+
+`ProfilePopover` (`components/chat/profile-popover.tsx`) displays user profiles and status selector:
+- Shows avatar, display name, username
+- For current user: status selector to change online status
+- For other users: shows their current status
 
 ### Real-time Subscriptions
 
@@ -101,6 +135,7 @@ All tables have RLS enabled. Key tables:
 | Table | Purpose |
 |-------|---------|
 | `profiles` | User profiles (extends auth.users) |
+| `user_preferences` | User settings (theme, status preference, notifications, privacy) |
 | `conversations` | Chat conversations (type: 'direct' or 'group') |
 | `conversation_participants` | User membership with role, last_read_at |
 | `messages` | Messages with file support, replies, pins |
@@ -165,3 +200,17 @@ supabase.channel('my-channel')
 ### Protected Route Pattern
 
 All routes under `app/(protected)/` require authentication + AAL2 MFA. The layout at `app/(protected)/layout.tsx` handles the auth check.
+
+### Settings Routes
+
+Settings are located at `/chat/settings/` with horizontal tab navigation:
+
+| Route | Purpose |
+|-------|---------|
+| `/chat/settings/profile` | Avatar, display name, username, bio |
+| `/chat/settings/appearance` | Theme, UI scale, font size, accent color |
+| `/chat/settings/messages` | Enter key behavior, link previews, typing indicators |
+| `/chat/settings/notifications` | Desktop notifications, sounds, DND schedule |
+| `/chat/settings/privacy` | Online status visibility, read receipts, blocked users |
+| `/chat/settings/security` | MFA management, active sessions, password |
+| `/chat/settings/accessibility` | Reduce motion, high contrast |
