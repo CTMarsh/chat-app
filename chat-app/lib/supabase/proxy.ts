@@ -36,7 +36,8 @@ export async function updateSession(request: NextRequest) {
   const isLandingPage = request.nextUrl.pathname === '/'
   const isMFARoute = request.nextUrl.pathname.startsWith('/mfa')
   const isWidgetRoute = request.nextUrl.pathname.startsWith('/widget')
-  const isProtectedRoute = !isPublicRoute && !isLandingPage && !isMFARoute && !isWidgetRoute
+  const isWidgetApiRoute = request.nextUrl.pathname.startsWith('/api/widget')
+  const isProtectedRoute = !isPublicRoute && !isLandingPage && !isMFARoute && !isWidgetRoute && !isWidgetApiRoute
 
   // Redirect unauthenticated users from protected routes to login
   if (!user && isProtectedRoute) {

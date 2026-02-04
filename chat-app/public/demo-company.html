@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusTech IT - Professional IT Support Services</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      color: #e2e8f0;
+    }
+
+    header {
+      background: rgba(15, 23, 42, 0.95);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+    }
+
+    nav a {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: #a855f7;
+    }
+
+    main {
+      padding-top: 80px;
+    }
+
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(168, 85, 247, 0.1);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #a855f7;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #f8fafc 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      font-size: 1.25rem;
+      color: #64748b;
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(168, 85, 247, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-secondary:hover {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .features {
+      background: #1e293b;
+      padding: 6rem 2rem;
+    }
+
+    .features-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .features .subtitle {
+      text-align: center;
+      color: #64748b;
+      margin-bottom: 4rem;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: #0f172a;
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .feature-card:hover {
+      border-color: #a855f7;
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: #f1f5f9;
+    }
+
+    .feature-card p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .stats {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .stat h3 {
+      font-size: 3rem;
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat p {
+      color: #64748b;
+    }
+
+    .cta-section {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+      border-top: 1px solid #1e293b;
+      border-bottom: 1px solid #1e293b;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .cta-section h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      text-align: center;
+      color: #475569;
+      font-size: 0.875rem;
+    }
+
+    .chat-hint {
+      position: fixed;
+      bottom: 100px;
+      right: 24px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: bounce 2s ease-in-out infinite;
+      z-index: 50;
+    }
+
+    .chat-hint p {
+      color: #e2e8f0;
+      font-size: 0.875rem;
+    }
+
+    .chat-hint::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      right: 30px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #1e293b;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">NexusTech IT</div>
+    <nav>
+      <a href="#">Services</a>
+      <a href="#">Solutions</a>
+      <a href="#">Pricing</a>
+      <a href="#">About Us</a>
+      <a href="#">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="hero-badge">24/7 Remote & On-Site Support</span>
+      <h1>IT Problems?<br>We've Got You Covered</h1>
+      <p class="tagline">NexusTech IT provides comprehensive managed IT services for businesses of all sizes. From helpdesk support to network security, we keep your technology running smoothly.</p>
+      <div class="hero-buttons">
+        <button class="btn-primary">Get a Free Consultation</button>
+        <button class="btn-secondary">View Our Services</button>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="features-inner">
+        <h2>Comprehensive IT Services</h2>
+        <p class="subtitle">Expert solutions tailored to your business needs</p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🖥️</div>
+            <h3>Managed IT Services</h3>
+            <p>Proactive monitoring and maintenance of your entire IT infrastructure. We handle the tech so you can focus on your business.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3>Cybersecurity</h3>
+            <p>Protect your business from threats with enterprise-grade security solutions, including firewalls, endpoint protection, and security audits.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3>Cloud Solutions</h3>
+            <p>Seamless migration and management of cloud services. Microsoft 365, Azure, AWS, and Google Workspace specialists.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3>Network Infrastructure</h3>
+            <p>Design, installation, and maintenance of reliable network systems. WiFi, VPN, and secure remote access solutions.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3>Backup & Recovery</h3>
+            <p>Automated backup solutions and disaster recovery planning. Never lose critical business data again.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🎧</div>
+            <h3>Helpdesk Support</h3>
+            <p>Fast, friendly technical support when you need it. Remote and on-site assistance available 24/7. Chat with us now!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <h3>500+</h3>
+        <p>Businesses Supported</p>
+      </div>
+      <div class="stat">
+        <h3>15min</h3>
+        <p>Avg. Response Time</p>
+      </div>
+      <div class="stat">
+        <h3>99.9%</h3>
+        <p>Issue Resolution Rate</p>
+      </div>
+      <div class="stat">
+        <h3>4.9/5</h3>
+        <p>Client Satisfaction</p>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to eliminate IT headaches?</h2>
+      <p>Let us handle your technology so you can focus on growing your business</p>
+      <button class="btn-primary">Schedule a Free Assessment</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 NexusTech IT Services. All rights reserved. | This is a demo page for testing the chat widget.</p>
+  </footer>
+
+  <div class="chat-hint">
+    <p>👋 Need help? Chat with us!</p>
+  </div>
+
+  <!-- Chat Widget -->
+  <script src="https://chat-app-eosin-nu-56.vercel.app/widget/loader.js"></script>
+  <script>
+    ChatWidget.init({
+      embedToken: '834702e35f54961dd666c582544c68abce7fc210c3fb0b854858b8fb7c078070'
+    });
+  </script>
+</body>
+</html>

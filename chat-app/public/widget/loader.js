@@ -8,9 +8,8 @@
   }
 
   // Derive base URL from where this script was loaded
-  // This ensures the widget works in production regardless of where it's embedded
   var scriptUrl = document.currentScript && document.currentScript.src;
-  var defaultBaseUrl = 'http://localhost:3000'; // Fallback for dev
+  var defaultBaseUrl = 'http://localhost:3000';
 
   if (scriptUrl) {
     try {
@@ -25,22 +24,58 @@
     config: null,
     iframe: null,
     button: null,
+    container: null,
+    styleElement: null,
     isOpen: false,
 
-    init: function(config) {
-      if (!config || !config.embedToken) {
+    init: function(userConfig) {
+      var self = this;
+
+      if (!userConfig || !userConfig.embedToken) {
         console.error('ChatWidget: embedToken is required');
         return;
       }
 
-      this.config = Object.assign({
-        position: 'bottom-right',
-        baseUrl: defaultBaseUrl,
-        buttonColor: '#6366f1',
-        buttonSize: 60,
-        zIndex: 999999
-      }, config);
+      // Set initial config with defaults
+      this.config = {
+        embedToken: userConfig.embedToken,
+        position: userConfig.position || 'bottom-right',
+        baseUrl: userConfig.baseUrl || defaultBaseUrl,
+        buttonColor: userConfig.buttonColor, // Will be fetched from server
+        buttonSize: userConfig.buttonSize || 60,
+        zIndex: userConfig.zIndex || 999999
+      };
 
+      // Fetch widget config from server to get the actual colors
+      this.fetchWidgetConfig()
+        .then(function(serverConfig) {
+          if (serverConfig) {
+            // Override with server config (database values take precedence)
+            self.config.buttonColor = serverConfig.primaryColor || self.config.buttonColor;
+            self.config.position = serverConfig.position || self.config.position;
+          }
+          self.render();
+        })
+        .catch(function(err) {
+          console.warn('ChatWidget: Could not fetch config, using defaults', err);
+          self.render();
+        });
+    },
+
+    fetchWidgetConfig: function() {
+      var self = this;
+      var apiUrl = this.config.baseUrl + '/api/widget/config?token=' + encodeURIComponent(this.config.embedToken);
+
+      return fetch(apiUrl)
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Failed to fetch widget config');
+          }
+          return response.json();
+        });
+    },
+
+    render: function() {
       this.createStyles();
       this.createButton();
       this.createIframe();
@@ -114,6 +149,7 @@
         '}'
       ].join('\n');
       document.head.appendChild(style);
+      this.styleElement = style;
     },
 
     createButton: function() {
@@ -158,7 +194,8 @@
       container.style[pos[1]] = '20px';
 
       document.body.appendChild(container);
-      this.iframe = container;
+      this.container = container;
+      this.iframe = iframe;
     },
 
     bindEvents: function() {
@@ -187,14 +224,14 @@
     open: function() {
       this.isOpen = true;
       this.button.classList.add('cw-open');
-      this.iframe.classList.add('cw-open');
+      this.container.classList.add('cw-open');
       this.button.setAttribute('aria-label', 'Close chat');
     },
 
     close: function() {
       this.isOpen = false;
       this.button.classList.remove('cw-open');
-      this.iframe.classList.remove('cw-open');
+      this.container.classList.remove('cw-open');
       this.button.setAttribute('aria-label', 'Open chat');
     },
 
@@ -202,8 +239,11 @@
       if (this.button) {
         this.button.remove();
       }
-      if (this.iframe) {
-        this.iframe.remove();
+      if (this.container) {
+        this.container.remove();
+      }
+      if (this.styleElement) {
+        this.styleElement.remove();
       }
       this.config = null;
       this.isOpen = false;
