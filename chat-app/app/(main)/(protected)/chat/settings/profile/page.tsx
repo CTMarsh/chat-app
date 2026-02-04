@@ -180,8 +180,8 @@ export default function ProfileSettingsPage() {
         )}
       </div>
 
-      {/* 3-column grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* Responsive grid */}
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Avatar Card */}
         <SettingSection title="Avatar" description="Your profile picture" accent>
           <div className="flex flex-col items-center py-4">
@@ -247,7 +247,7 @@ export default function ProfileSettingsPage() {
         </SettingSection>
 
         {/* Bio Card - spans 2 columns on large screens */}
-        <SettingSection title="Bio" description="Tell others about yourself" className="lg:col-span-2">
+        <SettingSection title="Bio" description="Tell others about yourself" className="lg:col-span-2 xl:col-span-2">
           <div className="space-y-3">
             <div className="relative">
               <textarea

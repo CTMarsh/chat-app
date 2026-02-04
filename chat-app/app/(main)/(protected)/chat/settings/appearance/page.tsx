@@ -54,8 +54,8 @@ export default function AppearanceSettingsPage() {
         </p>
       </div>
 
-      {/* 3-column grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* Responsive grid */}
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Theme Cards - each theme is its own card */}
         <SettingSection title="Light Theme" description="Bright and clean" accent={currentTheme === 'light'}>
           <button

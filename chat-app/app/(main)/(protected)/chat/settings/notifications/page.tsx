@@ -41,8 +41,8 @@ export default function NotificationsSettingsPage() {
         </p>
       </div>
 
-      {/* 3-column grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* Responsive grid */}
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Desktop Notifications */}
         <SettingSection title="Desktop" description="System notifications">
           <div className="flex items-center gap-4 py-2">
@@ -100,7 +100,7 @@ export default function NotificationsSettingsPage() {
           <SettingSection
             title="Schedule"
             description="Set quiet hours"
-            className="lg:col-span-2"
+            className="lg:col-span-2 xl:col-span-2"
           >
             <div className="flex items-center gap-4 py-2">
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">

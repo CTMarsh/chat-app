@@ -37,8 +37,8 @@ export default function MessagesSettingsPage() {
         </p>
       </div>
 
-      {/* 3-column grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* Responsive grid */}
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Enter Key Behavior */}
         <SettingSection title="Keyboard" description="Input controls">
           <div className="flex items-center gap-4 py-2">

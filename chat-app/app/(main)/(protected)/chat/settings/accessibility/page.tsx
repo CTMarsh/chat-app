@@ -23,8 +23,8 @@ export default function AccessibilitySettingsPage() {
         </p>
       </div>
 
-      {/* 3-column grid */}
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      {/* Responsive grid */}
+      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {/* Reduce Motion */}
         <SettingSection title="Motion" description="Control animations">
           <div className="flex items-center gap-4 py-2">
