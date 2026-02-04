@@ -9,6 +9,11 @@ import {
   Loader2,
   LogOut,
   Monitor,
+  Smartphone,
+  Laptop,
+  Globe,
+  X,
+  Plus,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SettingSection } from '@/components/settings/setting-section'
@@ -34,7 +39,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Smartphone, Laptop, Globe, X } from 'lucide-react'
 
 interface MFAFactor {
   id: string
@@ -114,7 +118,6 @@ export default function SecuritySettingsPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      // Track current session on page load
       await trackSession(navigator.userAgent)
       await Promise.all([fetchMFAFactors(), fetchSessions()])
       setIsLoading(false)
@@ -170,8 +173,11 @@ export default function SecuritySettingsPage() {
     )
   }
 
+  const hasMFA = mfaFactors.length > 0
+  const otherSessions = sessions.filter(s => !s.is_current)
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Security</h1>
@@ -180,135 +186,201 @@ export default function SecuritySettingsPage() {
         </p>
       </div>
 
-      {/* Responsive grid */}
-      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {/* MFA Status Card */}
-        <SettingSection
-          title="Two-Factor Authentication"
-          description="Extra layer of security"
-          accent
+      {/* Status Message */}
+      {message && (
+        <div
+          className={`rounded-lg p-4 text-sm ${
+            message.type === 'success'
+              ? 'bg-green-500/10 text-green-600 border border-green-200 dark:border-green-900'
+              : 'bg-destructive/10 text-destructive border border-destructive/20'
+          }`}
         >
-          {mfaFactors.length > 0 ? (
-            <div className="space-y-4">
+          {message.text}
+        </div>
+      )}
+
+      {/* Two-Factor Authentication Section */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Two-Factor Authentication</h2>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {/* 2FA Status Card */}
+          <SettingSection
+            title="Status"
+            description={hasMFA ? 'Your account is protected' : 'Add an extra layer of security'}
+            accent
+          >
+            {hasMFA ? (
               <div className="flex items-center gap-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
                   <ShieldCheck className="h-6 w-6 text-green-600" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-green-900 dark:text-green-100">
                     2FA Enabled
                   </p>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Your account is protected
+                    {mfaFactors.length} authenticator{mfaFactors.length > 1 ? 's' : ''} configured
                   </p>
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
-                  <ShieldOff className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-yellow-900 dark:text-yellow-100">
-                    2FA Not Enabled
-                  </p>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Protect your account now
-                  </p>
-                </div>
-              </div>
-              <Button onClick={() => setEnrollOpen(true)} className="w-full">
-                <Shield className="mr-2 h-4 w-4" />
-                Enable 2FA
-              </Button>
-            </div>
-          )}
-        </SettingSection>
-
-        {/* MFA Methods Card - only show if enabled */}
-        {mfaFactors.length > 0 && (
-          <SettingSection
-            title="Authentication Methods"
-            description="Manage your 2FA devices"
-            className="xl:col-span-2"
-          >
-            <div className="space-y-3">
-              {mfaFactors.map((factor) => (
-                <div
-                  key={factor.id}
-                  className="flex items-center justify-between rounded-lg border p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                      <Shield className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <span className="text-sm font-medium">
-                      {factor.friendly_name || 'Authenticator App'}
-                    </span>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
+                    <ShieldOff className="h-6 w-6 text-yellow-600" />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSelectedFactorId(factor.id)
-                      setUnenrollOpen(true)
-                    }}
-                  >
-                    <ShieldOff className="mr-2 h-4 w-4" />
-                    Remove
-                  </Button>
+                  <div className="min-w-0">
+                    <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                      Not Protected
+                    </p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      Enable 2FA for better security
+                    </p>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <Button onClick={() => setEnrollOpen(true)} className="w-full">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Enable Two-Factor Authentication
+                </Button>
+              </div>
+            )}
           </SettingSection>
-        )}
 
-        {/* Active Sessions Card */}
-        <SettingSection
-          title="Active Sessions"
-          description="Manage logged-in devices"
-          className={mfaFactors.length === 0 ? 'lg:col-span-2 xl:col-span-2' : 'xl:col-span-2'}
-        >
+          {/* Authentication Methods Card */}
+          <SettingSection
+            title="Authenticators"
+            description="Manage your authentication devices"
+          >
+            {hasMFA ? (
+              <div className="space-y-3">
+                {mfaFactors.map((factor) => (
+                  <div
+                    key={factor.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                        <Shield className="h-5 w-5 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium truncate">
+                        {factor.friendly_name || 'Authenticator App'}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => {
+                        setSelectedFactorId(factor.id)
+                        setUnenrollOpen(true)
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => setEnrollOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Another
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Shield className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  No authenticators configured
+                </p>
+              </div>
+            )}
+          </SettingSection>
+        </div>
+      </div>
+
+      {/* Active Sessions Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Active Sessions</h2>
+          {otherSessions.length > 0 && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isRevokingOthers}
+                >
+                  {isRevokingOthers ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="mr-2 h-4 w-4" />
+                  )}
+                  Sign Out Other Devices
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sign Out Other Devices?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will sign out all other devices except your current session.
+                    {otherSessions.length} session(s) will be revoked.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleRevokeOtherSessions}>
+                    Sign Out Other Devices
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+
+        <div className="rounded-xl border bg-card">
           {sessions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
+            <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                 <Monitor className="h-6 w-6 text-muted-foreground" />
               </div>
               <p className="mt-3 text-sm text-muted-foreground">No active sessions found</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="divide-y">
               {sessions.map((session) => {
                 const { device, icon: DeviceIcon } = parseUserAgent(session.user_agent)
                 return (
                   <div
                     key={session.id}
-                    className={`flex items-center justify-between rounded-lg border p-4 ${
-                      session.is_current ? 'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/30' : ''
+                    className={`flex items-center justify-between gap-4 p-4 ${
+                      session.is_current ? 'bg-green-50/50 dark:bg-green-950/20' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
                         session.is_current ? 'bg-green-100 dark:bg-green-900' : 'bg-muted'
                       }`}>
                         <DeviceIcon className={`h-5 w-5 ${
                           session.is_current ? 'text-green-600' : 'text-muted-foreground'
                         }`} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-medium">{device}</p>
                           {session.is_current && (
                             <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                              Current
+                              This device
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Active {formatRelativeTime(session.last_active_at)}
-                          {session.ip_address && ` • ${session.ip_address}`}
+                        <p className="text-xs text-muted-foreground truncate">
+                          {formatRelativeTime(session.last_active_at)}
+                          {session.ip_address && ` · ${session.ip_address}`}
                         </p>
                       </div>
                     </div>
@@ -317,8 +389,8 @@ export default function SecuritySettingsPage() {
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            size="icon"
+                            className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             disabled={isRevokingSession === session.id}
                           >
                             {isRevokingSession === session.id ? (
@@ -332,7 +404,7 @@ export default function SecuritySettingsPage() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Revoke Session?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will immediately sign out this device. The user will need to sign in again to access their account.
+                              This will immediately sign out this device. You will need to sign in again to access your account from that device.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -350,84 +422,52 @@ export default function SecuritySettingsPage() {
                   </div>
                 )
               })}
-
-              {/* Revoke Other Sessions Button */}
-              {sessions.filter(s => !s.is_current).length > 0 && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-2"
-                      disabled={isRevokingOthers}
-                    >
-                      {isRevokingOthers ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <LogOut className="mr-2 h-4 w-4" />
-                      )}
-                      Sign Out Other Devices
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Sign Out Other Devices?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will sign out all other devices except your current session.
-                        {sessions.filter(s => !s.is_current).length} session(s) will be revoked.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleRevokeOtherSessions}>
-                        Sign Out Other Devices
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
             </div>
           )}
-        </SettingSection>
+        </div>
+      </div>
 
-        {/* Sign Out Card - full width */}
-        <SettingSection
-          title="Sign Out"
-          description="End your session"
-          className="lg:col-span-3 xl:col-span-4"
-        >
-          {message && (
-            <div
-              className={`mb-4 rounded-lg p-3 text-sm ${
-                message.type === 'success'
-                  ? 'bg-green-500/10 text-green-600'
-                  : 'bg-destructive/10 text-destructive'
-              }`}
-            >
-              {message.text}
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-4">
-            <Button variant="outline" onClick={handleSignOut} size="lg">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleSignOutAll}
-              disabled={isSigningOut}
-              size="lg"
-            >
-              {isSigningOut ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <LogOut className="mr-2 h-4 w-4" />
-              )}
-              Sign Out All Devices
-            </Button>
-          </div>
-        </SettingSection>
+      {/* Sign Out Section */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Sign Out</h2>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                disabled={isSigningOut}
+              >
+                {isSigningOut ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="mr-2 h-4 w-4" />
+                )}
+                Sign Out All Devices
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sign Out All Devices?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will sign you out from all devices, including this one. You will need to sign in again.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleSignOutAll}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Sign Out All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
       {/* MFA Dialogs */}
