@@ -28,6 +28,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import type { WidgetWithWorkspace } from '@/lib/types/database'
 
 interface PageProps {
@@ -218,6 +224,38 @@ export default function WidgetConfigPage({ params }: PageProps) {
                 </>
               )}
             </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <AlertDialog>
+                  <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" disabled={isRegenerating}>
+                        <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Regenerate Token</p>
+                  </TooltipContent>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Regenerate Embed Token?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will immediately invalidate the current embed token. Any websites using the
+                        current embed code will no longer be able to load the chat widget until they
+                        update to the new embed code.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRegenerateToken}>
+                        Regenerate Token
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
         <pre className="rounded-lg bg-muted p-4 text-sm overflow-x-auto">
@@ -362,39 +400,6 @@ export default function WidgetConfigPage({ params }: PageProps) {
             placeholder="https://example.com&#10;https://www.example.com"
             rows={3}
           />
-        </div>
-
-        <div className="flex items-center justify-between pt-4 border-t">
-          <div>
-            <Label>Regenerate Embed Token</Label>
-            <p className="text-sm text-muted-foreground">
-              Generate a new embed token. The current embed code will stop working immediately.
-            </p>
-          </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" size="sm" disabled={isRegenerating}>
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-                {isRegenerating ? 'Regenerating...' : 'Regenerate Token'}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Regenerate Embed Token?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will immediately invalidate the current embed token. Any websites using the
-                  current embed code will no longer be able to load the chat widget until they
-                  update to the new embed code.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleRegenerateToken}>
-                  Regenerate Token
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
 
