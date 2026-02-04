@@ -222,10 +222,21 @@ export async function updateProfileBio(bio: string): Promise<{ error: string | n
   return updatePreferences({ bio })
 }
 
+export interface UserSession {
+  id: string
+  session_token: string
+  user_agent: string | null
+  ip_address: string | null
+  last_active_at: string
+  created_at: string
+  expires_at: string
+  is_current: boolean
+}
+
 /**
  * Get active sessions for the user
  */
-export async function getActiveSessions() {
+export async function getActiveSessions(): Promise<{ data: UserSession[]; error: string | null }> {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -233,21 +244,126 @@ export async function getActiveSessions() {
     return { data: [], error: 'Not authenticated' }
   }
 
-  // Note: Supabase doesn't expose session management directly
-  // This would need to be implemented with custom session tracking
-  // For now, return the current session info
-  const { data: session } = await supabase.auth.getSession()
+  // Get current session token to identify which session is "current"
+  const { data: authSession } = await supabase.auth.getSession()
+  const currentToken = authSession?.session?.access_token
 
-  return {
-    data: session?.session ? [{
-      id: 'current',
-      created_at: new Date().toISOString(),
-      last_active: new Date().toISOString(),
-      user_agent: 'Current browser',
-      is_current: true,
-    }] : [],
-    error: null
+  // Fetch all sessions from the database
+  const { data: sessions, error } = await supabase
+    .from('user_sessions')
+    .select('*')
+    .eq('user_id', user.id)
+    .gt('expires_at', new Date().toISOString())
+    .order('last_active_at', { ascending: false })
+
+  if (error) {
+    return { data: [], error: error.message }
   }
+
+  // Mark the current session
+  const sessionsWithCurrent = (sessions || []).map(session => ({
+    ...session,
+    is_current: session.session_token === currentToken
+  }))
+
+  return { data: sessionsWithCurrent as UserSession[], error: null }
+}
+
+/**
+ * Track/update the current session
+ */
+export async function trackSession(userAgent?: string, ipAddress?: string): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  const { data: authSession } = await supabase.auth.getSession()
+  if (!authSession?.session?.access_token) {
+    return { error: 'No active session' }
+  }
+
+  const { error } = await supabase.rpc('upsert_user_session', {
+    p_user_id: user.id,
+    p_session_token: authSession.session.access_token,
+    p_user_agent: userAgent || null,
+    p_ip_address: ipAddress || null
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { error: null }
+}
+
+/**
+ * Revoke a specific session
+ */
+export async function revokeSession(sessionId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify MFA status
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
+  const { data, error } = await supabase.rpc('revoke_user_session', {
+    p_session_id: sessionId
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  if (!data) {
+    return { error: 'Session not found or already revoked' }
+  }
+
+  revalidatePath('/chat/settings/security')
+  return { error: null }
+}
+
+/**
+ * Revoke all sessions except the current one
+ */
+export async function revokeOtherSessions(): Promise<{ count: number; error: string | null }> {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { count: 0, error: 'Not authenticated' }
+  }
+
+  // Verify MFA status
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { count: 0, error: 'MFA verification required' }
+  }
+
+  const { data: authSession } = await supabase.auth.getSession()
+  if (!authSession?.session?.access_token) {
+    return { count: 0, error: 'No active session' }
+  }
+
+  const { data, error } = await supabase.rpc('revoke_other_sessions', {
+    p_current_session_token: authSession.session.access_token
+  })
+
+  if (error) {
+    return { count: 0, error: error.message }
+  }
+
+  revalidatePath('/chat/settings/security')
+  return { count: data || 0, error: null }
 }
 
 /**

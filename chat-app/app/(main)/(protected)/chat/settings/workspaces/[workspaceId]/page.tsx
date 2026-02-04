@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getWorkspace, updateWorkspace, addWorkspaceMember, removeWorkspaceMember } from '@/lib/actions/workspaces'
+import { getWorkspace, updateWorkspace, addWorkspaceMember, removeWorkspaceMember, updateMemberRole } from '@/lib/actions/workspaces'
 import { searchProfiles } from '@/lib/actions/profiles'
 import type { WorkspaceWithMembers, Profile } from '@/lib/types/database'
 
@@ -58,23 +58,24 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>('')
   const [selectedRole, setSelectedRole] = useState<'admin' | 'agent'>('agent')
   const [isAddingMember, setIsAddingMember] = useState(false)
+  const [changingRoleFor, setChangingRoleFor] = useState<string | null>(null)
 
   // Load all available profiles when dialog opens
   const loadProfiles = useCallback(async () => {
     if (!workspace) return
 
     setIsSearching(true)
-    const { data } = await searchProfiles()
 
-    // Filter out users who are already members or the owner
-    const existingMemberIds = new Set([
+    // Get existing member IDs to exclude
+    const existingMemberIds = [
       workspace.owner_id,
       ...(workspace.members?.map(m => m.user_id) || [])
-    ])
+    ]
 
-    const available = (data || []).filter(p => !existingMemberIds.has(p.id))
-    setAllProfiles(available)
-    setFilteredProfiles(available)
+    const { data } = await searchProfiles({ excludeUserIds: existingMemberIds })
+
+    setAllProfiles(data || [])
+    setFilteredProfiles(data || [])
     setIsSearching(false)
   }, [workspace])
 
@@ -196,6 +197,23 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
       const { data } = await getWorkspace(resolvedParams.workspaceId)
       if (data) setWorkspace(data)
     }
+  }
+
+  const handleRoleChange = async (memberId: string, newRole: 'admin' | 'agent') => {
+    setChangingRoleFor(memberId)
+    setError(null)
+
+    const { error } = await updateMemberRole(resolvedParams.workspaceId, memberId, newRole)
+
+    if (error) {
+      setError(error)
+    } else {
+      // Refresh workspace data
+      const { data } = await getWorkspace(resolvedParams.workspaceId)
+      if (data) setWorkspace(data)
+    }
+
+    setChangingRoleFor(null)
   }
 
   const getRoleIcon = (role: string) => {
@@ -445,10 +463,29 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-sm text-blue-600">
-                      <Shield className="h-4 w-4" />
-                      Admin
-                    </div>
+                    <Select
+                      value={member.role}
+                      onValueChange={(value) => handleRoleChange(member.id, value as 'admin' | 'agent')}
+                      disabled={changingRoleFor === member.id}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-blue-500" />
+                            Admin
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="agent">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            Agent
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -489,10 +526,29 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      Agent
-                    </div>
+                    <Select
+                      value={member.role}
+                      onValueChange={(value) => handleRoleChange(member.id, value as 'admin' | 'agent')}
+                      disabled={changingRoleFor === member.id}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">
+                          <div className="flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-blue-500" />
+                            Admin
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="agent">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            Agent
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       variant="ghost"
                       size="icon"

@@ -16,7 +16,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getWidget, updateWidget } from '@/lib/actions/widgets'
+import { getWidget, updateWidget, regenerateEmbedToken } from '@/lib/actions/widgets'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import type { WidgetWithWorkspace } from '@/lib/types/database'
 
 interface PageProps {
@@ -31,6 +42,7 @@ export default function WidgetConfigPage({ params }: PageProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
 
   // Form state
   const [name, setName] = useState('')
@@ -115,6 +127,25 @@ export default function WidgetConfigPage({ params }: PageProps) {
     navigator.clipboard.writeText(embedCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleRegenerateToken = async () => {
+    setIsRegenerating(true)
+    setError(null)
+
+    const { data, error } = await regenerateEmbedToken(resolvedParams.widgetId)
+
+    if (error) {
+      setError(error)
+    } else if (data) {
+      // Refresh widget data to get the new token
+      const { data: refreshedWidget } = await getWidget(resolvedParams.widgetId)
+      if (refreshedWidget) {
+        setWidget(refreshedWidget)
+      }
+    }
+
+    setIsRegenerating(false)
   }
 
   if (isLoading) {
@@ -331,6 +362,39 @@ export default function WidgetConfigPage({ params }: PageProps) {
             placeholder="https://example.com&#10;https://www.example.com"
             rows={3}
           />
+        </div>
+
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div>
+            <Label>Regenerate Embed Token</Label>
+            <p className="text-sm text-muted-foreground">
+              Generate a new embed token. The current embed code will stop working immediately.
+            </p>
+          </div>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm" disabled={isRegenerating}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                {isRegenerating ? 'Regenerating...' : 'Regenerate Token'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Regenerate Embed Token?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will immediately invalidate the current embed token. Any websites using the
+                  current embed code will no longer be able to load the chat widget until they
+                  update to the new embed code.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleRegenerateToken}>
+                  Regenerate Token
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 

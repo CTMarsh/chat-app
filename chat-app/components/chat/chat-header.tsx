@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { MoreVertical, Phone, Video, Info, Search, XCircle, Headphones, Building2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { MoreVertical, Phone, Video, Info, Search, XCircle, Headphones, Building2, Ban, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -25,21 +25,41 @@ import { useChat } from '@/components/providers/chat-provider'
 import { SearchDialog } from './search-dialog'
 import { ProfilePopover } from './profile-popover'
 import { cn } from '@/lib/utils'
+import { blockUser, isUserBlocked, unblockUser } from '@/lib/actions/settings'
+import { useRouter } from 'next/navigation'
 
 export function ChatHeader() {
   const { activeConversation, currentUser, endConversation } = useChat()
+  const router = useRouter()
   const [showEndDialog, setShowEndDialog] = useState(false)
+  const [showBlockDialog, setShowBlockDialog] = useState(false)
   const [isEnding, setIsEnding] = useState(false)
+  const [isBlocking, setIsBlocking] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [checkingBlocked, setCheckingBlocked] = useState(false)
+
+  // Get the other participant for direct chats (needs to be before early returns for hooks)
+  const otherParticipant = activeConversation?.participants?.find(
+    p => p.user_id !== currentUser?.id
+  )
+
+  // Check if user is blocked when conversation changes
+  useEffect(() => {
+    const checkBlockStatus = async () => {
+      if (activeConversation?.type === 'direct' && otherParticipant?.user_id) {
+        setCheckingBlocked(true)
+        const blocked = await isUserBlocked(otherParticipant.user_id)
+        setIsBlocked(blocked)
+        setCheckingBlocked(false)
+      }
+    }
+    checkBlockStatus()
+  }, [activeConversation?.id, otherParticipant?.user_id])
 
   if (!activeConversation) return null
 
   const isWidget = activeConversation.type === 'widget'
   const isEnded = !!activeConversation.ended_at
-
-  // Get the other participant for direct chats
-  const otherParticipant = activeConversation.participants.find(
-    p => p.user_id !== currentUser?.id
-  )
 
   // Determine display name and avatar
   const displayName = isWidget
@@ -65,6 +85,37 @@ export function ChatHeader() {
 
     if (result.error) {
       console.error('Failed to end conversation:', result.error)
+    }
+  }
+
+  const handleBlockUser = async () => {
+    if (!otherParticipant?.user_id) return
+
+    setIsBlocking(true)
+    const { error } = await blockUser(otherParticipant.user_id)
+    setIsBlocking(false)
+    setShowBlockDialog(false)
+
+    if (error) {
+      console.error('Failed to block user:', error)
+    } else {
+      setIsBlocked(true)
+      // Redirect to conversation list
+      router.push('/chat')
+    }
+  }
+
+  const handleUnblockUser = async () => {
+    if (!otherParticipant?.user_id) return
+
+    setIsBlocking(true)
+    const { error } = await unblockUser(otherParticipant.user_id)
+    setIsBlocking(false)
+
+    if (error) {
+      console.error('Failed to unblock user:', error)
+    } else {
+      setIsBlocked(false)
     }
   }
 
@@ -187,6 +238,36 @@ export function ChatHeader() {
                 <Info className="mr-2 h-4 w-4" />
                 View Info
               </DropdownMenuItem>
+
+              {/* Block/Unblock for direct conversations */}
+              {activeConversation.type === 'direct' && otherParticipant && (
+                <>
+                  <DropdownMenuSeparator />
+                  {isBlocked ? (
+                    <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={handleUnblockUser}
+                      disabled={isBlocking}
+                    >
+                      {isBlocking ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Ban className="mr-2 h-4 w-4" />
+                      )}
+                      Unblock User
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={() => setShowBlockDialog(true)}
+                    >
+                      <Ban className="mr-2 h-4 w-4" />
+                      Block User
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
+
               {isWidget && !isEnded && (
                 <>
                   <DropdownMenuSeparator />
@@ -220,6 +301,29 @@ export function ChatHeader() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isEnding ? 'Ending...' : 'End Conversation'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Block User Dialog */}
+      <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Block {displayName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Blocking this user will hide their messages and prevent them from contacting you.
+              You can unblock them later from your privacy settings or from this conversation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBlocking}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockUser}
+              disabled={isBlocking}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isBlocking ? 'Blocking...' : 'Block User'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

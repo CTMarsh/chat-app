@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Loader2 } from 'lucide-react'
 import {
@@ -10,10 +10,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { createClient } from '@/lib/supabase/client'
 import { useChat } from '@/components/providers/chat-provider'
 import { createDirectConversation } from '@/lib/actions/conversations'
+import { searchProfiles } from '@/lib/actions/profiles'
 import type { Profile } from '@/lib/types/database'
 
 interface UserSearchDialogProps {
@@ -21,75 +22,85 @@ interface UserSearchDialogProps {
   onOpenChange: (open: boolean) => void
 }
 
+const USERS_PER_PAGE = 20
+
 export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) {
   const router = useRouter()
-  const { currentUser, conversations, refreshConversations } = useChat()
+  const { conversations, refreshConversations } = useChat()
   const [searchQuery, setSearchQuery] = useState('')
   const [users, setUsers] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [offset, setOffset] = useState(0)
 
-  // Create a stable Supabase client instance
-  const supabase = useMemo(() => createClient(), [])
+  // Fetch users with pagination support
+  const fetchUsers = useCallback(async (query: string, resetOffset = true) => {
+    const currentOffset = resetOffset ? 0 : offset
 
-  // Fetch users when dialog opens or search query changes
+    if (resetOffset) {
+      setIsLoading(true)
+      setOffset(0)
+    } else {
+      setIsLoadingMore(true)
+    }
+
+    try {
+      const result = await searchProfiles({
+        query: query.trim() || undefined,
+        limit: USERS_PER_PAGE,
+        offset: currentOffset
+      })
+
+      if (result.error) {
+        console.error('Error fetching users:', result.error)
+        return
+      }
+
+      if (result.data) {
+        if (resetOffset) {
+          setUsers(result.data)
+        } else {
+          setUsers(prev => [...prev, ...result.data!])
+        }
+        setHasMore(result.hasMore)
+        if (!resetOffset) {
+          setOffset(currentOffset + result.data.length)
+        } else {
+          setOffset(result.data.length)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setIsLoading(false)
+      setIsLoadingMore(false)
+    }
+  }, [offset])
+
+  // Initial fetch and search debounce
   useEffect(() => {
     if (!open) {
       setSearchQuery('')
       setUsers([])
+      setHasMore(false)
+      setOffset(0)
       return
     }
 
-    const fetchUsers = async () => {
-      // Get current user ID from context or session
-      let currentUserId = currentUser?.id
-      if (!currentUserId) {
-        const { data: { user } } = await supabase.auth.getUser()
-        currentUserId = user?.id
-      }
-
-      if (!currentUserId) {
-        console.error('No user ID available')
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        let query = supabase
-          .from('profiles')
-          .select('*')
-          .neq('id', currentUserId)
-          .order('display_name', { ascending: true })
-          .limit(20)
-
-        if (searchQuery.trim()) {
-          // Search by username, display_name, or email
-          query = query.or(
-            `username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`
-          )
-        }
-
-        const { data, error } = await query
-
-        if (error) {
-          console.error('Error fetching users:', error)
-          return
-        }
-
-        if (data) {
-          setUsers(data)
-        }
-      } catch (error) {
-        console.error('Error fetching users:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     // Debounce search
-    const debounce = setTimeout(fetchUsers, searchQuery ? 300 : 0)
+    const debounce = setTimeout(() => {
+      fetchUsers(searchQuery, true)
+    }, searchQuery ? 300 : 0)
     return () => clearTimeout(debounce)
-  }, [open, searchQuery, currentUser?.id, supabase])
+  }, [open, searchQuery])
+
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      fetchUsers(searchQuery, false)
+    }
+  }
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?'
@@ -199,6 +210,28 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                     )}
                   </button>
                 ))}
+
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full"
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        'Load More'
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

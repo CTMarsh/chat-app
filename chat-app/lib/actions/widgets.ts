@@ -184,25 +184,20 @@ export async function regenerateEmbedToken(widgetId: string): Promise<{ data: { 
     return { data: null, error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { data: null, error: 'MFA verification required' }
+  }
+
   // Generate new token using SQL function
-  const { data, error } = await supabase.rpc('regenerate_widget_token', { widget_id: widgetId })
+  const { data, error } = await supabase.rpc('regenerate_widget_token', { p_widget_id: widgetId })
 
   if (error) {
-    // Fallback: update directly if RPC doesn't exist
-    const { data: widget, error: updateError } = await supabase
-      .from('widgets')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', widgetId)
-      .select('embed_token')
-      .single()
-
-    if (updateError) {
-      return { data: null, error: updateError.message }
-    }
-
-    return { data: { embedToken: widget.embed_token }, error: null }
+    return { data: null, error: error.message }
   }
 
   revalidatePath(`/chat/settings/widgets/${widgetId}`)
+  revalidatePath('/chat/settings/widgets')
   return { data: { embedToken: data }, error: null }
 }

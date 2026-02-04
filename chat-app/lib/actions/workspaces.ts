@@ -225,3 +225,80 @@ export async function removeWorkspaceMember(
   revalidatePath('/chat/settings/workspaces')
   return { error: null }
 }
+
+export async function updateMemberRole(
+  workspaceId: string,
+  memberId: string,
+  newRole: 'admin' | 'agent'
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return { error: 'Not authenticated' }
+  }
+
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
+  // Check that the current user is the workspace owner or an admin
+  const { data: workspace, error: wsError } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (wsError || !workspace) {
+    return { error: 'Workspace not found' }
+  }
+
+  const isOwner = workspace.owner_id === user.id
+
+  if (!isOwner) {
+    // Check if current user is an admin
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership || membership.role !== 'admin') {
+      return { error: 'Only workspace owners and admins can change member roles' }
+    }
+  }
+
+  // Cannot change role of the workspace owner (they don't have a member entry with role)
+  const { data: targetMember } = await supabase
+    .from('workspace_members')
+    .select('user_id')
+    .eq('id', memberId)
+    .eq('workspace_id', workspaceId)
+    .single()
+
+  if (!targetMember) {
+    return { error: 'Member not found' }
+  }
+
+  if (targetMember.user_id === workspace.owner_id) {
+    return { error: 'Cannot change role of workspace owner' }
+  }
+
+  // Update the member's role
+  const { error } = await supabase
+    .from('workspace_members')
+    .update({ role: newRole })
+    .eq('id', memberId)
+    .eq('workspace_id', workspaceId)
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/chat/settings/workspaces')
+  revalidatePath(`/chat/settings/workspaces/${workspaceId}`)
+  return { error: null }
+}
