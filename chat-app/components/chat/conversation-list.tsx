@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Moon, Sun, Monitor, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare } from 'lucide-react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,6 @@ import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
 import { usePreferences } from '@/components/providers/preferences-provider'
 import { createClient } from '@/lib/supabase/client'
-import { useTheme } from 'next-themes'
 
 interface ConversationListProps {
   onSelect?: () => void
@@ -37,7 +36,6 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const [userSearchOpen, setUserSearchOpen] = useState(false)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const supabase = createClient()
-  const { theme, setTheme } = useTheme()
   const { preferences } = usePreferences()
 
   // Count widget conversations for the inbox badge
@@ -156,22 +154,6 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                 <DropdownMenuItem onClick={() => router.push('/chat/settings')} className="cursor-pointer">
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer">
-                  <Sun className="mr-2 h-4 w-4" />
-                  Light Mode
-                  {theme === 'light' && <span className="ml-auto text-xs text-primary">Active</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer">
-                  <Moon className="mr-2 h-4 w-4" />
-                  Dark Mode
-                  {theme === 'dark' && <span className="ml-auto text-xs text-primary">Active</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer">
-                  <Monitor className="mr-2 h-4 w-4" />
-                  System
-                  {theme === 'system' && <span className="ml-auto text-xs text-primary">Active</span>}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
