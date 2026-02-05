@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare } from 'lucide-react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare, Keyboard, Link } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ConversationItem } from './conversation-item'
 import { UserSearchDialog } from './user-search-dialog'
 import { CreateGroupDialog } from './create-group-dialog'
+import { KeyboardShortcutsDialog } from './keyboard-shortcuts-dialog'
+import { InviteDialog } from './invite-dialog'
 import { NotificationBadge } from './notification-badge'
 import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
@@ -35,6 +37,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const [filter, setFilter] = useState<ConversationFilter>('all')
   const [userSearchOpen, setUserSearchOpen] = useState(false)
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
   const supabase = createClient()
   const { preferences } = usePreferences()
 
@@ -155,6 +159,15 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShortcutsOpen(true)} className="cursor-pointer">
+                  <Keyboard className="mr-2 h-4 w-4" />
+                  Keyboard Shortcuts
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setInviteOpen(true)} className="cursor-pointer">
+                  <Link className="mr-2 h-4 w-4" />
+                  Invite to Chat
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -268,6 +281,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       {/* Dialogs */}
       <UserSearchDialog open={userSearchOpen} onOpenChange={setUserSearchOpen} />
       <CreateGroupDialog open={createGroupOpen} onOpenChange={setCreateGroupOpen} />
+      <KeyboardShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </div>
   )
 }
