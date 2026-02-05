@@ -21,7 +21,7 @@ import { ReadReceiptIndicator } from './read-receipt-indicator'
 import { LinkPreview, extractUrls } from './link-preview'
 import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
-import { useMessagePreferences } from '@/components/providers/preferences-provider'
+import { useMessagePreferences, usePrivacyPreferences } from '@/components/providers/preferences-provider'
 
 // Check if a string contains only emoji characters (up to 5 emojis)
 function isEmojiOnly(text: string): boolean {
@@ -41,6 +41,7 @@ interface MessageItemProps {
 export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
   const { currentUser, toggleReaction, deleteMessage, pinMessage, unpinMessage } = useChat()
   const { linkPreviewsEnabled } = useMessagePreferences()
+  const { showReadReceipts } = usePrivacyPreferences()
   const isDeleted = !!message.deleted_at
 
   const getInitials = (name: string | null | undefined) => {
@@ -305,7 +306,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
           {message.is_edited && (
             <span className="text-xs text-muted-foreground">(edited)</span>
           )}
-          {isOwn && (
+          {isOwn && showReadReceipts && (
             <ReadReceiptIndicator
               isRead={(message.read_receipts?.length || 0) > 0}
               readBy={message.read_receipts?.map(r => r.user_id) || []}

@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { useChat } from '@/components/providers/chat-provider'
+import { usePrivacyPreferences } from '@/components/providers/preferences-provider'
 import { MessageItem } from './message-item'
 import { TypingIndicator } from './typing-indicator'
 import { PinnedMessagesBar } from './pinned-messages-bar'
 
 export function MessageList() {
   const { messages, activeConversation, currentUser, typingUsers, pinnedMessages, unpinMessage } = useChat()
+  const { showTypingIndicator } = usePrivacyPreferences()
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -87,7 +89,7 @@ export function MessageList() {
           </div>
         )}
 
-        {typingUserNames.length > 0 && (
+        {showTypingIndicator && typingUserNames.length > 0 && (
           <TypingIndicator userNames={typingUserNames} />
         )}
 
