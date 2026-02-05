@@ -120,7 +120,7 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
     <div className="flex items-center gap-4">
       <div className="relative">
         <Avatar className="h-20 w-20">
-          <AvatarImage src={currentUrl || undefined} />
+          <AvatarImage src={currentUrl || undefined} alt="Your avatar" />
           <AvatarFallback className="text-xl">{fallback}</AvatarFallback>
         </Avatar>
         {isUploading && (
@@ -138,8 +138,9 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
             size="sm"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
+            aria-label={currentUrl ? 'Change avatar' : 'Upload avatar'}
           >
-            <Camera className="mr-2 h-4 w-4" />
+            <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
             {currentUrl ? 'Change' : 'Upload'}
           </Button>
           {currentUrl && (
@@ -149,8 +150,9 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
               size="sm"
               onClick={handleRemove}
               disabled={isUploading}
+              aria-label="Remove avatar"
             >
-              <X className="mr-2 h-4 w-4" />
+              <X className="mr-2 h-4 w-4" aria-hidden="true" />
               Remove
             </Button>
           )}
@@ -169,6 +171,7 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
         accept="image/jpeg,image/png,image/gif,image/webp"
         onChange={handleUpload}
         className="hidden"
+        aria-label="Select avatar image file"
       />
     </div>
   )

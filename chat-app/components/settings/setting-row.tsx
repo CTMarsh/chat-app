@@ -1,3 +1,6 @@
+'use client'
+
+import { useId } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SettingRowProps {
@@ -5,6 +8,8 @@ interface SettingRowProps {
   description?: string
   children: React.ReactNode
   className?: string
+  /** Optional ID to associate with the control - if not provided, one will be generated */
+  htmlFor?: string
 }
 
 export function SettingRow({
@@ -12,7 +17,12 @@ export function SettingRow({
   description,
   children,
   className,
+  htmlFor,
 }: SettingRowProps) {
+  const generatedId = useId()
+  const labelId = `${generatedId}-label`
+  const descriptionId = description ? `${generatedId}-description` : undefined
+
   return (
     <div
       className={cn(
@@ -21,12 +31,26 @@ export function SettingRow({
       )}
     >
       <div className="flex-1 space-y-1">
-        <div className="text-sm font-medium">{label}</div>
+        <label
+          id={labelId}
+          htmlFor={htmlFor}
+          className="text-sm font-medium cursor-pointer"
+        >
+          {label}
+        </label>
         {description && (
-          <div className="text-sm text-muted-foreground">{description}</div>
+          <p id={descriptionId} className="text-sm text-muted-foreground">
+            {description}
+          </p>
         )}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div
+        className="shrink-0"
+        aria-labelledby={labelId}
+        aria-describedby={descriptionId}
+      >
+        {children}
+      </div>
     </div>
   )
 }

@@ -193,7 +193,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                     className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 hover:bg-primary/5 hover:shadow-md disabled:opacity-50"
                   >
                     <Avatar className="ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all group-hover:ring-primary/20">
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarImage src={user.avatar_url || undefined} alt={`${user.display_name || user.username}'s avatar`} />
                       <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(user.display_name)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 overflow-hidden">
@@ -206,7 +206,11 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                       </p>
                     </div>
                     {user.status === 'online' && (
-                      <span className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50" />
+                      <span
+                        className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50"
+                        aria-label="Online"
+                        title="Online"
+                      />
                     )}
                   </button>
                 ))}

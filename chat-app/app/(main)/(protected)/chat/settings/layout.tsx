@@ -59,7 +59,7 @@ export default function SettingsLayout({
 
         {/* Horizontal Navigation Tabs */}
         <div className="overflow-x-auto">
-          <nav className="flex gap-1 px-4 pb-3">
+          <nav className="flex gap-1 px-4 pb-3" aria-label="Settings navigation">
             {settingsNavItems.map((item) => {
               const isActive = pathname === item.href
               const Icon = item.icon

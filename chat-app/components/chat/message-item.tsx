@@ -125,13 +125,16 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
       >
         {showAvatar ? (
           <Avatar className="h-8 w-8 flex-shrink-0 opacity-50">
-            <AvatarImage src={message.sender.avatar_url || undefined} />
+            <AvatarImage
+              src={message.sender.avatar_url || undefined}
+              alt={`${message.sender.display_name || message.sender.username}'s avatar`}
+            />
             <AvatarFallback className="text-xs">
               {getInitials(message.sender.display_name)}
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="w-8 flex-shrink-0" />
+          <div className="w-8 flex-shrink-0" aria-hidden="true" />
         )}
 
         <div
@@ -173,9 +176,12 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
           side={isOwn ? 'left' : 'right'}
           align="start"
         >
-          <button className="cursor-pointer">
+          <button className="cursor-pointer" aria-label={`View ${message.sender.display_name || message.sender.username}'s profile`}>
             <Avatar className="h-8 w-8 flex-shrink-0 ring-2 ring-primary/10 ring-offset-1 ring-offset-background transition-all duration-200 hover:ring-primary/30">
-              <AvatarImage src={message.sender.avatar_url || undefined} />
+              <AvatarImage
+                src={message.sender.avatar_url || undefined}
+                alt={`${message.sender.display_name || message.sender.username}'s avatar`}
+              />
               <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
                 {getInitials(message.sender.display_name)}
               </AvatarFallback>
@@ -183,7 +189,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
           </button>
         </ProfilePopover>
       ) : (
-        <div className="w-8 flex-shrink-0" />
+        <div className="w-8 flex-shrink-0" aria-hidden="true" />
       )}
 
       <div
@@ -260,9 +266,10 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+                  className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                  aria-label="Message actions"
                 >
-                  <MoreVertical className="h-4 w-4" />
+                  <MoreVertical className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isOwn ? 'end' : 'start'}>

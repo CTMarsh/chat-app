@@ -183,9 +183,9 @@ export function ChatHeader() {
               side="bottom"
               align="start"
             >
-              <button className="relative cursor-pointer">
+              <button className="relative cursor-pointer" aria-label={`View ${displayName}'s profile`}>
                 <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
-                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarImage src={avatarUrl || undefined} alt={`${displayName}'s avatar`} />
                   <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
                 <span className={cn(
@@ -200,7 +200,7 @@ export function ChatHeader() {
           ) : (
             <div className="relative">
               <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
-                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarImage src={avatarUrl || undefined} alt={`${displayName}'s avatar`} />
                 <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(displayName)}</AvatarFallback>
               </Avatar>
             </div>
@@ -222,15 +222,15 @@ export function ChatHeader() {
         <div className="flex items-center gap-1">
           <SearchDialog
             trigger={
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
-                <Search className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors" aria-label="Search messages">
+                <Search className="h-5 w-5" aria-hidden="true" />
               </Button>
             }
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors">
-                <MoreVertical className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-colors" aria-label="More options">
+                <MoreVertical className="h-5 w-5" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="shadow-lg shadow-primary/5">

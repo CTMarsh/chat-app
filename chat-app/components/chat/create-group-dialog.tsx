@@ -156,18 +156,20 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
           <div className="space-y-4">
             {/* Selected users */}
             {selectedUsers.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="list" aria-label="Selected members">
                 {selectedUsers.map(user => (
                   <div
                     key={user.id}
+                    role="listitem"
                     className="flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-sm shadow-sm transition-all hover:shadow-md"
                   >
                     <span className="font-medium">{user.display_name || user.username}</span>
                     <button
                       onClick={() => toggleUser(user)}
                       className="rounded-full p-0.5 transition-colors hover:bg-primary/20"
+                      aria-label={`Remove ${user.display_name || user.username} from selection`}
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -207,7 +209,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                         className="flex w-full items-center gap-3 rounded-xl p-3 text-left transition-all duration-200 hover:bg-primary/5 hover:shadow-md"
                       >
                         <Avatar className="ring-2 ring-primary/10 ring-offset-1 ring-offset-background">
-                          <AvatarImage src={user.avatar_url || undefined} />
+                          <AvatarImage src={user.avatar_url || undefined} alt={`${user.display_name || user.username}'s avatar`} />
                           <AvatarFallback className="bg-primary/10 font-medium text-primary">{getInitials(user.display_name)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 overflow-hidden">
@@ -254,7 +256,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                     className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm"
                   >
                     <Avatar className="h-5 w-5">
-                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarImage src={user.avatar_url || undefined} alt={`${user.display_name || user.username}'s avatar`} />
                       <AvatarFallback className="text-xs">
                         {getInitials(user.display_name)}
                       </AvatarFallback>

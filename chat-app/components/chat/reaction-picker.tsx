@@ -49,13 +49,14 @@ export function ReactionPicker({ onReact, existingReactions = [] }: ReactionPick
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+          className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          aria-label="Add reaction"
         >
-          <SmilePlus className="h-4 w-4" />
+          <SmilePlus className="h-4 w-4" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" side="top" align="start">
-        <div className="flex gap-1">
+        <div className="flex gap-1" role="group" aria-label="Quick reactions">
           {quickReactions.map((emoji) => (
             <button
               key={emoji}
@@ -63,6 +64,8 @@ export function ReactionPicker({ onReact, existingReactions = [] }: ReactionPick
               className={`rounded p-1.5 text-lg transition-colors hover:bg-muted ${
                 existingReactions.includes(emoji) ? 'bg-primary/20' : ''
               }`}
+              aria-label={`React with ${emoji}`}
+              aria-pressed={existingReactions.includes(emoji)}
             >
               {emoji}
             </button>

@@ -55,15 +55,15 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
           <span className="text-muted-foreground">{currentMessage.content}</span>
         </button>
         {messages.length > 1 && (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={navigatePrev}>
-              <ChevronUp className="h-4 w-4" />
+          <div className="flex items-center gap-1" role="group" aria-label="Navigate pinned messages">
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={navigatePrev} aria-label="Previous pinned message">
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground" aria-live="polite">
               {currentIndex + 1}/{messages.length}
             </span>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={navigateNext}>
-              <ChevronDown className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={navigateNext} aria-label="Next pinned message">
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         )}
@@ -93,8 +93,9 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
           size="icon"
           className="h-6 w-6"
           onClick={() => setExpanded(false)}
+          aria-label="Collapse pinned messages"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
       <div className="max-h-48 overflow-auto px-4 pb-2">
@@ -104,7 +105,10 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
             className="mb-2 flex items-start gap-2 rounded-lg bg-background/80 p-2 shadow-sm transition-all duration-200 hover:bg-background hover:shadow-md last:mb-0"
           >
             <Avatar className="h-6 w-6 ring-1 ring-primary/10">
-              <AvatarImage src={message.sender.avatar_url || undefined} />
+              <AvatarImage
+                src={message.sender.avatar_url || undefined}
+                alt={`${message.sender.display_name || message.sender.username}'s avatar`}
+              />
               <AvatarFallback className="bg-primary/10 text-xs text-primary">
                 {getInitials(message.sender.display_name)}
               </AvatarFallback>
@@ -127,8 +131,9 @@ export function PinnedMessagesBar({ messages, onMessageClick, onUnpin }: PinnedM
               size="icon"
               className="h-6 w-6 shrink-0"
               onClick={() => onUnpin(message.id)}
+              aria-label="Unpin this message"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3" aria-hidden="true" />
             </Button>
           </div>
         ))}

@@ -40,39 +40,48 @@ export function ImageLightbox({ src, alt, open, onClose }: ImageLightboxProps) {
   const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image preview: ${alt}`}
+    >
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/80"
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* Controls */}
-      <div className="absolute right-4 top-4 z-10 flex gap-2">
+      <div className="absolute right-4 top-4 z-10 flex gap-2" role="toolbar" aria-label="Image controls">
         <Button
           variant="secondary"
           size="icon"
           onClick={zoomOut}
           className="bg-black/50 hover:bg-black/70"
+          aria-label="Zoom out"
         >
-          <ZoomOut className="h-5 w-5 text-white" />
+          <ZoomOut className="h-5 w-5 text-white" aria-hidden="true" />
         </Button>
         <Button
           variant="secondary"
           size="icon"
           onClick={zoomIn}
           className="bg-black/50 hover:bg-black/70"
+          aria-label="Zoom in"
         >
-          <ZoomIn className="h-5 w-5 text-white" />
+          <ZoomIn className="h-5 w-5 text-white" aria-hidden="true" />
         </Button>
         <Button
           variant="secondary"
           size="icon"
           asChild
           className="bg-black/50 hover:bg-black/70"
+          aria-label={`Download ${alt}`}
         >
           <a href={src} download>
-            <Download className="h-5 w-5 text-white" />
+            <Download className="h-5 w-5 text-white" aria-hidden="true" />
           </a>
         </Button>
         <Button
@@ -80,8 +89,9 @@ export function ImageLightbox({ src, alt, open, onClose }: ImageLightboxProps) {
           size="icon"
           onClick={onClose}
           className="bg-black/50 hover:bg-black/70"
+          aria-label="Close image preview"
         >
-          <X className="h-5 w-5 text-white" />
+          <X className="h-5 w-5 text-white" aria-hidden="true" />
         </Button>
       </div>
 

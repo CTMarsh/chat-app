@@ -61,8 +61,11 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
         style={{ width: '48px', height: '48px' }}
+        aria-label="Open emoji picker"
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
-        <Smile className="h-6 w-6 text-muted-foreground" />
+        <Smile className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
       </Button>
 
       {isOpen && (

@@ -24,10 +24,18 @@ export function MentionList({ users, selectedIndex, onSelect }: MentionListProps
   if (users.length === 0) return null
 
   return (
-    <div className="absolute bottom-full left-0 z-50 mb-2 max-h-48 w-64 overflow-auto rounded-lg border bg-popover shadow-lg">
+    <div
+      id="mention-listbox"
+      role="listbox"
+      aria-label="Mention suggestions"
+      className="absolute bottom-full left-0 z-50 mb-2 max-h-48 w-64 overflow-auto rounded-lg border bg-popover shadow-lg"
+    >
       {users.map((user, index) => (
         <button
           key={user.id}
+          id={`mention-option-${user.id}`}
+          role="option"
+          aria-selected={index === selectedIndex}
           onClick={() => onSelect(user)}
           className={cn(
             'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-accent',
@@ -35,7 +43,10 @@ export function MentionList({ users, selectedIndex, onSelect }: MentionListProps
           )}
         >
           <Avatar className="h-6 w-6">
-            <AvatarImage src={user.avatar_url || undefined} />
+            <AvatarImage
+              src={user.avatar_url || undefined}
+              alt={`${user.display_name || user.username}'s avatar`}
+            />
             <AvatarFallback className="text-xs">
               {getInitials(user.display_name || user.username)}
             </AvatarFallback>

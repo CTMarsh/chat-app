@@ -87,10 +87,26 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
       .slice(0, 2)
   }
 
-  const highlightMatch = (text: string, query: string) => {
-    if (!query.trim()) return text
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-    return text.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800">$1</mark>')
+  // Safe highlight component that doesn't use dangerouslySetInnerHTML
+  const HighlightedText = ({ text, query }: { text: string; query: string }) => {
+    if (!query.trim()) return <p className="line-clamp-2 text-sm text-muted-foreground">{text}</p>
+
+    const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const parts = text.split(new RegExp(`(${escapedQuery})`, 'gi'))
+
+    return (
+      <p className="line-clamp-2 text-sm text-muted-foreground">
+        {parts.map((part, i) =>
+          part.toLowerCase() === query.toLowerCase() ? (
+            <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </p>
+    )
   }
 
   return (
@@ -127,8 +143,9 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
               <button
                 onClick={() => setQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -147,16 +164,18 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
             )}
 
             {!isLoading && results.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2" role="listbox" aria-label="Search results">
                 {results.map((message) => (
                   <button
                     key={message.id}
+                    role="option"
+                    aria-selected={false}
                     onClick={() => handleResultClick(message.id)}
                     className="w-full rounded-xl border border-border/50 bg-background/50 p-3 text-left transition-all duration-200 hover:border-primary/20 hover:bg-primary/5 hover:shadow-md"
                   >
                     <div className="flex items-start gap-3">
                       <Avatar className="h-8 w-8 ring-2 ring-primary/10 ring-offset-1 ring-offset-background">
-                        <AvatarImage src={message.sender.avatar_url || undefined} />
+                        <AvatarImage src={message.sender.avatar_url || undefined} alt={`${message.sender.display_name || message.sender.username}'s avatar`} />
                         <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
                           {getInitials(message.sender.display_name)}
                         </AvatarFallback>
@@ -170,12 +189,7 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
                             {message.created_at && format(new Date(message.created_at), 'MMM d, yyyy HH:mm')}
                           </span>
                         </div>
-                        <p
-                          className="line-clamp-2 text-sm text-muted-foreground"
-                          dangerouslySetInnerHTML={{
-                            __html: highlightMatch(message.content, query),
-                          }}
-                        />
+                        <HighlightedText text={message.content} query={query} />
                       </div>
                     </div>
                   </button>

@@ -46,20 +46,25 @@ export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onCl
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading || !!selectedFile}
         style={{ width: '48px', height: '48px' }}
+        aria-label={isUploading ? 'Uploading file...' : 'Attach a file'}
       >
         {isUploading ? (
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
         ) : (
-          <Paperclip className="h-6 w-6 text-muted-foreground" />
+          <Paperclip className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
         )}
       </Button>
 
       {selectedFile && (
-        <div className="absolute bottom-12 left-0 z-50 flex items-center gap-2 rounded-lg border bg-background p-2 shadow-lg">
+        <div
+          className="absolute bottom-12 left-0 z-50 flex items-center gap-2 rounded-lg border bg-background p-2 shadow-lg"
+          role="status"
+          aria-label={`Selected file: ${selectedFile.name}, ${formatFileSize(selectedFile.size)}`}
+        >
           {isImage ? (
-            <ImageIcon className="h-5 w-5 text-blue-500" />
+            <ImageIcon className="h-5 w-5 text-blue-500" aria-hidden="true" />
           ) : (
-            <File className="h-5 w-5 text-muted-foreground" />
+            <File className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           )}
           <div className="max-w-[200px]">
             <p className="truncate text-sm font-medium">{selectedFile.name}</p>
@@ -72,8 +77,9 @@ export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onCl
             className="h-6 w-6"
             onClick={onClear}
             disabled={isUploading}
+            aria-label="Remove selected file"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       )}

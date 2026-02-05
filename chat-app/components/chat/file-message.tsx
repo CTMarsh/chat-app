@@ -40,6 +40,10 @@ export function FileMessage({ fileUrl, fileName, fileSize, fileType }: FileMessa
             alt={fileName}
             className="max-h-64 w-auto cursor-pointer rounded-lg object-contain transition-opacity hover:opacity-90"
             onClick={() => setLightboxOpen(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setLightboxOpen(true)}
+            aria-label={`View ${fileName} in full size`}
           />
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <span className="truncate">{fileName}</span>
@@ -63,15 +67,16 @@ export function FileMessage({ fileUrl, fileName, fileSize, fileType }: FileMessa
         <p className="truncate text-sm font-medium">{fileName}</p>
         <p className="text-xs text-muted-foreground">{formatFileSize(fileSize)}</p>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1" role="group" aria-label="File actions">
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8"
           asChild
+          aria-label={`Open ${fileName} in new tab`}
         >
           <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
           </a>
         </Button>
         <Button
@@ -79,9 +84,10 @@ export function FileMessage({ fileUrl, fileName, fileSize, fileType }: FileMessa
           size="icon"
           className="h-8 w-8"
           asChild
+          aria-label={`Download ${fileName}`}
         >
           <a href={fileUrl} download={fileName}>
-            <Download className="h-4 w-4" />
+            <Download className="h-4 w-4" aria-hidden="true" />
           </a>
         </Button>
       </div>

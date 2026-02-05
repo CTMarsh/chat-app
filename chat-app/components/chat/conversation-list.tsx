@@ -114,9 +114,12 @@ export function ConversationList({ onSelect }: ConversationListProps) {
           <div className="flex items-center gap-3">
             {currentUser && (
               <ProfilePopover profile={currentUser} isCurrentUser side="bottom" align="start">
-                <button className="relative cursor-pointer">
+                <button className="relative cursor-pointer" aria-label="Open your profile">
                   <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background transition-all hover:ring-primary/40">
-                    <AvatarImage src={currentUser?.avatar_url || undefined} />
+                    <AvatarImage
+                      src={currentUser?.avatar_url || undefined}
+                      alt={`${currentUser?.display_name || currentUser?.username}'s avatar`}
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary font-medium">
                       {getInitials(currentUser?.display_name)}
                     </AvatarFallback>
@@ -253,11 +256,11 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       </div>
 
       {/* Conversation list */}
-      <div className="flex-1 overflow-y-auto px-2">
+      <nav className="flex-1 overflow-y-auto px-2" aria-label="Conversations">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-              <MessageSquare className="h-8 w-8 text-muted-foreground" />
+              <MessageSquare className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
             </div>
             <p className="mt-4 text-sm font-medium text-muted-foreground">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
@@ -267,17 +270,18 @@ export function ConversationList({ onSelect }: ConversationListProps) {
             </p>
           </div>
         ) : (
-          <div className="space-y-1">
+          <ul className="space-y-1 list-none" role="list">
             {filteredConversations.map(conversation => (
-              <ConversationItem
-                key={conversation.id}
-                conversation={conversation}
-                onSelect={onSelect}
-              />
+              <li key={conversation.id}>
+                <ConversationItem
+                  conversation={conversation}
+                  onSelect={onSelect}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
+      </nav>
 
       {/* Dialogs */}
       <UserSearchDialog open={userSearchOpen} onOpenChange={setUserSearchOpen} />

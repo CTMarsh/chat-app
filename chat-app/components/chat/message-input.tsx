@@ -292,8 +292,11 @@ export function MessageInput() {
   return (
     <form onSubmit={handleSubmit} className="relative border-t bg-card/30 p-4 backdrop-blur-sm">
       {uploadError && (
-        <div className="mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive shadow-sm">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+        <div
+          role="alert"
+          className="mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/30 p-3 text-sm text-destructive shadow-sm"
+        >
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
           <span className="flex-1">{uploadError}</span>
           <Button
             type="button"
@@ -301,8 +304,9 @@ export function MessageInput() {
             size="icon"
             className="h-6 w-6 text-destructive hover:text-destructive"
             onClick={() => setUploadError(null)}
+            aria-label="Dismiss error"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       )}
@@ -327,6 +331,11 @@ export function MessageInput() {
           onChange={e => handleContentChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={activeConversation?.type === 'group' ? 'Type a message... (use @ to mention)' : 'Type a message...'}
+          aria-label={activeConversation?.type === 'group' ? 'Type a message, use @ to mention someone' : 'Type a message'}
+          aria-describedby={showMentions ? 'mention-listbox' : undefined}
+          aria-expanded={showMentions}
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
           className="flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12 text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
           rows={1}
           disabled={isSending}
@@ -336,8 +345,9 @@ export function MessageInput() {
           size="icon"
           disabled={(!content.trim() && !selectedFile) || isSending}
           className="h-12 w-12 rounded-xl bg-primary shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 disabled:opacity-50 disabled:shadow-none disabled:scale-100"
+          aria-label="Send message"
         >
-          <Send className="h-5 w-5" />
+          <Send className="h-5 w-5" aria-hidden="true" />
         </Button>
       </div>
     </form>

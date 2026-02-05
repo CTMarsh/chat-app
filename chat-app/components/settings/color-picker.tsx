@@ -60,11 +60,14 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           <div className="text-sm font-medium">Accent Color</div>
 
           {/* Preset colors */}
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Preset accent colors">
             {presetColors.map((color) => (
               <button
                 key={color.value}
                 type="button"
+                role="radio"
+                aria-checked={value === color.value}
+                aria-label={`${color.name} color`}
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
                   value === color.value
@@ -76,10 +79,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                   onChange(color.value)
                   setCustomColor(color.value)
                 }}
-                title={color.name}
               >
                 {value === color.value && (
-                  <Check className="h-4 w-4 text-white" />
+                  <Check className="h-4 w-4 text-white" aria-hidden="true" />
                 )}
               </button>
             ))}
@@ -102,7 +104,11 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 
           {/* Native color picker */}
           <div className="flex items-center gap-2">
+            <label htmlFor="accent-color-picker" className="sr-only">
+              Select custom color
+            </label>
             <input
+              id="accent-color-picker"
               type="color"
               value={value}
               onChange={(e) => {
@@ -110,8 +116,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                 setCustomColor(e.target.value)
               }}
               className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
+              aria-label="Custom color picker"
             />
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground" aria-hidden="true">
               Or use color picker
             </span>
           </div>
