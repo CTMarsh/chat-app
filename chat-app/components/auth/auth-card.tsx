@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Card,
   CardContent,
@@ -11,7 +12,6 @@ import {
   CardFooter,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { MessageSquare } from 'lucide-react'
 
 interface AuthCardProps {
   children: ReactNode
@@ -43,10 +43,14 @@ export function AuthCard({
         {/* Logo */}
         <div className="mb-8 flex justify-center">
           <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-lg">
-              <MessageSquare className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">ChatApp</span>
+            <Image
+              src="/chatark-logo.png"
+              alt="ChatArk"
+              width={44}
+              height={44}
+              className="rounded-xl shadow-lg shadow-primary/25"
+            />
+            <span className="text-xl font-bold">Chat<span className="text-primary">Ark</span></span>
           </Link>
         </div>
 

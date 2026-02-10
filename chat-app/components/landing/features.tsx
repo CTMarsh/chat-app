@@ -60,11 +60,11 @@ export function Features() {
             Features
           </div>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
-            Everything you need to stay connected
+            Everything you need on board
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Our platform comes packed with powerful features designed to make
-            communication effortless and enjoyable.
+            ChatArk comes packed with powerful features designed to make
+            team communication effortless and secure.
           </p>
         </div>
 

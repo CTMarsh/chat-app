@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chat App",
-  description: "Real-time chat application",
+  title: "ChatArk",
+  description: "Navigate your conversations — real-time chat built for teams",
 };
 
 export default function RootLayout({

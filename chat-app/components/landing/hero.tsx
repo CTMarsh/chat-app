@@ -22,24 +22,24 @@ export function Hero() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              New: Real-time messaging is here
+              Secure real-time messaging
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Connect with anyone,{' '}
-              <span className="text-primary">anywhere</span>
+              Navigate your{' '}
+              <span className="text-primary">conversations</span>
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-xl">
-              Experience seamless communication with our modern chat platform.
-              Send messages, share files, and collaborate in real-time with
-              friends, family, and colleagues.
+              ChatArk is a secure, real-time messaging platform built for teams.
+              Share files, react with emoji, and collaborate — all protected by
+              mandatory multi-factor authentication.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" asChild>
                 <Link href="/signup">
-                  Get Started Free
+                  Come Aboard
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

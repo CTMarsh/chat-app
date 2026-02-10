@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { MessageSquare, Github, Twitter, Linkedin } from 'lucide-react'
+import Image from 'next/image'
+import { Github, Twitter, Linkedin } from 'lucide-react'
 
 const footerLinks = {
   product: [
@@ -41,14 +42,18 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4 w-fit transition-transform hover:scale-105">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
-                <MessageSquare className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">ChatApp</span>
+              <Image
+                src="/chatark-logo.png"
+                alt="ChatArk"
+                width={40}
+                height={40}
+                className="rounded-xl shadow-lg shadow-primary/25"
+              />
+              <span className="text-xl font-bold">Chat<span className="text-primary">Ark</span></span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-xs">
-              Connect with anyone, anywhere. The modern messaging platform for
-              teams and individuals.
+              Navigate your conversations. A secure, real-time messaging platform
+              built for teams and individuals.
             </p>
             <div className="flex gap-2">
               {socialLinks.map((social) => (
@@ -139,7 +144,7 @@ export function Footer() {
         <div className="relative mt-12 pt-8 border-t border-border/50">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
           <p className="text-sm text-muted-foreground text-center">
-            &copy; {new Date().getFullYear()} ChatApp. All rights reserved.
+            &copy; {new Date().getFullYear()} ChatArk. All rights reserved.
           </p>
         </div>
       </div>

@@ -16,7 +16,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { Menu, User, LogOut, MessageSquare } from 'lucide-react'
+import Image from 'next/image'
+import { Menu, User, LogOut } from 'lucide-react'
 
 type UserClaims = {
   email?: string
@@ -43,10 +44,14 @@ export async function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 transition-transform hover:scale-105">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/25">
-            <MessageSquare className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-bold">ChatApp</span>
+          <Image
+            src="/chatark-logo.png"
+            alt="ChatArk"
+            width={40}
+            height={40}
+            className="rounded-xl shadow-lg shadow-primary/25"
+          />
+          <span className="text-xl font-bold">Chat<span className="text-primary">Ark</span></span>
         </Link>
 
         {/* Desktop Navigation */}
