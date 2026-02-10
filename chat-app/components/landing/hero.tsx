@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Play } from 'lucide-react'
 import { ChatPreview } from './chat-preview'
+import { ScrollToDemo } from './scroll-to-demo'
 
 export function Hero() {
   return (
@@ -42,12 +43,7 @@ export function Hero() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="#demo">
-                  <Play className="mr-2 h-4 w-4" />
-                  Watch Demo
-                </Link>
-              </Button>
+              <ScrollToDemo />
             </div>
 
           </div>
@@ -56,7 +52,7 @@ export function Hero() {
           <div className="relative lg:ml-auto">
             <div className="relative rounded-2xl border border-border/50 bg-gradient-to-b from-card/80 to-card p-2 shadow-2xl shadow-primary/10 backdrop-blur-sm">
               <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
-              <div className="aspect-[4/3] rounded-xl bg-background/80 overflow-hidden">
+              <div className="h-[360px] md:h-[400px] rounded-xl bg-background/80 overflow-hidden">
                 <ChatPreview />
               </div>
             </div>

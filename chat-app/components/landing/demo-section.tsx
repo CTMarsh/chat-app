@@ -100,7 +100,6 @@ const demoScript: DemoMessage[] = [
     time: '2:17 PM',
     reactions: [{ emoji: '👍', count: 2 }, { emoji: '🎉', count: 1 }],
     reactionDelay: 800,
-    feature: 'reactions',
   },
 ]
 
