@@ -1,4 +1,5 @@
 export { Header } from './header'
 export { Hero } from './hero'
 export { Features } from './features'
+export { DemoSection } from './demo-section'
 export { Footer } from './footer'

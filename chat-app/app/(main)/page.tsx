@@ -1,4 +1,4 @@
-import { Header, Hero, Features, Footer } from '@/components/landing'
+import { Header, Hero, Features, DemoSection, Footer } from '@/components/landing'
 
 export default function Home() {
   return (
@@ -7,6 +7,7 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <Features />
+        <DemoSection />
       </main>
       <Footer />
     </div>
