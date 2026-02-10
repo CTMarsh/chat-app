@@ -209,11 +209,14 @@ export function ChatPreview() {
   const [typingUser, setTypingUser] = useState<string | null>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const hasStartedRef = useRef(false)
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+    }
   }, [])
 
   // Main animation loop
@@ -374,7 +377,7 @@ export function ChatPreview() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-none">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2.5 space-y-2.5 scrollbar-none">
           {visibleMessages.map(msg => (
             <MessageBubble
               key={msg.id}
@@ -383,7 +386,6 @@ export function ChatPreview() {
             />
           ))}
           {typingUser && <TypingIndicator userName={typingUser} />}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input */}
