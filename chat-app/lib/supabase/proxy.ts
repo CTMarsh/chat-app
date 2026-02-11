@@ -31,7 +31,7 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
-  const publicRoutes = ['/login', '/signup', '/auth', '/forgot-password', '/reset-password', '/privacy', '/terms', '/cookies']
+  const publicRoutes = ['/login', '/signup', '/auth', '/forgot-password', '/reset-password', '/privacy', '/terms', '/cookies', '/blog', '/careers', '/docs', '/help', '/api-docs', '/status']
   const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isLandingPage = request.nextUrl.pathname === '/'
   const isMFARoute = request.nextUrl.pathname.startsWith('/mfa')
