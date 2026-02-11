@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import type { UserPreferences, BlockedUserWithProfile } from '@/lib/types/database'
 
 // Partial update type for preferences
@@ -38,7 +39,7 @@ export async function getPreferences(): Promise<{ data: UserPreferences | null; 
       }
       return { data: newPrefs as UserPreferences, error: null }
     }
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   return { data: data as UserPreferences, error: null }
@@ -69,7 +70,7 @@ export async function updatePreferences(
     .eq('user_id', user.id)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   // If online_status_preference changed, also update profiles.status
@@ -129,7 +130,7 @@ export async function blockUser(blockedUserId: string): Promise<{ error: string 
     if (error.code === '23505') {
       return { error: 'User is already blocked' }
     }
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/settings/privacy')
@@ -160,7 +161,7 @@ export async function unblockUser(blockedUserId: string): Promise<{ error: strin
     .eq('blocked_user_id', blockedUserId)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/settings/privacy')
@@ -188,7 +189,7 @@ export async function getBlockedUsers(): Promise<{ data: BlockedUserWithProfile[
     .order('created_at', { ascending: false })
 
   if (error) {
-    return { data: [], error: error.message }
+    return { data: [], error: sanitizeErrorMessage(error.message) }
   }
 
   return { data: data as BlockedUserWithProfile[], error: null }
@@ -257,7 +258,7 @@ export async function getActiveSessions(): Promise<{ data: UserSession[]; error:
     .order('last_active_at', { ascending: false })
 
   if (error) {
-    return { data: [], error: error.message }
+    return { data: [], error: sanitizeErrorMessage(error.message) }
   }
 
   // Mark the current session
@@ -293,7 +294,7 @@ export async function trackSession(userAgent?: string, ipAddress?: string): Prom
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   return { error: null }
@@ -321,7 +322,7 @@ export async function revokeSession(sessionId: string): Promise<{ error: string 
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   if (!data) {
@@ -359,7 +360,7 @@ export async function revokeOtherSessions(): Promise<{ count: number; error: str
   })
 
   if (error) {
-    return { count: 0, error: error.message }
+    return { count: 0, error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/security')
@@ -386,7 +387,7 @@ export async function signOutAllDevices(): Promise<{ error: string | null }> {
   const { error } = await supabase.auth.signOut({ scope: 'global' })
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   return { error: null }

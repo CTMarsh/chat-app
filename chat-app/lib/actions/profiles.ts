@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { sanitizePostgRESTFilter } from '@/lib/utils/postgrest-sanitizer'
 import type { Profile } from '@/lib/types/database'
 
 export interface SearchProfilesOptions {
@@ -45,7 +47,8 @@ export async function searchProfiles(options: SearchProfilesOptions = {}): Promi
 
   // If search query provided, filter by username or display_name
   if (query && query.trim()) {
-    dbQuery = dbQuery.or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+    const sanitized = sanitizePostgRESTFilter(query.trim())
+    dbQuery = dbQuery.or(`username.ilike.%${sanitized}%,display_name.ilike.%${sanitized}%`)
   }
 
   // Order by display_name for consistent results
@@ -56,7 +59,7 @@ export async function searchProfiles(options: SearchProfilesOptions = {}): Promi
   const { data, error, count } = await dbQuery
 
   if (error) {
-    return { data: null, error: error.message, hasMore: false }
+    return { data: null, error: sanitizeErrorMessage(error.message), hasMore: false }
   }
 
   const hasMore = count !== null ? offset + (data?.length || 0) < count : false
@@ -85,7 +88,7 @@ export async function getProfile(userId: string): Promise<{ data: Profile | null
     .single()
 
   if (error) {
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   return { data, error: null }

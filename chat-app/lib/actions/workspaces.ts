@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import type { Workspace, WorkspaceWithMembers, Widget } from '@/lib/types/database'
 
 export async function getWorkspaces(): Promise<{ data: WorkspaceWithMembers[] | null; error: string | null }> {
@@ -119,7 +120,7 @@ export async function createWorkspace(name: string): Promise<{ data: Workspace |
     .single()
 
   if (error) {
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')
@@ -137,6 +138,12 @@ export async function updateWorkspace(
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const { error } = await supabase
     .from('workspaces')
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -144,7 +151,7 @@ export async function updateWorkspace(
     .eq('owner_id', user.id)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')
@@ -159,6 +166,12 @@ export async function deleteWorkspace(workspaceId: string): Promise<{ error: str
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const { error } = await supabase
     .from('workspaces')
     .delete()
@@ -166,7 +179,7 @@ export async function deleteWorkspace(workspaceId: string): Promise<{ error: str
     .eq('owner_id', user.id)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')
@@ -185,6 +198,12 @@ export async function addWorkspaceMember(
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const { error } = await supabase
     .from('workspace_members')
     .insert({
@@ -194,7 +213,7 @@ export async function addWorkspaceMember(
     })
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')
@@ -212,6 +231,12 @@ export async function removeWorkspaceMember(
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const { error } = await supabase
     .from('workspace_members')
     .delete()
@@ -219,7 +244,7 @@ export async function removeWorkspaceMember(
     .eq('user_id', userId)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')
@@ -295,7 +320,7 @@ export async function updateMemberRole(
     .eq('workspace_id', workspaceId)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/workspaces')

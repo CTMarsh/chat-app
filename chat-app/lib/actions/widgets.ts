@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import type { Widget, WidgetWithWorkspace } from '@/lib/types/database'
 
 export async function getWidgets(workspaceId?: string): Promise<{ data: WidgetWithWorkspace[] | null; error: string | null }> {
@@ -26,7 +27,7 @@ export async function getWidgets(workspaceId?: string): Promise<{ data: WidgetWi
   const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) {
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   return { data: data as WidgetWithWorkspace[], error: null }
@@ -99,7 +100,7 @@ export async function createWidget(
     .single()
 
   if (error) {
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/widgets')
@@ -127,6 +128,12 @@ export async function updateWidget(
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const dbUpdates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   }
@@ -147,7 +154,7 @@ export async function updateWidget(
     .eq('id', widgetId)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/widgets')
@@ -163,13 +170,19 @@ export async function deleteWidget(widgetId: string): Promise<{ error: string | 
     return { error: 'Not authenticated' }
   }
 
+  // Verify MFA
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { error: 'MFA verification required' }
+  }
+
   const { error } = await supabase
     .from('widgets')
     .delete()
     .eq('id', widgetId)
 
   if (error) {
-    return { error: error.message }
+    return { error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath('/chat/settings/widgets')
@@ -194,7 +207,7 @@ export async function regenerateEmbedToken(widgetId: string): Promise<{ data: { 
   const { data, error } = await supabase.rpc('regenerate_widget_token', { p_widget_id: widgetId })
 
   if (error) {
-    return { data: null, error: error.message }
+    return { data: null, error: sanitizeErrorMessage(error.message) }
   }
 
   revalidatePath(`/chat/settings/widgets/${widgetId}`)

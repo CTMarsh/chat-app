@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 
 export async function endConversation(conversationId: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
@@ -57,7 +58,7 @@ export async function endConversation(conversationId: string): Promise<{ error: 
 
   if (updateError) {
     console.error('Error ending conversation:', updateError)
-    return { error: updateError.message }
+    return { error: sanitizeErrorMessage(updateError.message) }
   }
 
   revalidatePath('/chat')
@@ -86,7 +87,7 @@ export async function createDirectConversation(otherUserId: string) {
 
   if (rpcError) {
     console.error('Error creating conversation:', rpcError)
-    return { error: rpcError.message }
+    return { error: sanitizeErrorMessage(rpcError.message) }
   }
 
   revalidatePath('/chat')
