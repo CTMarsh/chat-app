@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { isValidUUID } from '@/lib/utils/validation'
 import type { UserPreferences, BlockedUserWithProfile } from '@/lib/types/database'
 
 // Partial update type for preferences
@@ -101,6 +102,10 @@ export async function updatePreferences(
  * Block a user
  */
 export async function blockUser(blockedUserId: string): Promise<{ error: string | null }> {
+  if (!isValidUUID(blockedUserId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -141,6 +146,10 @@ export async function blockUser(blockedUserId: string): Promise<{ error: string 
  * Unblock a user
  */
 export async function unblockUser(blockedUserId: string): Promise<{ error: string | null }> {
+  if (!isValidUUID(blockedUserId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -199,6 +208,10 @@ export async function getBlockedUsers(): Promise<{ data: BlockedUserWithProfile[
  * Check if a user is blocked
  */
 export async function isUserBlocked(userId: string): Promise<boolean> {
+  if (!isValidUUID(userId)) {
+    return false
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -304,6 +317,10 @@ export async function trackSession(userAgent?: string, ipAddress?: string): Prom
  * Revoke a specific session
  */
 export async function revokeSession(sessionId: string): Promise<{ error: string | null }> {
+  if (!isValidUUID(sessionId)) {
+    return { error: 'Invalid session ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()

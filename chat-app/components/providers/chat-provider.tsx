@@ -502,9 +502,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
 
-    // Extract URLs for link previews
+    // Extract URLs for link previews (with SSRF protection)
     const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,:;"')\]!?])/g
-    const urls = content.match(urlRegex) || []
+    const rawUrls = content.match(urlRegex) || []
+    const urls = rawUrls.filter(u => {
+      try {
+        const parsed = new URL(u)
+        if (!['http:', 'https:'].includes(parsed.protocol)) return false
+        const h = parsed.hostname
+        if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return false
+        if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(h)) return false
+        if (u.length > 2048) return false
+        return true
+      } catch { return false }
+    })
     let linkPreviews: Array<{url: string; title?: string; description?: string; image?: string; siteName?: string}> = []
 
     // Fetch link previews (limit to first 3 URLs)

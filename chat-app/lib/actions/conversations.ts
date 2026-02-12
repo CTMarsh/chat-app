@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { isValidUUID } from '@/lib/utils/validation'
 
 export async function endConversation(conversationId: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
@@ -66,6 +67,10 @@ export async function endConversation(conversationId: string): Promise<{ error: 
 }
 
 export async function createDirectConversation(otherUserId: string) {
+  if (!isValidUUID(otherUserId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const supabase = await createClient()
 
   // Get the authenticated user - server-side has access to cookies

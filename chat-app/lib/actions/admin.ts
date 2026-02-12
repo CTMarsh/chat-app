@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { isValidUUID } from '@/lib/utils/validation'
+import { sanitizePostgRESTFilter } from '@/lib/utils/postgrest-sanitizer'
 import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 
 // ============================================================
@@ -107,7 +109,8 @@ export async function getAdminWorkspaces(search?: string): Promise<{
     .order('created_at', { ascending: false })
 
   if (search) {
-    query = query.ilike('name', `%${search}%`)
+    const sanitized = sanitizePostgRESTFilter(search)
+    query = query.ilike('name', `%${sanitized}%`)
   }
 
   const { data, error: queryError } = await query
@@ -272,7 +275,8 @@ export async function getAdminUsers(search?: string): Promise<{
     .order('created_at', { ascending: false })
 
   if (search) {
-    query = query.or(`username.ilike.%${search}%,display_name.ilike.%${search}%,email.ilike.%${search}%`)
+    const sanitized = sanitizePostgRESTFilter(search)
+    query = query.or(`username.ilike.%${sanitized}%,display_name.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
   }
 
   const { data, error: queryError } = await query
@@ -636,10 +640,21 @@ export async function getPlatformSettings(): Promise<{
   return { data: data as Array<{ key: string; value: string; description: string | null; updated_at: string }>, error: null }
 }
 
+const ALLOWED_PLATFORM_SETTING_KEYS = [
+  'max_workspaces_per_user',
+  'max_workspace_members',
+  'max_widgets_per_workspace',
+  'allow_signups',
+] as const
+
 export async function updatePlatformSetting(
   key: string,
   value: string
 ): Promise<{ error: string | null }> {
+  if (!ALLOWED_PLATFORM_SETTING_KEYS.includes(key as typeof ALLOWED_PLATFORM_SETTING_KEYS[number])) {
+    return { error: 'Invalid setting key' }
+  }
+
   const { supabase, error } = await requirePlatformAdmin()
   if (error || !supabase) return { error: error || 'Access denied' }
 
@@ -831,6 +846,10 @@ export async function adminAddWorkspaceMember(
   userId: string,
   role: string
 ): Promise<{ error: string | null }> {
+  if (!isValidUUID(userId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const { supabase, user, error } = await requirePlatformAdmin()
   if (error || !supabase || !user) return { error: error || 'Access denied' }
 
@@ -873,6 +892,10 @@ export async function adminRemoveWorkspaceMember(
   workspaceId: string,
   memberId: string
 ): Promise<{ error: string | null }> {
+  if (!isValidUUID(memberId)) {
+    return { error: 'Invalid member ID' }
+  }
+
   const { supabase, user, error } = await requirePlatformAdmin()
   if (error || !supabase || !user) return { error: error || 'Access denied' }
 

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { isValidUUID } from '@/lib/utils/validation'
 import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import type { Workspace, WorkspaceWithMembers, Widget, WorkspaceRole } from '@/lib/types/database'
 
@@ -234,6 +235,10 @@ export async function addWorkspaceMember(
   userId: string,
   role: WorkspaceRole = 'agent'
 ): Promise<{ error: string | null }> {
+  if (!isValidUUID(userId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -307,6 +312,10 @@ export async function removeWorkspaceMember(
   workspaceId: string,
   userId: string
 ): Promise<{ error: string | null }> {
+  if (!isValidUUID(userId)) {
+    return { error: 'Invalid user ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
