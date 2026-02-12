@@ -451,8 +451,13 @@ export async function setUserAdmin(
   userId: string,
   isAdmin: boolean
 ): Promise<{ error: string | null }> {
-  const { supabase, error } = await requirePlatformAdmin()
-  if (error || !supabase) return { error: error || 'Access denied' }
+  const { supabase, user, error } = await requirePlatformAdmin()
+  if (error || !supabase || !user) return { error: error || 'Access denied' }
+
+  // Prevent self-revocation of admin status
+  if (userId === user.id && !isAdmin) {
+    return { error: 'Cannot revoke your own admin status' }
+  }
 
   const { error: updateError } = await supabase
     .from('profiles')
@@ -481,6 +486,11 @@ export async function adminDeleteUser(
 ): Promise<{ error: string | null }> {
   const { supabase, user, error } = await requirePlatformAdmin()
   if (error || !supabase || !user) return { error: error || 'Access denied' }
+
+  // Prevent self-deletion
+  if (userId === user.id) {
+    return { error: 'Cannot delete your own account' }
+  }
 
   // Log before deletion (the user will be gone after)
   await supabase.rpc('admin_log_action', {

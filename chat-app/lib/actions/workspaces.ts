@@ -247,6 +247,30 @@ export async function addWorkspaceMember(
     return { error: 'MFA verification required' }
   }
 
+  // Verify caller is workspace owner or admin
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (!workspace) {
+    return { error: 'Workspace not found' }
+  }
+
+  if (workspace.owner_id !== user.id) {
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership || membership.role !== 'admin') {
+      return { error: 'Only workspace owners and admins can add members' }
+    }
+  }
+
   // Enforce max_workspace_members
   const { data: maxSetting } = await getPlatformSettingValue('max_workspace_members')
   if (maxSetting) {
@@ -294,6 +318,30 @@ export async function removeWorkspaceMember(
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { error: 'MFA verification required' }
+  }
+
+  // Verify caller is workspace owner or admin
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (!workspace) {
+    return { error: 'Workspace not found' }
+  }
+
+  if (workspace.owner_id !== user.id) {
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership || membership.role !== 'admin') {
+      return { error: 'Only workspace owners and admins can remove members' }
+    }
   }
 
   const { error } = await supabase
@@ -369,6 +417,11 @@ export async function updateMemberRole(
 
   if (targetMember.user_id === workspace.owner_id) {
     return { error: 'Cannot change role of workspace owner' }
+  }
+
+  // Only workspace owners can promote to admin
+  if (newRole === 'admin' && !isOwner) {
+    return { error: 'Only workspace owners can promote members to admin' }
   }
 
   // Update the member's role

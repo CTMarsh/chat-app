@@ -40,9 +40,13 @@ export async function searchProfiles(options: SearchProfilesOptions = {}): Promi
     .select('*', { count: 'exact' })
     .neq('id', user.id) // Always exclude current user
 
-  // Exclude additional user IDs if provided
+  // Exclude additional user IDs if provided (validate UUIDs to prevent injection)
   if (excludeUserIds.length > 0) {
-    dbQuery = dbQuery.not('id', 'in', `(${excludeUserIds.join(',')})`)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const validIds = excludeUserIds.filter(id => uuidRegex.test(id))
+    if (validIds.length > 0) {
+      dbQuery = dbQuery.not('id', 'in', `(${validIds.join(',')})`)
+    }
   }
 
   // If search query provided, filter by username or display_name
