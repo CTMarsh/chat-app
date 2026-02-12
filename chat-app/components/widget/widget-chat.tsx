@@ -337,8 +337,20 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         visitorEmail: result.visitorEmail,
       }
 
-      setMessages(prev => [...prev, newMessage])
-      lastMessageTimeRef.current = result.createdAt
+      // Add visitor message and auto-reply (if any) together
+      if (result.autoReply) {
+        setMessages(prev => [...prev, newMessage, {
+          id: result.autoReply.id,
+          content: result.autoReply.content,
+          createdAt: result.autoReply.createdAt,
+          type: 'text',
+          isFromVisitor: false,
+        }])
+        lastMessageTimeRef.current = result.autoReply.createdAt
+      } else {
+        setMessages(prev => [...prev, newMessage])
+        lastMessageTimeRef.current = result.createdAt
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send message')
     } finally {

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ConversationWithParticipants, MessageWithSender, Notification } from '@/lib/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -56,7 +56,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const [typingUsers, setTypingUsers] = useState<Map<string, string[]>>(new Map())
   const [isLoading, setIsLoading] = useState(true)
   const [pinnedMessages, setPinnedMessages] = useState<MessageWithSender[]>([])
-  const [channels, setChannels] = useState<RealtimeChannel[]>([])
+  const channelsRef = useRef<RealtimeChannel[]>([])
   const [maxFileSizeMb, setMaxFileSizeMb] = useState(50)
 
   const supabase = createClient()
@@ -383,11 +383,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
 
-    // Create optimistic message data before insert
-    const optimisticId = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
       .from('messages')
       .insert({
         content,
@@ -399,16 +397,18 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         file_size: fileSize,
         file_type: fileType,
       })
+      .select('id')
+      .single()
 
     if (error) {
       console.error('Error sending message:', error)
       throw error
     }
 
-    // Optimistic UI update - construct message locally without re-fetching
-    if (currentUser) {
+    // Immediate UI update using the real DB ID
+    if (currentUser && inserted) {
       const newMessage: MessageWithSender = {
-        id: optimisticId,
+        id: inserted.id,
         content,
         conversation_id: conversationId,
         sender_id: userId,
@@ -542,11 +542,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       linkPreviews = await Promise.all(previewPromises)
     }
 
-    // Create optimistic message data before insert
-    const optimisticId = crypto.randomUUID()
     const now = new Date().toISOString()
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
       .from('messages')
       .insert({
         content,
@@ -559,16 +557,18 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         file_type: fileType,
         link_previews: linkPreviews.length > 0 ? linkPreviews : null,
       })
+      .select('id')
+      .single()
 
     if (error) {
       console.error('Error sending message:', error)
       throw error
     }
 
-    // Optimistic UI update - construct message locally without re-fetching
-    if (currentUser) {
+    // Immediate UI update using the real DB ID
+    if (currentUser && inserted) {
       const newMessage: MessageWithSender = {
-        id: optimisticId,
+        id: inserted.id,
         content,
         conversation_id: conversationId,
         sender_id: userId,
@@ -597,25 +597,13 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       setMessages(prev => [...prev, newMessage])
     }
 
-    // Create mentions - fetch the actual message ID from DB
-    if (mentionedUserIds.length > 0) {
-      // Get the message we just inserted
-      const { data: insertedMsg } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('conversation_id', conversationId)
-        .eq('sender_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (insertedMsg) {
-        const mentions = mentionedUserIds.map(mentionedUserId => ({
-          message_id: insertedMsg.id,
-          mentioned_user_id: mentionedUserId,
-        }))
-        await supabase.from('message_mentions').insert(mentions)
-      }
+    // Create mentions using the real inserted message ID
+    if (mentionedUserIds.length > 0 && inserted) {
+      const mentions = mentionedUserIds.map(mentionedUserId => ({
+        message_id: inserted.id,
+        mentioned_user_id: mentionedUserId,
+      }))
+      await supabase.from('message_mentions').insert(mentions)
     }
 
     // Update conversation timestamp
@@ -623,7 +611,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
-  }, [supabase, userId, maxFileSizeMb])
+  }, [supabase, userId, currentUser, maxFileSizeMb])
 
   // Mark conversation as read
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -811,12 +799,15 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
               .single()
 
             if (data) {
-              // Add to messages if it's for the active conversation
+              // Add or replace message if it's for the active conversation
               if (activeConversation?.id === data.conversation_id) {
-                // Only add if not already present (prevents duplicates from optimistic updates)
                 setMessages(prev => {
-                  if (prev.some(m => m.id === data.id)) {
-                    return prev
+                  const existingIndex = prev.findIndex(m => m.id === data.id)
+                  if (existingIndex >= 0) {
+                    // Replace optimistic message with full server data
+                    const updated = [...prev]
+                    updated[existingIndex] = data as MessageWithSender
+                    return updated
                   }
                   return [...prev, data as MessageWithSender]
                 })
@@ -863,13 +854,14 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         )
         .subscribe()
 
-      setChannels([messagesChannel, notificationsChannel, profilesChannel])
+      channelsRef.current = [messagesChannel, notificationsChannel, profilesChannel]
     }
 
     setupSubscriptions()
 
     return () => {
-      channels.forEach(channel => supabase.removeChannel(channel))
+      channelsRef.current.forEach(channel => supabase.removeChannel(channel))
+      channelsRef.current = []
     }
   }, [supabase, userId, activeConversation?.id, fetchConversations])
 
