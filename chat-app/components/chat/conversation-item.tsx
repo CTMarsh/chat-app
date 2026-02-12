@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation'
 import { formatDistanceToNow } from 'date-fns'
-import { Circle, Clock, MinusCircle, EyeOff, Headphones, Building2 } from 'lucide-react'
+import { Circle, Clock, MinusCircle, EyeOff, Headphones, Building2, Ban } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useChat } from '@/components/providers/chat-provider'
 import type { ConversationWithParticipants } from '@/lib/types/database'
@@ -52,6 +52,8 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
         return { icon: MinusCircle, bgColor: 'bg-red-500', bgColorActive: 'bg-red-400', hasIcon: true }
       case 'invisible':
         return { icon: EyeOff, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: true }
+      case 'suspended':
+        return { icon: Ban, bgColor: 'bg-red-700', bgColorActive: 'bg-red-600', hasIcon: true }
       default:
         return { icon: Circle, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: false }
     }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -17,10 +17,15 @@ export default function MFASetupPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [enrolling, setEnrolling] = useState(true)
+  const enrollingRef = useRef(false)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
+    // Guard against StrictMode double-mount race condition
+    if (enrollingRef.current) return
+    enrollingRef.current = true
+
     const checkAndEnroll = async () => {
       const { data: factors } = await supabase.auth.mfa.listFactors()
 
@@ -40,8 +45,33 @@ export default function MFASetupPage() {
       })
 
       if (error) {
+        // If enroll fails due to existing factor (e.g. from a previous attempt),
+        // re-fetch factors and use the existing unverified one
+        const { data: retryFactors } = await supabase.auth.mfa.listFactors()
+        const existing = retryFactors?.totp.find(f => (f.status as string) === 'unverified')
+        if (existing) {
+          // Unenroll the stale factor and try once more
+          await supabase.auth.mfa.unenroll({ factorId: existing.id })
+          const { data: retryData, error: retryError } = await supabase.auth.mfa.enroll({
+            factorType: 'totp',
+            friendlyName: 'Authenticator App',
+          })
+          if (retryError) {
+            setError(retryError.message)
+            setEnrolling(false)
+            enrollingRef.current = false
+            return
+          }
+          setFactorId(retryData.id)
+          setQrCode(retryData.totp.qr_code)
+          setSecret(retryData.totp.secret)
+          setEnrolling(false)
+          return
+        }
+
         setError(error.message)
         setEnrolling(false)
+        enrollingRef.current = false
         return
       }
 

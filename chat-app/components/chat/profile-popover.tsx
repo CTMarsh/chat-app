@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Circle, Clock, MinusCircle, EyeOff, Check } from 'lucide-react'
+import { Circle, Clock, MinusCircle, EyeOff, Check, Ban } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Popover,
@@ -67,6 +67,8 @@ export function ProfilePopover({
         return { icon: MinusCircle, bgColor: 'bg-red-500', label: 'Do Not Disturb' }
       case 'invisible':
         return { icon: EyeOff, bgColor: 'bg-gray-400', label: 'Invisible' }
+      case 'suspended':
+        return { icon: Ban, bgColor: 'bg-red-700', label: 'Suspended' }
       default:
         return { icon: Circle, bgColor: 'bg-gray-400', label: 'Offline' }
     }

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthCard, AuthInputWrapper } from '@/components/auth/auth-card'
-import { Mail, Lock, Loader2, CheckCircle, User, UserPlus } from 'lucide-react'
+import { Mail, Lock, Loader2, CheckCircle, User, UserPlus, ShieldOff } from 'lucide-react'
+import { checkSignupsAllowed } from '@/lib/actions/platform-settings'
 
 export default function SignupPage() {
   const [name, setName] = useState('')
@@ -17,10 +18,29 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [signupsDisabled, setSignupsDisabled] = useState(false)
+  const [checkingSignups, setCheckingSignups] = useState(true)
+
+  // Check if signups are allowed on mount
+  useEffect(() => {
+    const check = async () => {
+      const { allowed } = await checkSignupsAllowed()
+      setSignupsDisabled(!allowed)
+      setCheckingSignups(false)
+    }
+    check()
+  }, [])
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    // Re-check before submitting (setting may have changed)
+    const { allowed } = await checkSignupsAllowed()
+    if (!allowed) {
+      setSignupsDisabled(true)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -56,6 +76,43 @@ export default function SignupPage() {
       setSuccess(true)
       setLoading(false)
     }
+  }
+
+  if (checkingSignups) {
+    return (
+      <AuthCard
+        title="Create an account"
+        description="Checking availability..."
+        icon={<Loader2 className="h-7 w-7 text-primary animate-spin" />}
+      >
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </AuthCard>
+    )
+  }
+
+  if (signupsDisabled) {
+    return (
+      <AuthCard
+        title="Signups disabled"
+        description="New account registration is currently unavailable"
+        icon={<ShieldOff className="h-7 w-7 text-muted-foreground" />}
+        footer={
+          <Link href="/login">
+            <Button variant="outline" className="shadow-sm">
+              Back to Login
+            </Button>
+          </Link>
+        }
+      >
+        <div className="rounded-lg border border-muted bg-muted/30 p-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Signups are currently disabled by the platform administrator. Please contact your administrator for access.
+          </p>
+        </div>
+      </AuthCard>
+    )
   }
 
   if (success) {

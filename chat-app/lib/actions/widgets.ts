@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
+import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import type { Widget, WidgetWithWorkspace } from '@/lib/types/database'
 
 export async function getWidgets(workspaceId?: string): Promise<{ data: WidgetWithWorkspace[] | null; error: string | null }> {
@@ -81,6 +82,22 @@ export async function createWidget(
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { data: null, error: 'MFA verification required' }
+  }
+
+  // Enforce max_widgets_per_workspace
+  const { data: maxSetting } = await getPlatformSettingValue('max_widgets_per_workspace')
+  if (maxSetting) {
+    const maxWidgets = parseInt(maxSetting, 10)
+    if (!isNaN(maxWidgets)) {
+      const { count } = await supabase
+        .from('widgets')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspaceId)
+
+      if ((count ?? 0) >= maxWidgets) {
+        return { data: null, error: `Widget limit reached (max ${maxWidgets})` }
+      }
+    }
   }
 
   const { data, error } = await supabase

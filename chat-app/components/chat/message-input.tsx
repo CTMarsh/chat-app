@@ -24,7 +24,7 @@ function isEmojiOnly(text: string): boolean {
 }
 
 export function MessageInput() {
-  const { activeConversation, currentUser, sendMessageWithMentions, setTyping } = useChat()
+  const { activeConversation, currentUser, sendMessageWithMentions, setTyping, maxFileSizeMb } = useChat()
 
   // Check if conversation is ended (widget only)
   const isEnded = activeConversation?.type === 'widget' && !!activeConversation.ended_at
@@ -78,7 +78,7 @@ export function MessageInput() {
     const query = mentionQuery.toLowerCase()
     return mentionableUsers
       .filter(u =>
-        u.username.toLowerCase().includes(query) ||
+        u.username?.toLowerCase().includes(query) ||
         u.display_name?.toLowerCase().includes(query)
       )
       .slice(0, 5)
@@ -163,7 +163,7 @@ export function MessageInput() {
 
     // Set cursor position after mention
     setTimeout(() => {
-      const newPos = lastAtIndex + user.username.length + 2
+      const newPos = lastAtIndex + (user.username?.length ?? 0) + 2
       textarea.selectionStart = textarea.selectionEnd = newPos
       textarea.focus()
     }, 0)
@@ -323,6 +323,7 @@ export function MessageInput() {
           isUploading={isSending}
           selectedFile={selectedFile}
           onClear={() => setSelectedFile(null)}
+          maxFileSizeMb={maxFileSizeMb}
         />
         <EmojiPicker onEmojiSelect={handleEmojiSelect} />
         <textarea

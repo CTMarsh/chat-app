@@ -9,17 +9,18 @@ interface FileUploadButtonProps {
   isUploading: boolean
   selectedFile: File | null
   onClear: () => void
+  maxFileSizeMb?: number
 }
 
-export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onClear }: FileUploadButtonProps) {
+export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onClear, maxFileSizeMb = 50 }: FileUploadButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // Validate file size (50MB max)
-      if (file.size > 50 * 1024 * 1024) {
-        alert('File must be less than 50MB')
+      // Validate file size against platform setting
+      if (file.size > maxFileSizeMb * 1024 * 1024) {
+        alert(`File must be less than ${maxFileSizeMb}MB`)
         return
       }
       onFileSelect(file)

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare, Keyboard, Link } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare, Keyboard, Link, ShieldAlert, Ban } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import { ProfilePopover } from './profile-popover'
 import { useChat } from '@/components/providers/chat-provider'
 import { usePreferences } from '@/components/providers/preferences-provider'
 import { createClient } from '@/lib/supabase/client'
+import { checkIsAdmin } from '@/lib/actions/admin'
 
 interface ConversationListProps {
   onSelect?: () => void
@@ -39,8 +40,14 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
   const { preferences } = usePreferences()
+
+  // Check admin status on mount
+  useEffect(() => {
+    checkIsAdmin().then(setIsAdmin)
+  }, [])
 
   // Count widget conversations for the inbox badge
   const widgetConversations = conversations.filter(c => c.type === 'widget')
@@ -73,7 +80,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
     )
     return (
       otherParticipant?.profile.display_name?.toLowerCase().includes(searchLower) ||
-      otherParticipant?.profile.username.toLowerCase().includes(searchLower)
+      otherParticipant?.profile.username?.toLowerCase().includes(searchLower)
     )
   })
 
@@ -102,6 +109,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
         return { icon: MinusCircle, bgColor: 'bg-red-500', textColor: 'text-white' }
       case 'invisible':
         return { icon: EyeOff, bgColor: 'bg-gray-400', textColor: 'text-white' }
+      case 'suspended':
+        return { icon: Ban, bgColor: 'bg-red-700', textColor: 'text-white' }
       default:
         return { icon: Circle, bgColor: 'bg-gray-400', textColor: 'text-white' }
     }
@@ -168,6 +177,15 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                   <Link className="mr-2 h-4 w-4" />
                   Invite to Chat
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer text-red-600 focus:text-red-600">
+                      <ShieldAlert className="mr-2 h-4 w-4" />
+                      Platform Admin
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />

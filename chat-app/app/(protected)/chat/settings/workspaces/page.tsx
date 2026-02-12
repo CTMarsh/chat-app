@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Plus, Building2, Users, Crown, Shield, Trash2, MoreVertical, ChevronRight } from 'lucide-react'
+import { Plus, Building2, Users, Crown, Shield, Eye, Trash2, MoreVertical, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -159,9 +159,11 @@ export default function WorkspacesSettingsPage() {
           {workspaces.map((workspace) => {
             const admins = workspace.members?.filter(m => m.role === 'admin') || []
             const agents = workspace.members?.filter(m => m.role === 'agent') || []
+            const members = workspace.members?.filter(m => m.role === 'member') || []
             const ownerCount = 1 // The workspace owner
             const adminCount = admins.length
             const agentCount = agents.length
+            const memberCount = members.length
 
             return (
               <div
@@ -186,6 +188,12 @@ export default function WorkspacesSettingsPage() {
                         <Users className="h-4 w-4" />
                         {agentCount}
                       </span>
+                      {memberCount > 0 && (
+                        <span className="flex items-center gap-1" title="Members">
+                          <Eye className="h-4 w-4" />
+                          {memberCount}
+                        </span>
+                      )}
                       <span>
                         {workspace.widgets?.length || 0} widgets
                       </span>

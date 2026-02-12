@@ -6,6 +6,7 @@ import type { Profile, ConversationWithParticipants, MessageWithSender, Notifica
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { scanFile } from '@/lib/utils/scan-file'
 import { getPreferences } from '@/lib/actions/settings'
+import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import { endConversation as endConversationAction } from '@/lib/actions/conversations'
 
 interface FileAttachment {
@@ -41,6 +42,7 @@ interface ChatContextType {
   unpinMessage: (messageId: string) => Promise<void>
   updateUserStatus: (status: string) => Promise<void>
   endConversation: (conversationId: string) => Promise<{ error: string | null }>
+  maxFileSizeMb: number
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -55,6 +57,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const [isLoading, setIsLoading] = useState(true)
   const [pinnedMessages, setPinnedMessages] = useState<MessageWithSender[]>([])
   const [channels, setChannels] = useState<RealtimeChannel[]>([])
+  const [maxFileSizeMb, setMaxFileSizeMb] = useState(50)
 
   const supabase = createClient()
 
@@ -336,6 +339,12 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     // Upload file if provided
     if (file) {
+      // Enforce max_file_size_mb
+      const maxBytes = maxFileSizeMb * 1024 * 1024
+      if (file.size > maxBytes) {
+        throw new Error(`File must be less than ${maxFileSizeMb}MB`)
+      }
+
       // Scan file for viruses before uploading
       try {
         const scanResult = await scanFile(file)
@@ -420,6 +429,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         is_edited: false,
         visitor_name: null,
         visitor_email: null,
+        search_vector: null,
         sender: currentUser,
         reactions: [],
         read_receipts: [],
@@ -432,7 +442,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
-  }, [supabase, userId, currentUser])
+  }, [supabase, userId, currentUser, maxFileSizeMb])
 
   // Send message with mentions
   const sendMessageWithMentions = useCallback(async (
@@ -448,6 +458,12 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     // Upload file if provided
     if (file) {
+      // Enforce max_file_size_mb
+      const maxBytes = maxFileSizeMb * 1024 * 1024
+      if (file.size > maxBytes) {
+        throw new Error(`File must be less than ${maxFileSizeMb}MB`)
+      }
+
       // Scan file for viruses before uploading
       try {
         const scanResult = await scanFile(file)
@@ -562,6 +578,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         is_edited: false,
         visitor_name: null,
         visitor_email: null,
+        search_vector: null,
         sender: currentUser,
         reactions: [],
         read_receipts: [],
@@ -595,7 +612,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
-  }, [supabase, userId])
+  }, [supabase, userId, maxFileSizeMb])
 
   // Mark conversation as read
   const markAsRead = useCallback(async (conversationId: string) => {
@@ -882,6 +899,12 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         fetchCurrentUser(),
         fetchConversations(),
         fetchNotifications(),
+        getPlatformSettingValue('max_file_size_mb').then(({ data }) => {
+          if (data) {
+            const parsed = parseInt(data, 10)
+            if (!isNaN(parsed)) setMaxFileSizeMb(parsed)
+          }
+        }),
       ])
       setIsLoading(false)
     }
@@ -934,6 +957,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         unpinMessage,
         updateUserStatus,
         endConversation,
+        maxFileSizeMb,
       }}
     >
       {children}

@@ -3,7 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
-import type { Workspace, WorkspaceWithMembers, Widget } from '@/lib/types/database'
+import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
+import type { Workspace, WorkspaceWithMembers, Widget, WorkspaceRole } from '@/lib/types/database'
 
 export async function getWorkspaces(): Promise<{ data: WorkspaceWithMembers[] | null; error: string | null }> {
   const supabase = await createClient()
@@ -110,6 +111,22 @@ export async function createWorkspace(name: string): Promise<{ data: Workspace |
     return { data: null, error: 'MFA verification required' }
   }
 
+  // Enforce max_workspaces_per_user
+  const { data: maxSetting } = await getPlatformSettingValue('max_workspaces_per_user')
+  if (maxSetting) {
+    const maxWorkspaces = parseInt(maxSetting, 10)
+    if (!isNaN(maxWorkspaces)) {
+      const { count } = await supabase
+        .from('workspaces')
+        .select('id', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+
+      if ((count ?? 0) >= maxWorkspaces) {
+        return { data: null, error: `Workspace limit reached (max ${maxWorkspaces})` }
+      }
+    }
+  }
+
   const { data, error } = await supabase
     .from('workspaces')
     .insert({
@@ -189,7 +206,7 @@ export async function deleteWorkspace(workspaceId: string): Promise<{ error: str
 export async function addWorkspaceMember(
   workspaceId: string,
   userId: string,
-  role: 'admin' | 'agent' = 'agent'
+  role: WorkspaceRole = 'agent'
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 
@@ -202,6 +219,22 @@ export async function addWorkspaceMember(
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { error: 'MFA verification required' }
+  }
+
+  // Enforce max_workspace_members
+  const { data: maxSetting } = await getPlatformSettingValue('max_workspace_members')
+  if (maxSetting) {
+    const maxMembers = parseInt(maxSetting, 10)
+    if (!isNaN(maxMembers)) {
+      const { count } = await supabase
+        .from('workspace_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', workspaceId)
+
+      if ((count ?? 0) >= maxMembers) {
+        return { error: `Member limit reached (max ${maxMembers})` }
+      }
+    }
   }
 
   const { error } = await supabase
@@ -254,7 +287,7 @@ export async function removeWorkspaceMember(
 export async function updateMemberRole(
   workspaceId: string,
   memberId: string,
-  newRole: 'admin' | 'agent'
+  newRole: WorkspaceRole
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
 

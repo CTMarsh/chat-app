@@ -141,6 +141,7 @@ export function ChatHeader() {
       case 'online': return 'Online'
       case 'away': return 'Away'
       case 'dnd': return 'Do Not Disturb'
+      case 'suspended': return 'Suspended'
       default: return 'Offline'
     }
   }
@@ -193,6 +194,7 @@ export function ChatHeader() {
                   status === 'online' && 'bg-green-500',
                   status === 'away' && 'bg-yellow-500',
                   status === 'dnd' && 'bg-red-500',
+                  status === 'suspended' && 'bg-red-700',
                   (!status || status === 'offline') && 'bg-gray-400'
                 )} />
               </button>

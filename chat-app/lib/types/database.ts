@@ -7,8 +7,50 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  __InternalSupabase: {
+    PostgrestVersion: "14.1"
+  }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_users: {
         Row: {
           blocked_user_id: string
@@ -44,6 +86,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cleanup_logs: {
+        Row: {
+          executed_at: string | null
+          id: string
+          job_name: string
+          records_deleted: number | null
+        }
+        Insert: {
+          executed_at?: string | null
+          id?: string
+          job_name: string
+          records_deleted?: number | null
+        }
+        Update: {
+          executed_at?: string | null
+          id?: string
+          job_name?: string
+          records_deleted?: number | null
+        }
+        Relationships: []
       }
       conversation_participants: {
         Row: {
@@ -150,6 +213,42 @@ export type Database = {
             columns: ["widget_id"]
             isOneToOne: false
             referencedRelation: "widgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      friendships: {
+        Row: {
+          created_at: string | null
+          id: string
+          user1: string
+          user2: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          user1: string
+          user2: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          user1?: string
+          user2?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "friendships_user1_fkey"
+            columns: ["user1"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "friendships_user2_fkey"
+            columns: ["user2"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -283,6 +382,7 @@ export type Database = {
           pinned_at: string | null
           pinned_by: string | null
           reply_to_id: string | null
+          search_vector: unknown
           sender_id: string
           type: string | null
           updated_at: string | null
@@ -306,6 +406,7 @@ export type Database = {
           pinned_at?: string | null
           pinned_by?: string | null
           reply_to_id?: string | null
+          search_vector?: unknown
           sender_id: string
           type?: string | null
           updated_at?: string | null
@@ -329,6 +430,7 @@ export type Database = {
           pinned_at?: string | null
           pinned_by?: string | null
           reply_to_id?: string | null
+          search_vector?: unknown
           sender_id?: string
           type?: string | null
           updated_at?: string | null
@@ -414,6 +516,38 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: string
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -421,10 +555,11 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          is_platform_admin: boolean
           last_seen_at: string | null
           status: string | null
           updated_at: string | null
-          username: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -432,10 +567,11 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id: string
+          is_platform_admin?: boolean
           last_seen_at?: string | null
           status?: string | null
           updated_at?: string | null
-          username: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -443,12 +579,82 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          is_platform_admin?: boolean
           last_seen_at?: string | null
           status?: string | null
           updated_at?: string | null
-          username?: string
+          username?: string | null
         }
         Relationships: []
+      }
+      push_tokens: {
+        Row: {
+          created_at: string | null
+          device_name: string | null
+          id: string
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          platform: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          dest_user_id: string
+          id: string
+          reason: string
+          source_user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dest_user_id: string
+          id?: string
+          reason: string
+          source_user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dest_user_id?: string
+          id?: string
+          reason?: string
+          source_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_dest_user_id_fkey"
+            columns: ["dest_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_source_user_id_fkey"
+            columns: ["source_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_preferences: {
         Row: {
@@ -545,6 +751,50 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          last_active_at: string | null
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_active_at?: string | null
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          last_active_at?: string | null
+          session_token?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visitor_sessions: {
         Row: {
           created_at: string | null
@@ -554,7 +804,7 @@ export type Database = {
           last_seen_at: string | null
           metadata: Json | null
           name: string
-          session_token: string
+          session_token: string | null
           widget_id: string
         }
         Insert: {
@@ -565,7 +815,7 @@ export type Database = {
           last_seen_at?: string | null
           metadata?: Json | null
           name: string
-          session_token?: string
+          session_token?: string | null
           widget_id: string
         }
         Update: {
@@ -576,7 +826,7 @@ export type Database = {
           last_seen_at?: string | null
           metadata?: Json | null
           name?: string
-          session_token?: string
+          session_token?: string | null
           widget_id?: string
         }
         Relationships: [
@@ -594,7 +844,7 @@ export type Database = {
           allowed_origins: string[] | null
           collect_name: boolean | null
           created_at: string | null
-          embed_token: string
+          embed_token: string | null
           id: string
           is_active: boolean | null
           name: string
@@ -610,7 +860,7 @@ export type Database = {
           allowed_origins?: string[] | null
           collect_name?: boolean | null
           created_at?: string | null
-          embed_token?: string
+          embed_token?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -626,7 +876,7 @@ export type Database = {
           allowed_origins?: string[] | null
           collect_name?: boolean | null
           created_at?: string | null
-          embed_token?: string
+          embed_token?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -687,11 +937,76 @@ export type Database = {
           },
         ]
       }
+      workspace_settings: {
+        Row: {
+          auto_reply_enabled: boolean
+          auto_reply_message: string | null
+          business_hours: Json | null
+          business_hours_enabled: boolean
+          created_at: string
+          default_offline_message: string | null
+          default_primary_color: string | null
+          default_welcome_message: string | null
+          id: string
+          max_conversations_per_agent: number | null
+          notify_on_new_conversation: boolean
+          notify_on_unassigned_timeout: boolean
+          timezone: string | null
+          unassigned_timeout_minutes: number | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          auto_reply_enabled?: boolean
+          auto_reply_message?: string | null
+          business_hours?: Json | null
+          business_hours_enabled?: boolean
+          created_at?: string
+          default_offline_message?: string | null
+          default_primary_color?: string | null
+          default_welcome_message?: string | null
+          id?: string
+          max_conversations_per_agent?: number | null
+          notify_on_new_conversation?: boolean
+          notify_on_unassigned_timeout?: boolean
+          timezone?: string | null
+          unassigned_timeout_minutes?: number | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          auto_reply_enabled?: boolean
+          auto_reply_message?: string | null
+          business_hours?: Json | null
+          business_hours_enabled?: boolean
+          created_at?: string
+          default_offline_message?: string | null
+          default_primary_color?: string | null
+          default_welcome_message?: string | null
+          id?: string
+          max_conversations_per_agent?: number | null
+          notify_on_new_conversation?: boolean
+          notify_on_unassigned_timeout?: boolean
+          timezone?: string | null
+          unassigned_timeout_minutes?: number | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspaces: {
         Row: {
           created_at: string | null
           id: string
-          include_owners_in_availability: boolean
+          include_owners_in_availability: boolean | null
           name: string
           owner_id: string
           updated_at: string | null
@@ -699,7 +1014,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
-          include_owners_in_availability?: boolean
+          include_owners_in_availability?: boolean | null
           name: string
           owner_id: string
           updated_at?: string | null
@@ -707,7 +1022,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
-          include_owners_in_availability?: boolean
+          include_owners_in_availability?: boolean | null
           name?: string
           owner_id?: string
           updated_at?: string | null
@@ -727,6 +1042,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: { Args: { p_user_id: string }; Returns: undefined }
+      admin_get_dashboard_metrics: { Args: never; Returns: Json }
+      admin_log_action: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_target_id?: string
+          p_target_type: string
+        }
+        Returns: string
+      }
+      admin_regenerate_widget_token: {
+        Args: { p_widget_id: string }
+        Returns: string
+      }
+      admin_reset_user_mfa: { Args: { p_user_id: string }; Returns: undefined }
+      admin_set_user_suspended: {
+        Args: { p_suspended: boolean; p_user_id: string }
+        Returns: undefined
+      }
+      admin_set_workspace_suspended: {
+        Args: { p_suspended: boolean; p_workspace_id: string }
+        Returns: undefined
+      }
+      admin_update_setting: {
+        Args: { p_key: string; p_value: string }
+        Returns: undefined
+      }
+      cleanup_expired_sessions: { Args: never; Returns: number }
+      create_direct_conversation: {
+        Args: { p_other_user_id: string }
+        Returns: string
+      }
+      get_allow_signups: { Args: never; Returns: boolean }
       get_unread_count: {
         Args: { conv_id: string; usr_id: string }
         Returns: number
@@ -735,9 +1084,30 @@ export type Database = {
         Args: { conv_id: string }
         Returns: boolean
       }
+      is_platform_admin: { Args: never; Returns: boolean }
+      is_workspace_admin: { Args: { ws_id: string }; Returns: boolean }
       is_workspace_member: {
         Args: { workspace_uuid: string }
         Returns: boolean
+      }
+      is_workspace_owner: { Args: { ws_id: string }; Returns: boolean }
+      regenerate_widget_token: {
+        Args: { p_widget_id: string }
+        Returns: string
+      }
+      revoke_other_sessions: {
+        Args: { p_current_session_token: string }
+        Returns: number
+      }
+      revoke_user_session: { Args: { p_session_id: string }; Returns: boolean }
+      upsert_user_session: {
+        Args: {
+          p_ip_address?: string
+          p_session_token: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: string
       }
     }
     Enums: {
@@ -826,8 +1196,12 @@ export type BlockedUserWithProfile = BlockedUser & {
 // Widget system types
 export type Workspace = Tables<'workspaces'>
 export type WorkspaceMember = Tables<'workspace_members'>
+export type WorkspaceSettings = Tables<'workspace_settings'>
 export type Widget = Tables<'widgets'>
 export type VisitorSession = Tables<'visitor_sessions'>
+
+// Workspace role union type
+export type WorkspaceRole = 'admin' | 'agent' | 'member'
 
 // Extended workspace with members
 export type WorkspaceWithMembers = Workspace & {
