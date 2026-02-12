@@ -5,6 +5,29 @@ import { revalidatePath } from 'next/cache'
 import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import type { WorkspaceSettings } from '@/lib/types/database'
 
+async function verifyWorkspaceAccess(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  workspaceId: string
+): Promise<boolean> {
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (workspace?.owner_id === userId) return true
+
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .single()
+
+  return !!membership
+}
+
 export async function getWorkspaceSettings(
   workspaceId: string
 ): Promise<{ data: WorkspaceSettings | null; error: string | null }> {
@@ -13,6 +36,11 @@ export async function getWorkspaceSettings(
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) {
     return { data: null, error: 'Not authenticated' }
+  }
+
+  // Verify workspace membership
+  if (!await verifyWorkspaceAccess(supabase, user.id, workspaceId)) {
+    return { data: null, error: 'Not authorized' }
   }
 
   const { data, error } = await supabase
@@ -56,6 +84,32 @@ export async function updateWorkspaceSettings(
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { error: 'MFA verification required' }
+  }
+
+  // Verify workspace ownership or admin role
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (!workspace) {
+    return { error: 'Workspace not found' }
+  }
+
+  const isOwner = workspace.owner_id === user.id
+
+  if (!isOwner) {
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('role')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership || membership.role !== 'admin') {
+      return { error: 'Only workspace owners and admins can update settings' }
+    }
   }
 
   const { error } = await supabase

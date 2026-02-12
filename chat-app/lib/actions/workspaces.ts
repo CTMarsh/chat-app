@@ -77,6 +77,32 @@ export async function getWorkspace(workspaceId: string): Promise<{ data: Workspa
     return { data: null, error: 'Not authenticated' }
   }
 
+  // Verify user is owner or member before returning data
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (!workspace) {
+    return { data: null, error: 'Workspace not found' }
+  }
+
+  const isOwner = workspace.owner_id === user.id
+
+  if (!isOwner) {
+    const { data: membership } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!membership) {
+      return { data: null, error: 'Not authorized' }
+    }
+  }
+
   const { data, error } = await supabase
     .from('workspaces')
     .select(`

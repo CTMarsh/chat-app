@@ -6,7 +6,32 @@ import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import type { Widget, WidgetWithWorkspace } from '@/lib/types/database'
 
-export async function getWidgets(workspaceId?: string): Promise<{ data: WidgetWithWorkspace[] | null; error: string | null }> {
+async function verifyWorkspaceAccess(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  workspaceId: string
+): Promise<boolean> {
+  // Check if user is workspace owner
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('owner_id')
+    .eq('id', workspaceId)
+    .single()
+
+  if (workspace?.owner_id === userId) return true
+
+  // Check if user is a workspace member
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('user_id', userId)
+    .single()
+
+  return !!membership
+}
+
+export async function getWidgets(workspaceId: string): Promise<{ data: WidgetWithWorkspace[] | null; error: string | null }> {
   const supabase = await createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -14,18 +39,19 @@ export async function getWidgets(workspaceId?: string): Promise<{ data: WidgetWi
     return { data: null, error: 'Not authenticated' }
   }
 
-  let query = supabase
+  // Verify workspace membership
+  if (!await verifyWorkspaceAccess(supabase, user.id, workspaceId)) {
+    return { data: null, error: 'Not authorized' }
+  }
+
+  const { data, error } = await supabase
     .from('widgets')
     .select(`
       *,
       workspace:workspaces(*)
     `)
-
-  if (workspaceId) {
-    query = query.eq('workspace_id', workspaceId)
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false })
+    .eq('workspace_id', workspaceId)
+    .order('created_at', { ascending: false })
 
   if (error) {
     return { data: null, error: sanitizeErrorMessage(error.message) }
@@ -55,6 +81,11 @@ export async function getWidget(widgetId: string): Promise<{ data: WidgetWithWor
     return { data: null, error: 'Widget not found' }
   }
 
+  // Verify workspace membership
+  if (!await verifyWorkspaceAccess(supabase, user.id, data.workspace_id)) {
+    return { data: null, error: 'Not authorized' }
+  }
+
   return { data: data as WidgetWithWorkspace, error: null }
 }
 
@@ -82,6 +113,11 @@ export async function createWidget(
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { data: null, error: 'MFA verification required' }
+  }
+
+  // Verify workspace membership
+  if (!await verifyWorkspaceAccess(supabase, user.id, workspaceId)) {
+    return { data: null, error: 'Not authorized' }
   }
 
   // Enforce max_widgets_per_workspace
@@ -151,6 +187,21 @@ export async function updateWidget(
     return { error: 'MFA verification required' }
   }
 
+  // Verify workspace membership via widget lookup
+  const { data: widget } = await supabase
+    .from('widgets')
+    .select('workspace_id')
+    .eq('id', widgetId)
+    .single()
+
+  if (!widget) {
+    return { error: 'Widget not found' }
+  }
+
+  if (!await verifyWorkspaceAccess(supabase, user.id, widget.workspace_id)) {
+    return { error: 'Not authorized' }
+  }
+
   const dbUpdates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   }
@@ -193,6 +244,21 @@ export async function deleteWidget(widgetId: string): Promise<{ error: string | 
     return { error: 'MFA verification required' }
   }
 
+  // Verify workspace membership via widget lookup
+  const { data: widget } = await supabase
+    .from('widgets')
+    .select('workspace_id')
+    .eq('id', widgetId)
+    .single()
+
+  if (!widget) {
+    return { error: 'Widget not found' }
+  }
+
+  if (!await verifyWorkspaceAccess(supabase, user.id, widget.workspace_id)) {
+    return { error: 'Not authorized' }
+  }
+
   const { error } = await supabase
     .from('widgets')
     .delete()
@@ -218,6 +284,21 @@ export async function regenerateEmbedToken(widgetId: string): Promise<{ data: { 
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
     return { data: null, error: 'MFA verification required' }
+  }
+
+  // Verify workspace membership via widget lookup
+  const { data: widget } = await supabase
+    .from('widgets')
+    .select('workspace_id')
+    .eq('id', widgetId)
+    .single()
+
+  if (!widget) {
+    return { data: null, error: 'Widget not found' }
+  }
+
+  if (!await verifyWorkspaceAccess(supabase, user.id, widget.workspace_id)) {
+    return { data: null, error: 'Not authorized' }
   }
 
   // Generate new token using SQL function

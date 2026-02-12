@@ -46,19 +46,20 @@ export default function WidgetsSettingsPage() {
   const loadData = async () => {
     setIsLoading(true)
 
-    const [widgetsResult, workspacesResult] = await Promise.all([
-      getWidgets(),
-      getWorkspaces(),
-    ])
+    const workspacesResult = await getWorkspaces()
 
-    if (widgetsResult.data) {
-      setWidgets(widgetsResult.data)
-    }
     if (workspacesResult.data) {
       setWorkspaces(workspacesResult.data)
       if (workspacesResult.data.length > 0 && !selectedWorkspaceId) {
         setSelectedWorkspaceId(workspacesResult.data[0].id)
       }
+
+      // Load widgets for all user's workspaces
+      const allWidgets = await Promise.all(
+        workspacesResult.data.map(ws => getWidgets(ws.id))
+      )
+      const combined = allWidgets.flatMap(r => r.data ?? [])
+      setWidgets(combined)
     }
 
     setIsLoading(false)

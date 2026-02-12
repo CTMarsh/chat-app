@@ -51,8 +51,15 @@
         .then(function(serverConfig) {
           if (serverConfig) {
             // Override with server config (database values take precedence)
-            self.config.buttonColor = serverConfig.primaryColor || self.config.buttonColor;
-            self.config.position = serverConfig.position || self.config.position;
+            // Validate color to prevent CSS injection
+            var color = serverConfig.primaryColor || self.config.buttonColor;
+            if (color && /^#[0-9a-fA-F]{3,8}$|^rgb/.test(color)) {
+              self.config.buttonColor = color;
+            }
+            var pos = serverConfig.position || self.config.position;
+            if (pos === 'bottom-right' || pos === 'bottom-left') {
+              self.config.position = pos;
+            }
           }
           self.render();
         })
@@ -183,6 +190,7 @@
       var iframe = document.createElement('iframe');
       iframe.src = this.config.baseUrl + '/widget?token=' + encodeURIComponent(this.config.embedToken);
       iframe.setAttribute('allow', 'microphone');
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-forms');
       iframe.setAttribute('title', 'Chat Widget');
 
       container.appendChild(iframe);

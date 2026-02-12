@@ -83,7 +83,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         setConfig(widgetConfig)
 
         // Try to resume session from localStorage
-        const savedSession = localStorage.getItem(`widget_session_${embedToken}`)
+        const savedSession = sessionStorage.getItem(`widget_session_${embedToken}`)
         if (savedSession) {
           const parsed = JSON.parse(savedSession)
           await resumeSession(parsed.sessionToken)
@@ -113,7 +113,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         setConversationId(sessionData.conversationId)
 
         // Save session
-        localStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(sessionData))
+        sessionStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(sessionData))
 
         // Load messages if conversation exists
         if (sessionData.conversationId) {
@@ -122,7 +122,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
       }
     } catch (err) {
       console.error('Failed to resume session:', err)
-      localStorage.removeItem(`widget_session_${embedToken}`)
+      sessionStorage.removeItem(`widget_session_${embedToken}`)
     }
   }
 
@@ -145,7 +145,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
       setConversationId(sessionData.conversationId)
 
       // Save session
-      localStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(sessionData))
+      sessionStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(sessionData))
 
       return true
     } catch (err) {
@@ -263,7 +263,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   // Start new chat (reset session)
   const startNewChat = () => {
     // Clear localStorage
-    localStorage.removeItem(`widget_session_${embedToken}`)
+    sessionStorage.removeItem(`widget_session_${embedToken}`)
     // Reset all state
     setSession(null)
     setMessages([])
@@ -323,7 +323,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
         // Update saved session
         const updatedSession = { ...session, conversationId: result.conversationId }
         setSession(updatedSession)
-        localStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(updatedSession))
+        sessionStorage.setItem(`widget_session_${embedToken}`, JSON.stringify(updatedSession))
       }
 
       // Add message to list (optimistic update)
