@@ -225,28 +225,24 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             className={cn(
               'relative rounded-2xl px-4 py-2 transition-all duration-200',
               isOwn
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                : 'bg-muted/80 shadow-sm hover:shadow-md',
-              showAvatar && isOwn && 'rounded-br-[4px]',
-              showAvatar && !isOwn && 'rounded-bl-[4px]'
+                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 rounded-br-[4px]'
+                : 'bg-muted/80 shadow-sm hover:shadow-md rounded-bl-[4px]'
             )}
           >
             {/* Sail-shaped bubble tail */}
-            {showAvatar && (
-              <svg
-                className={cn(
-                  'absolute bottom-0 h-[10px] w-[7px]',
-                  isOwn ? '-right-[6px]' : '-left-[6px]'
-                )}
-                viewBox={isOwn ? '0 0 7 10' : '0 0 7 10'}
-                fill="none"
-              >
-                <path
-                  d={isOwn ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
-                  className={isOwn ? 'fill-primary' : 'fill-muted'}
-                />
-              </svg>
-            )}
+            <svg
+              className={cn(
+                'absolute bottom-0 h-[10px] w-[7px]',
+                isOwn ? '-right-[6px]' : '-left-[6px]'
+              )}
+              viewBox="0 0 7 10"
+              fill="none"
+            >
+              <path
+                d={isOwn ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
+                className={isOwn ? 'fill-primary' : 'fill-muted'}
+              />
+            </svg>
             {message.content && (
               <p className={cn(
                 "whitespace-pre-wrap break-words",

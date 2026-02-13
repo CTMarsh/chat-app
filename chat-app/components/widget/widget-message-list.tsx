@@ -47,11 +47,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
       ref={scrollRef}
       className="flex-1 overflow-y-auto p-4 space-y-3"
     >
-      {messages.map((message, index) => {
-        const prevMessage = index > 0 ? messages[index - 1] : null
-        const showTail = !prevMessage || prevMessage.isFromVisitor !== message.isFromVisitor
-
-        return (
+      {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isFromVisitor ? 'justify-end' : 'justify-start'}`}
@@ -79,26 +75,24 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
               <div
                 className={`relative rounded-2xl px-3.5 py-2 ${
                   message.isFromVisitor
-                    ? `text-white ${showTail ? 'rounded-br-[4px]' : 'rounded-br-md'}`
-                    : `bg-gray-100 text-gray-800 ${showTail ? 'rounded-bl-[4px]' : 'rounded-bl-md'}`
+                    ? 'text-white rounded-br-[4px]'
+                    : 'bg-gray-100 text-gray-800 rounded-bl-[4px]'
                 }`}
                 style={message.isFromVisitor ? { backgroundColor: primaryColor } : undefined}
               >
                 {/* Sail-shaped bubble tail */}
-                {showTail && (
-                  <svg
-                    className={`absolute bottom-0 h-[10px] w-[7px] ${
-                      message.isFromVisitor ? '-right-[6px]' : '-left-[6px]'
-                    }`}
-                    viewBox="0 0 7 10"
-                    fill="none"
-                  >
-                    <path
-                      d={message.isFromVisitor ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
-                      fill={message.isFromVisitor ? primaryColor : '#f3f4f6'}
-                    />
-                  </svg>
-                )}
+                <svg
+                  className={`absolute bottom-0 h-[10px] w-[7px] ${
+                    message.isFromVisitor ? '-right-[6px]' : '-left-[6px]'
+                  }`}
+                  viewBox="0 0 7 10"
+                  fill="none"
+                >
+                  <path
+                    d={message.isFromVisitor ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
+                    fill={message.isFromVisitor ? primaryColor : '#f3f4f6'}
+                  />
+                </svg>
 
                 {/* Agent name for agent messages */}
                 {!message.isFromVisitor && message.sender?.displayName && (
@@ -122,7 +116,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
             </div>
           </div>
         )
-      })}
+      )}
     </div>
   )
 }
