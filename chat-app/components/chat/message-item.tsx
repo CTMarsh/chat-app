@@ -297,6 +297,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                   onKeyDown={handleEditKeyDown}
                   className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                   rows={1}
+                  maxLength={10000}
                 />
                 <div className="mt-1 flex items-center gap-1">
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleSaveEdit}>

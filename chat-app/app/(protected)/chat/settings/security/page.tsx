@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SettingSection } from '@/components/settings/setting-section'
 import { createClient } from '@/lib/supabase/client'
+import { changePassword } from '@/lib/actions/auth'
 import { MFAEnroll } from '@/components/auth/mfa-enroll'
 import { MFAUnenroll } from '@/components/auth/mfa-unenroll'
 import {
@@ -101,6 +102,7 @@ export default function SecuritySettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [isRevokingSession, setIsRevokingSession] = useState<string | null>(null)
   const [isRevokingOthers, setIsRevokingOthers] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -157,8 +159,12 @@ export default function SecuritySettingsPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters' })
+    if (!currentPassword) {
+      setMessage({ type: 'error', text: 'Current password is required' })
+      return
+    }
+    if (newPassword.length < 8) {
+      setMessage({ type: 'error', text: 'Password must be at least 8 characters' })
       return
     }
     if (newPassword !== confirmPassword) {
@@ -166,11 +172,12 @@ export default function SecuritySettingsPage() {
       return
     }
     setIsChangingPassword(true)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    const { error } = await changePassword(currentPassword, newPassword)
     if (error) {
-      setMessage({ type: 'error', text: error.message })
+      setMessage({ type: 'error', text: error })
     } else {
       setMessage({ type: 'success', text: 'Password changed successfully' })
+      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     }
@@ -336,9 +343,20 @@ export default function SecuritySettingsPage() {
         <h2 className="text-lg font-semibold">Change Password</h2>
         <SettingSection
           title="Update your password"
-          description="Choose a strong password with at least 6 characters"
+          description="Choose a strong password with at least 8 characters"
         >
           <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <Input
+                id="current-password"
+                type="password"
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
+                placeholder="Enter current password"
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="new-password">New Password</Label>
               <Input
@@ -347,7 +365,7 @@ export default function SecuritySettingsPage() {
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 placeholder="Enter new password"
-                minLength={6}
+                minLength={8}
                 required
               />
             </div>
@@ -359,11 +377,11 @@ export default function SecuritySettingsPage() {
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Confirm new password"
-                minLength={6}
+                minLength={8}
                 required
               />
             </div>
-            <Button type="submit" disabled={isChangingPassword || !newPassword || !confirmPassword}>
+            <Button type="submit" disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}>
               {isChangingPassword ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (

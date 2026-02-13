@@ -8,6 +8,7 @@ import { scanFile } from '@/lib/utils/scan-file'
 import { getPreferences } from '@/lib/actions/settings'
 import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import { endConversation as endConversationAction } from '@/lib/actions/conversations'
+import { editMessage as editMessageAction } from '@/lib/actions/messages'
 
 interface FileAttachment {
   file: File
@@ -249,16 +250,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     }
   }, [supabase])
 
-  // Pin a message
+  // Pin a message (via RPC with SECURITY DEFINER)
   const pinMessage = useCallback(async (messageId: string) => {
-    const { error } = await supabase
-      .from('messages')
-      .update({
-        is_pinned: true,
-        pinned_at: new Date().toISOString(),
-        pinned_by: userId,
-      })
-      .eq('id', messageId)
+    const { error } = await supabase.rpc('pin_message', { msg_id: messageId })
 
     if (error) {
       console.error('Error pinning message:', error)
@@ -276,16 +270,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     }
   }, [supabase, userId, messages])
 
-  // Unpin a message
+  // Unpin a message (via RPC with SECURITY DEFINER)
   const unpinMessage = useCallback(async (messageId: string) => {
-    const { error } = await supabase
-      .from('messages')
-      .update({
-        is_pinned: false,
-        pinned_at: null,
-        pinned_by: null,
-      })
-      .eq('id', messageId)
+    const { error } = await supabase.rpc('unpin_message', { msg_id: messageId })
 
     if (error) {
       console.error('Error unpinning message:', error)
@@ -345,6 +332,11 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
   // Send message
   const sendMessage = useCallback(async (content: string, conversationId: string, file?: File, replyToId?: string) => {
+    // Validate content length (matches DB CHECK constraint)
+    if (content.length > 10000) {
+      throw new Error('Message too long (max 10,000 characters)')
+    }
+
     let fileUrl: string | null = null
     let fileName: string | null = null
     let fileSize: number | null = null
@@ -466,6 +458,11 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     file?: File,
     replyToId?: string
   ) => {
+    // Validate content length (matches DB CHECK constraint)
+    if (content.length > 10000) {
+      throw new Error('Message too long (max 10,000 characters)')
+    }
+
     let fileUrl: string | null = null
     let fileName: string | null = null
     let fileSize: number | null = null
@@ -638,17 +635,18 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .eq('user_id', userId)
   }, [supabase, userId])
 
-  // Mark notification as read
+  // Mark notification as read (scoped to user for defense-in-depth)
   const markNotificationRead = useCallback(async (notificationId: string) => {
     await supabase
       .from('notifications')
       .update({ is_read: true })
       .eq('id', notificationId)
+      .eq('user_id', userId)
 
     setNotifications(prev =>
       prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
     )
-  }, [supabase])
+  }, [supabase, userId])
 
   // Mark all notifications as read
   const markAllNotificationsRead = useCallback(async () => {
@@ -748,31 +746,23 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     )
   }, [supabase, userId])
 
-  // Edit message
+  // Edit message (via server action with AAL2 enforcement)
   const editMessage = useCallback(async (messageId: string, newContent: string) => {
-    const { error } = await supabase
-      .from('messages')
-      .update({
-        content: newContent,
-        is_edited: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', messageId)
-      .eq('sender_id', userId)
+    const { error } = await editMessageAction(messageId, newContent)
 
     if (error) {
       console.error('Error editing message:', error)
-      throw error
+      throw new Error(error)
     }
 
     setMessages(prev =>
       prev.map(m =>
         m.id === messageId
-          ? { ...m, content: newContent, is_edited: true, updated_at: new Date().toISOString() }
+          ? { ...m, content: newContent.trim(), is_edited: true, updated_at: new Date().toISOString() }
           : m
       )
     )
-  }, [supabase, userId])
+  }, [])
 
   // Toggle reaction on a message
   const toggleReaction = useCallback(async (messageId: string, emoji: string) => {

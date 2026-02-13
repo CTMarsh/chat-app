@@ -14,6 +14,16 @@ interface LinkPreviewProps {
   preview: LinkPreviewData
 }
 
+// Only allow https:// URLs to prevent javascript: or data: injection
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 export function LinkPreview({ preview }: LinkPreviewProps) {
   const getDomain = (url: string) => {
     try {
@@ -23,6 +33,11 @@ export function LinkPreview({ preview }: LinkPreviewProps) {
     }
   }
 
+  // Reject unsafe URLs entirely
+  if (!isSafeUrl(preview.url)) return null
+
+  const safeImage = preview.image && isSafeUrl(preview.image) ? preview.image : null
+
   return (
     <a
       href={preview.url}
@@ -31,10 +46,10 @@ export function LinkPreview({ preview }: LinkPreviewProps) {
       className="mt-2 block overflow-hidden rounded-lg border bg-muted/30 transition-colors hover:bg-muted/50"
       aria-label={preview.title ? `Link to ${preview.title} on ${preview.siteName || getDomain(preview.url)}` : `External link to ${getDomain(preview.url)}`}
     >
-      {preview.image && (
+      {safeImage && (
         <div className="relative h-32 w-full overflow-hidden bg-muted">
           <img
-            src={preview.image}
+            src={safeImage}
             alt={preview.title ? `Preview image for ${preview.title}` : 'Link preview image'}
             className="h-full w-full object-cover"
             onError={(e) => {

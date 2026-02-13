@@ -206,6 +206,7 @@ export default function ProfileSettingsPage() {
                 onChange={e => setDisplayName(e.target.value)}
                 onBlur={handleDisplayNameBlur}
                 placeholder="Enter your display name"
+                maxLength={100}
                 className={cn(
                   "pr-8",
                   displayName !== originalDisplayName && "border-primary/50"
@@ -231,6 +232,7 @@ export default function ProfileSettingsPage() {
                 onChange={e => setUsername(e.target.value)}
                 onBlur={handleUsernameBlur}
                 placeholder="Enter your username"
+                maxLength={50}
                 className={cn(
                   "pr-8",
                   username !== originalUsername && "border-primary/50"
