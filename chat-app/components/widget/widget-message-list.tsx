@@ -80,7 +80,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
                 }`}
                 style={message.isFromVisitor ? { backgroundColor: primaryColor } : undefined}
               >
-                {/* Sail-shaped bubble tail */}
+                {/* Bubble tail */}
                 <svg
                   className={`absolute bottom-0 h-[10px] w-[7px] ${
                     message.isFromVisitor ? '-right-[6px]' : '-left-[6px]'

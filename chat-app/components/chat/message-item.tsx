@@ -229,7 +229,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 : 'bg-muted/80 shadow-sm hover:shadow-md rounded-bl-[4px]'
             )}
           >
-            {/* Sail-shaped bubble tail */}
+            {/* Bubble tail */}
             <svg
               className={cn(
                 'absolute bottom-0 h-[10px] w-[7px]',
@@ -240,7 +240,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             >
               <path
                 d={isOwn ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
-                className={isOwn ? 'fill-primary' : 'fill-muted'}
+                className={isOwn ? 'fill-primary' : 'fill-muted/80'}
               />
             </svg>
             {message.content && (
