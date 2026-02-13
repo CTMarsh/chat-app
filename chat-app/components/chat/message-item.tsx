@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { format } from 'date-fns'
-import { Trash2, MoreVertical, Pin, PinOff } from 'lucide-react'
+import { Trash2, MoreVertical, Pin, PinOff, Pencil, Reply, X, Check } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,10 +39,13 @@ interface MessageItemProps {
 }
 
 export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
-  const { currentUser, toggleReaction, deleteMessage, pinMessage, unpinMessage } = useChat()
+  const { currentUser, toggleReaction, deleteMessage, editMessage, pinMessage, unpinMessage, setReplyTo } = useChat()
   const { linkPreviewsEnabled } = useMessagePreferences()
   const { showReadReceipts } = usePrivacyPreferences()
   const isDeleted = !!message.deleted_at
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(message.content || '')
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null)
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?'
@@ -111,6 +114,48 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
     } else {
       await pinMessage(message.id)
     }
+  }
+
+  const handleStartEdit = () => {
+    setEditContent(message.content || '')
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditContent(message.content || '')
+  }
+
+  const handleSaveEdit = async () => {
+    const trimmed = editContent.trim()
+    if (!trimmed || trimmed === message.content) {
+      handleCancelEdit()
+      return
+    }
+    await editMessage(message.id, trimmed)
+    setIsEditing(false)
+  }
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSaveEdit()
+    }
+    if (e.key === 'Escape') {
+      handleCancelEdit()
+    }
+  }
+
+  // Focus textarea when editing starts
+  useEffect(() => {
+    if (isEditing && editTextareaRef.current) {
+      editTextareaRef.current.focus()
+      editTextareaRef.current.selectionStart = editTextareaRef.current.value.length
+    }
+  }, [isEditing])
+
+  const handleReply = () => {
+    setReplyTo(message)
   }
 
   // If message is deleted, show placeholder
@@ -243,7 +288,27 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 className={isOwn ? 'fill-primary' : 'fill-muted/80'}
               />
             </svg>
-            {message.content && (
+            {isEditing ? (
+              <div className="min-w-[200px]">
+                <textarea
+                  ref={editTextareaRef}
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  onKeyDown={handleEditKeyDown}
+                  className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  rows={1}
+                />
+                <div className="mt-1 flex items-center gap-1">
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleSaveEdit}>
+                    <Check className="h-3.5 w-3.5 text-green-500" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCancelEdit}>
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                  <span className="text-[10px] text-muted-foreground ml-1">Enter to save, Esc to cancel</span>
+                </div>
+              </div>
+            ) : message.content && (
               <p className={cn(
                 "whitespace-pre-wrap break-words",
                 isEmojiOnly(message.content) && !message.file_url ? "text-[44px] leading-tight" : "text-sm"
@@ -287,6 +352,10 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={isOwn ? 'end' : 'start'}>
+                <DropdownMenuItem onClick={handleReply}>
+                  <Reply className="mr-2 h-4 w-4" />
+                  Reply
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleTogglePin}>
                   {message.is_pinned ? (
                     <>
@@ -300,6 +369,12 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                     </>
                   )}
                 </DropdownMenuItem>
+                {isOwn && (
+                  <DropdownMenuItem onClick={handleStartEdit}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
                 {isOwn && (
                   <DropdownMenuItem
                     onClick={handleDelete}

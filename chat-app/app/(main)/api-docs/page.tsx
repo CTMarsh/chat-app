@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Header, Footer } from '@/components/landing'
-import { Code, Lock, Zap, Webhook } from 'lucide-react'
+import { Lock, Zap, Webhook } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'API Documentation - ChatArk',
@@ -28,13 +28,6 @@ const endpoints = [
     description:
       'Subscribe to messages, typing indicators, presence, and reactions via Supabase Realtime channels with PostgreSQL change events and broadcast.',
     status: 'Available',
-  },
-  {
-    icon: Code,
-    title: 'REST API',
-    description:
-      'Full CRUD access to conversations, messages, profiles, and workspaces via Supabase PostgREST with row-level security.',
-    status: 'Coming soon',
   },
 ]
 
@@ -314,8 +307,7 @@ typingChannel
           {/* Contact */}
           <div className="rounded-xl border border-border/50 bg-card/30 p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Full REST API reference documentation is coming soon. For widget integration help
-              or API questions, contact us at{' '}
+              For widget integration help or API questions, contact us at{' '}
               <a href="mailto:developers@chatark.io" className="text-primary hover:underline">
                 developers@chatark.io
               </a>.

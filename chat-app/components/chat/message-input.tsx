@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react'
-import { Send, AlertTriangle, X } from 'lucide-react'
+import { Send, AlertTriangle, X, Reply } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useChat } from '@/components/providers/chat-provider'
 import { EmojiPicker } from './emoji-picker'
@@ -24,7 +24,7 @@ function isEmojiOnly(text: string): boolean {
 }
 
 export function MessageInput() {
-  const { activeConversation, currentUser, sendMessageWithMentions, setTyping, maxFileSizeMb } = useChat()
+  const { activeConversation, currentUser, sendMessageWithMentions, setTyping, maxFileSizeMb, replyTo, clearReplyTo } = useChat()
 
   // Check if conversation is ended (widget only)
   const isEnded = activeConversation?.type === 'widget' && !!activeConversation.ended_at
@@ -184,9 +184,11 @@ export function MessageInput() {
       .filter(u => messageContent.includes(`@${u.username}`))
       .map(u => u.id)
 
+    const currentReplyToId = replyTo?.id
     setContent('')
     setSelectedFile(null)
     setMentionedUsers([])
+    clearReplyTo()
 
     // Clear typing indicator
     if (typingTimeoutRef.current) {
@@ -200,7 +202,8 @@ export function MessageInput() {
         messageContent || (fileToSend ? `Sent a ${fileToSend.type.startsWith('image/') ? 'photo' : 'file'}` : ''),
         activeConversation.id,
         mentionedUserIds,
-        fileToSend || undefined
+        fileToSend || undefined,
+        currentReplyToId
       )
     } catch (error) {
       console.error('Failed to send message:', error)
@@ -291,6 +294,29 @@ export function MessageInput() {
 
   return (
     <form onSubmit={handleSubmit} className="relative border-t bg-card/30 p-4 backdrop-blur-sm">
+      {replyTo && (
+        <div className="mb-2 flex items-center gap-2 rounded-lg border-l-2 border-primary/50 bg-muted/30 px-3 py-2">
+          <Reply className="h-4 w-4 shrink-0 text-primary" />
+          <div className="min-w-0 flex-1">
+            <span className="text-xs font-medium text-primary">
+              {replyTo.sender.display_name || replyTo.sender.username}
+            </span>
+            <p className="truncate text-xs text-muted-foreground">
+              {replyTo.content}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0"
+            onClick={clearReplyTo}
+            aria-label="Cancel reply"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
       {uploadError && (
         <div
           role="alert"

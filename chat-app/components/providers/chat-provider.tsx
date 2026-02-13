@@ -27,7 +27,10 @@ interface ChatContextType {
   typingUsers: Map<string, string[]>
   isLoading: boolean
   setActiveConversation: (conversation: ConversationWithParticipants | null) => void
-  sendMessage: (content: string, conversationId: string, file?: File) => Promise<void>
+  replyTo: MessageWithSender | null
+  setReplyTo: (message: MessageWithSender) => void
+  clearReplyTo: () => void
+  sendMessage: (content: string, conversationId: string, file?: File, replyToId?: string) => Promise<void>
   markAsRead: (conversationId: string) => Promise<void>
   markNotificationRead: (notificationId: string) => Promise<void>
   markAllNotificationsRead: () => Promise<void>
@@ -36,7 +39,8 @@ interface ChatContextType {
   fetchConversationById: (conversationId: string) => Promise<ConversationWithParticipants | null>
   toggleReaction: (messageId: string, emoji: string) => Promise<void>
   deleteMessage: (messageId: string) => Promise<void>
-  sendMessageWithMentions: (content: string, conversationId: string, mentionedUserIds: string[], file?: File) => Promise<void>
+  editMessage: (messageId: string, newContent: string) => Promise<void>
+  sendMessageWithMentions: (content: string, conversationId: string, mentionedUserIds: string[], file?: File, replyToId?: string) => Promise<void>
   pinnedMessages: MessageWithSender[]
   pinMessage: (messageId: string) => Promise<void>
   unpinMessage: (messageId: string) => Promise<void>
@@ -58,10 +62,19 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const [pinnedMessages, setPinnedMessages] = useState<MessageWithSender[]>([])
   const channelsRef = useRef<RealtimeChannel[]>([])
   const [maxFileSizeMb, setMaxFileSizeMb] = useState(50)
+  const [replyTo, setReplyToState] = useState<MessageWithSender | null>(null)
 
   const supabase = createClient()
 
   const unreadCount = notifications.filter(n => !n.is_read).length
+
+  const setReplyTo = useCallback((message: MessageWithSender) => {
+    setReplyToState(message)
+  }, [])
+
+  const clearReplyTo = useCallback(() => {
+    setReplyToState(null)
+  }, [])
 
   // Fetch current user profile
   const fetchCurrentUser = useCallback(async () => {
@@ -331,7 +344,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   }, [activeConversation?.id])
 
   // Send message
-  const sendMessage = useCallback(async (content: string, conversationId: string, file?: File) => {
+  const sendMessage = useCallback(async (content: string, conversationId: string, file?: File, replyToId?: string) => {
     let fileUrl: string | null = null
     let fileName: string | null = null
     let fileSize: number | null = null
@@ -396,6 +409,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         file_name: fileName,
         file_size: fileSize,
         file_type: fileType,
+        reply_to_id: replyToId || null,
       })
       .select('id')
       .single()
@@ -421,7 +435,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         updated_at: now,
         deleted_at: null,
         deleted_by: null,
-        reply_to_id: null,
+        reply_to_id: replyToId || null,
         is_pinned: false,
         pinned_at: null,
         pinned_by: null,
@@ -449,7 +463,8 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     content: string,
     conversationId: string,
     mentionedUserIds: string[],
-    file?: File
+    file?: File,
+    replyToId?: string
   ) => {
     let fileUrl: string | null = null
     let fileName: string | null = null
@@ -556,6 +571,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         file_size: fileSize,
         file_type: fileType,
         link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+        reply_to_id: replyToId || null,
       })
       .select('id')
       .single()
@@ -581,7 +597,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         updated_at: now,
         deleted_at: null,
         deleted_by: null,
-        reply_to_id: null,
+        reply_to_id: replyToId || null,
         is_pinned: false,
         pinned_at: null,
         pinned_by: null,
@@ -727,6 +743,32 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       prev.map(m =>
         m.id === messageId
           ? { ...m, deleted_at: new Date().toISOString(), deleted_by: userId }
+          : m
+      )
+    )
+  }, [supabase, userId])
+
+  // Edit message
+  const editMessage = useCallback(async (messageId: string, newContent: string) => {
+    const { error } = await supabase
+      .from('messages')
+      .update({
+        content: newContent,
+        is_edited: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', messageId)
+      .eq('sender_id', userId)
+
+    if (error) {
+      console.error('Error editing message:', error)
+      throw error
+    }
+
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === messageId
+          ? { ...m, content: newContent, is_edited: true, updated_at: new Date().toISOString() }
           : m
       )
     )
@@ -944,6 +986,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         unreadCount,
         typingUsers,
         isLoading,
+        replyTo,
+        setReplyTo,
+        clearReplyTo,
         setActiveConversation,
         sendMessage,
         markAsRead,
@@ -954,6 +999,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         fetchConversationById,
         toggleReaction,
         deleteMessage,
+        editMessage,
         sendMessageWithMentions,
         pinnedMessages,
         pinMessage,

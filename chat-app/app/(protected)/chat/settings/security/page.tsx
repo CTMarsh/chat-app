@@ -14,8 +14,11 @@ import {
   Globe,
   X,
   Plus,
+  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { SettingSection } from '@/components/settings/setting-section'
 import { createClient } from '@/lib/supabase/client'
 import { MFAEnroll } from '@/components/auth/mfa-enroll'
@@ -98,6 +101,9 @@ export default function SecuritySettingsPage() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [isRevokingSession, setIsRevokingSession] = useState<string | null>(null)
   const [isRevokingOthers, setIsRevokingOthers] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [message, setMessage] = useState<{
     type: 'success' | 'error'
     text: string
@@ -147,6 +153,28 @@ export default function SecuritySettingsPage() {
       await fetchSessions()
     }
     setIsRevokingOthers(false)
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newPassword.length < 6) {
+      setMessage({ type: 'error', text: 'Password must be at least 6 characters' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setMessage({ type: 'error', text: 'Passwords do not match' })
+      return
+    }
+    setIsChangingPassword(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) {
+      setMessage({ type: 'error', text: error.message })
+    } else {
+      setMessage({ type: 'success', text: 'Password changed successfully' })
+      setNewPassword('')
+      setConfirmPassword('')
+    }
+    setIsChangingPassword(false)
   }
 
   const handleSignOut = async () => {
@@ -301,6 +329,50 @@ export default function SecuritySettingsPage() {
             )}
           </SettingSection>
         </div>
+      </div>
+
+      {/* Change Password Section */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Change Password</h2>
+        <SettingSection
+          title="Update your password"
+          description="Choose a strong password with at least 6 characters"
+        >
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                minLength={6}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                minLength={6}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={isChangingPassword || !newPassword || !confirmPassword}>
+              {isChangingPassword ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <KeyRound className="mr-2 h-4 w-4" />
+              )}
+              Change Password
+            </Button>
+          </form>
+        </SettingSection>
       </div>
 
       {/* Active Sessions Section */}
