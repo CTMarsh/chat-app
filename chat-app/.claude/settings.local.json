@@ -32,11 +32,23 @@
       "mcp__supabase__deploy_edge_function",
       "WebFetch(domain:docs.virustotal.com)",
       "mcp__supabase__get_logs",
-      "mcp__supabase__get_edge_function"
+      "mcp__supabase__get_edge_function",
+      "mcp__supabase-dev__get_project_url",
+      "mcp__supabase-dev__get_publishable_keys",
+      "mcp__supabase-dev__list_tables",
+      "mcp__supabase-dev__apply_migration",
+      "mcp__supabase-dev__list_extensions",
+      "mcp__supabase-dev__list_edge_functions",
+      "mcp__supabase-dev__deploy_edge_function",
+      "mcp__supabase-dev__list_migrations",
+      "mcp__supabase-dev__get_advisors",
+      "mcp__supabase-dev__execute_sql",
+      "mcp__supabase-dev__get_logs"
     ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "supabase"
+    "supabase",
+    "supabase-dev"
   ]
 }
