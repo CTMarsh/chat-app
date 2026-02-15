@@ -24,6 +24,7 @@ import {
 import { useChat } from '@/components/providers/chat-provider'
 import { SearchDialog } from './search-dialog'
 import { ProfilePopover } from './profile-popover'
+import { GroupInfoPanel } from './group-info-panel'
 import { cn } from '@/lib/utils'
 import { blockUser, isUserBlocked, unblockUser } from '@/lib/actions/settings'
 import { useRouter } from 'next/navigation'
@@ -37,6 +38,7 @@ export function ChatHeader() {
   const [isBlocking, setIsBlocking] = useState(false)
   const [isBlocked, setIsBlocked] = useState(false)
   const [checkingBlocked, setCheckingBlocked] = useState(false)
+  const [showGroupInfo, setShowGroupInfo] = useState(false)
 
   // Get the other participant for direct chats (needs to be before early returns for hooks)
   const otherParticipant = activeConversation?.participants?.find(
@@ -236,7 +238,7 @@ export function ChatHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="shadow-lg shadow-primary/5">
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => setShowGroupInfo(true)}>
                 <Info className="mr-2 h-4 w-4" />
                 View Info
               </DropdownMenuItem>
@@ -307,6 +309,15 @@ export function ChatHeader() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Group Info Panel */}
+      {activeConversation.type === 'group' && (
+        <GroupInfoPanel
+          open={showGroupInfo}
+          onOpenChange={setShowGroupInfo}
+          conversation={activeConversation}
+        />
+      )}
 
       {/* Block User Dialog */}
       <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
