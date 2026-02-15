@@ -6,6 +6,10 @@ import { sanitizeErrorMessage } from '@/lib/utils/error-sanitizer'
 import { isValidUUID } from '@/lib/utils/validation'
 
 export async function endConversation(conversationId: string): Promise<{ error: string | null }> {
+  if (!isValidUUID(conversationId)) {
+    return { error: 'Invalid conversation ID' }
+  }
+
   const supabase = await createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()

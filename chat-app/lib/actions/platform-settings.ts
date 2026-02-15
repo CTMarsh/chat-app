@@ -10,6 +10,12 @@ export async function getPlatformSettingValue(key: string): Promise<{ data: stri
     return { data: null, error: 'Not authenticated' }
   }
 
+  // Verify MFA status
+  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (aalData?.currentLevel !== 'aal2') {
+    return { data: null, error: 'MFA verification required' }
+  }
+
   const { data, error } = await supabase
     .from('platform_settings')
     .select('value')
