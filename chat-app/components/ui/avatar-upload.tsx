@@ -117,7 +117,7 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
   }, [currentUrl, userId, supabase, onUpload])
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col items-center gap-3">
       <div className="relative">
         <Avatar className="h-20 w-20">
           <AvatarImage src={currentUrl || undefined} alt="Your avatar" />
@@ -130,40 +130,39 @@ export function AvatarUpload({ userId, currentUrl, fallback, onUpload }: AvatarU
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          aria-label={currentUrl ? 'Change avatar' : 'Upload avatar'}
+        >
+          <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
+          {currentUrl ? 'Change' : 'Upload'}
+        </Button>
+        {currentUrl && (
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleRemove}
             disabled={isUploading}
-            aria-label={currentUrl ? 'Change avatar' : 'Upload avatar'}
+            aria-label="Remove avatar"
           >
-            <Camera className="mr-2 h-4 w-4" aria-hidden="true" />
-            {currentUrl ? 'Change' : 'Upload'}
+            <X className="mr-2 h-4 w-4" aria-hidden="true" />
+            Remove
           </Button>
-          {currentUrl && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleRemove}
-              disabled={isUploading}
-              aria-label="Remove avatar"
-            >
-              <X className="mr-2 h-4 w-4" aria-hidden="true" />
-              Remove
-            </Button>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          JPEG, PNG, GIF, or WebP. Max 5MB.
-        </p>
-        {error && (
-          <p className="text-xs text-destructive">{error}</p>
         )}
       </div>
+
+      <p className="text-xs text-muted-foreground">
+        JPEG, PNG, GIF, or WebP. Max 5MB.
+      </p>
+      {error && (
+        <p className="text-xs text-destructive">{error}</p>
+      )}
 
       <input
         ref={fileInputRef}

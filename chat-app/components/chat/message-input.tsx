@@ -363,7 +363,7 @@ export function MessageInput() {
           aria-expanded={showMentions}
           aria-haspopup="listbox"
           aria-autocomplete="list"
-          className="flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12 text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5"
+          className="flex-1 resize-none rounded-xl border border-border/50 bg-background/80 px-4 py-3 min-h-12 text-base transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:shadow-lg focus:shadow-primary/5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           rows={1}
           maxLength={10000}
           disabled={isSending}

@@ -47,8 +47,8 @@ export default function SignupPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters')
       return
     }
 
@@ -206,7 +206,7 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-11 pl-10 transition-shadow focus:shadow-md"
                 required
-                minLength={6}
+                minLength={8}
               />
             </AuthInputWrapper>
           </div>
@@ -222,7 +222,7 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-11 pl-10 transition-shadow focus:shadow-md"
                 required
-                minLength={6}
+                minLength={8}
               />
             </AuthInputWrapper>
           </div>

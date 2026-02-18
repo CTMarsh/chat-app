@@ -180,9 +180,9 @@ export default function AppearanceSettingsPage() {
           </SettingRow>
         </SettingSection>
 
-        {/* Accent Color */}
-        <SettingSection title="Accent Color" description="Personalize highlights">
-          <SettingRow label="Color" description="Buttons and links">
+        {/* Accent Colour */}
+        <SettingSection title="Accent Colour" description="Personalise highlights">
+          <SettingRow label="Colour" description="Buttons and links">
             <ColorPicker value={accentColor} onChange={setAccentColor} />
           </SettingRow>
         </SettingSection>

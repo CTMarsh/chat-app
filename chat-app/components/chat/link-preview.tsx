@@ -47,11 +47,12 @@ export function LinkPreview({ preview }: LinkPreviewProps) {
       aria-label={preview.title ? `Link to ${preview.title} on ${preview.siteName || getDomain(preview.url)}` : `External link to ${getDomain(preview.url)}`}
     >
       {safeImage && (
-        <div className="relative h-32 w-full overflow-hidden bg-muted">
+        <div className="relative h-40 w-full overflow-hidden bg-muted">
           <img
             src={safeImage}
             alt={preview.title ? `Preview image for ${preview.title}` : 'Link preview image'}
             className="h-full w-full object-cover"
+            loading="lazy"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none'
             }}

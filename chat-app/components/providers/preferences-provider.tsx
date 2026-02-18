@@ -74,7 +74,7 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     root.setAttribute('data-message-density', preferences.message_density)
 
     // Accent Color - set CSS variable and data attribute
-    if (preferences.accent_color && preferences.accent_color !== '#3b82f6') {
+    if (preferences.accent_color && preferences.accent_color !== '#4A8BC2') {
       root.style.setProperty('--user-accent-color', preferences.accent_color)
       root.setAttribute('data-accent-color', 'custom')
     } else {
@@ -167,7 +167,7 @@ export function useAppearancePreferences() {
     theme: preferences?.theme ?? 'system',
     uiScale: preferences?.ui_scale ?? 'comfortable',
     fontSize: preferences?.font_size ?? 'medium',
-    accentColor: preferences?.accent_color ?? '#3b82f6',
+    accentColor: preferences?.accent_color ?? '#4A8BC2',
     messageDensity: preferences?.message_density ?? 'default',
     setTheme: (theme: UserPreferences['theme']) => updatePreference('theme', theme),
     setUiScale: (scale: UserPreferences['ui_scale']) => updatePreference('ui_scale', scale),

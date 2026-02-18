@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, useRef, useMemo, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Check, RefreshCw, ExternalLink } from 'lucide-react'
@@ -61,6 +61,47 @@ export default function WidgetConfigPage({ params }: PageProps) {
   const [isActive, setIsActive] = useState(true)
   const [allowedOrigins, setAllowedOrigins] = useState('')
 
+  // Track original values for dirty state detection
+  const originalValuesRef = useRef<Record<string, unknown>>({})
+
+  const isDirty = useMemo(() => {
+    const orig = originalValuesRef.current
+    if (!Object.keys(orig).length) return false
+    return (
+      name !== orig.name ||
+      primaryColor !== orig.primaryColor ||
+      position !== orig.position ||
+      welcomeMessage !== orig.welcomeMessage ||
+      offlineMessage !== orig.offlineMessage ||
+      requireEmail !== orig.requireEmail ||
+      collectName !== orig.collectName ||
+      isActive !== orig.isActive ||
+      allowedOrigins !== orig.allowedOrigins
+    )
+  }, [name, primaryColor, position, welcomeMessage, offlineMessage, requireEmail, collectName, isActive, allowedOrigins])
+
+  const resetForm = () => {
+    const orig = originalValuesRef.current
+    setName(orig.name as string)
+    setPrimaryColor(orig.primaryColor as string)
+    setPosition(orig.position as 'bottom-right' | 'bottom-left')
+    setWelcomeMessage(orig.welcomeMessage as string)
+    setOfflineMessage(orig.offlineMessage as string)
+    setRequireEmail(orig.requireEmail as boolean)
+    setCollectName(orig.collectName as boolean)
+    setIsActive(orig.isActive as boolean)
+    setAllowedOrigins(orig.allowedOrigins as string)
+  }
+
+  // Navigation guard for unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) { e.preventDefault() }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
   useEffect(() => {
     const loadWidget = async () => {
       setIsLoading(true)
@@ -70,15 +111,27 @@ export default function WidgetConfigPage({ params }: PageProps) {
         setError(error)
       } else if (data) {
         setWidget(data)
-        setName(data.name)
-        setPrimaryColor(data.primary_color || '#6366f1')
-        setPosition((data.position as 'bottom-right' | 'bottom-left') || 'bottom-right')
-        setWelcomeMessage(data.welcome_message || '')
-        setOfflineMessage(data.offline_message || '')
-        setRequireEmail(data.require_email ?? true)
-        setCollectName(data.collect_name ?? true)
-        setIsActive(data.is_active ?? true)
-        setAllowedOrigins((data.allowed_origins || []).join('\n'))
+        const formValues = {
+          name: data.name,
+          primaryColor: data.primary_color || '#6366f1',
+          position: (data.position as 'bottom-right' | 'bottom-left') || 'bottom-right',
+          welcomeMessage: data.welcome_message || '',
+          offlineMessage: data.offline_message || '',
+          requireEmail: data.require_email ?? true,
+          collectName: data.collect_name ?? true,
+          isActive: data.is_active ?? true,
+          allowedOrigins: (data.allowed_origins || []).join('\n'),
+        }
+        setName(formValues.name)
+        setPrimaryColor(formValues.primaryColor)
+        setPosition(formValues.position)
+        setWelcomeMessage(formValues.welcomeMessage)
+        setOfflineMessage(formValues.offlineMessage)
+        setRequireEmail(formValues.requireEmail)
+        setCollectName(formValues.collectName)
+        setIsActive(formValues.isActive)
+        setAllowedOrigins(formValues.allowedOrigins)
+        originalValuesRef.current = formValues
       }
 
       setIsLoading(false)
@@ -111,9 +164,15 @@ export default function WidgetConfigPage({ params }: PageProps) {
     if (error) {
       setError(error)
     } else {
-      // Refresh widget data
+      // Refresh widget data and update original values
       const { data } = await getWidget(resolvedParams.widgetId)
-      if (data) setWidget(data)
+      if (data) {
+        setWidget(data)
+        originalValuesRef.current = {
+          name, primaryColor, position, welcomeMessage, offlineMessage,
+          requireEmail, collectName, isActive, allowedOrigins: origins.join('\n'),
+        }
+      }
     }
 
     setIsSaving(false)
@@ -192,6 +251,18 @@ export default function WidgetConfigPage({ params }: PageProps) {
       {error && (
         <div className="rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
           {error}
+        </div>
+      )}
+
+      {isDirty && (
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-2">
+          <span className="text-sm text-amber-700 dark:text-amber-400">You have unsaved changes</span>
+          <div className="flex gap-2">
+            <Button size="sm" variant="ghost" onClick={resetForm}>Discard</Button>
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
         </div>
       )}
 

@@ -12,16 +12,12 @@ import {
 import { Input } from '@/components/ui/input'
 
 const presetColors = [
-  { name: 'Blue', value: '#3b82f6' },
-  { name: 'Purple', value: '#8b5cf6' },
-  { name: 'Pink', value: '#ec4899' },
-  { name: 'Red', value: '#ef4444' },
-  { name: 'Orange', value: '#f97316' },
-  { name: 'Yellow', value: '#eab308' },
-  { name: 'Green', value: '#22c55e' },
-  { name: 'Teal', value: '#14b8a6' },
-  { name: 'Cyan', value: '#06b6d4' },
-  { name: 'Indigo', value: '#6366f1' },
+  { name: 'Ocean', value: '#4A8BC2' },
+  { name: 'Navy', value: '#1A2938' },
+  { name: 'Golden', value: '#D4A04A' },
+  { name: 'Seafoam', value: '#2BA89E' },
+  { name: 'Coral', value: '#D06050' },
+  { name: 'Dusk', value: '#6B5B95' },
 ]
 
 interface ColorPickerProps {
@@ -57,32 +53,42 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
       </PopoverTrigger>
       <PopoverContent className="w-64" align="end">
         <div className="space-y-3">
-          <div className="text-sm font-medium">Accent Color</div>
+          <div className="text-sm font-medium">Accent Colour</div>
 
-          {/* Preset colors */}
-          <div className="grid grid-cols-5 gap-2" role="radiogroup" aria-label="Preset accent colors">
+          {/* Preset colours */}
+          <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Preset accent colours">
             {presetColors.map((color) => (
               <button
                 key={color.value}
                 type="button"
                 role="radio"
-                aria-checked={value === color.value}
-                aria-label={`${color.name} color`}
+                aria-checked={value.toLowerCase() === color.value.toLowerCase()}
+                aria-label={`${color.name} colour`}
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
-                  value === color.value
-                    ? 'border-foreground'
-                    : 'border-transparent hover:border-muted-foreground'
+                  'flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all',
+                  value.toLowerCase() === color.value.toLowerCase()
+                    ? 'bg-muted ring-2 ring-foreground'
+                    : 'hover:bg-muted/50'
                 )}
-                style={{ backgroundColor: color.value }}
                 onClick={() => {
                   onChange(color.value)
                   setCustomColor(color.value)
                 }}
               >
-                {value === color.value && (
-                  <Check className="h-4 w-4 text-white" aria-hidden="true" />
-                )}
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
+                    value.toLowerCase() === color.value.toLowerCase()
+                      ? 'border-foreground'
+                      : 'border-transparent'
+                  )}
+                  style={{ backgroundColor: color.value }}
+                >
+                  {value.toLowerCase() === color.value.toLowerCase() && (
+                    <Check className="h-4 w-4 text-white" aria-hidden="true" />
+                  )}
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground">{color.name}</span>
               </button>
             ))}
           </div>

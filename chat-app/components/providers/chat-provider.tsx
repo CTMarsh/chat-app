@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, useMemo, ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ConversationWithParticipants, MessageWithSender, Notification } from '@/lib/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -62,10 +62,11 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const [isLoading, setIsLoading] = useState(true)
   const [pinnedMessages, setPinnedMessages] = useState<MessageWithSender[]>([])
   const channelsRef = useRef<RealtimeChannel[]>([])
+  const fetchConversationsRef = useRef<() => Promise<void>>(() => Promise.resolve())
   const [maxFileSizeMb, setMaxFileSizeMb] = useState(50)
   const [replyTo, setReplyToState] = useState<MessageWithSender | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const unreadCount = notifications.filter(n => !n.is_read).length
 
@@ -166,6 +167,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     }
   }, [supabase, userId])
 
+  // Keep ref current for use in subscription callbacks
+  useEffect(() => { fetchConversationsRef.current = fetchConversations }, [fetchConversations])
+
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
     const { data } = await supabase
@@ -184,7 +188,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   const fetchMessages = useCallback(async (conversationId: string) => {
     const { data, error } = await supabase
       .from('messages')
-      .select('*, sender:profiles!messages_sender_id_fkey(*)')
+      .select('*, sender:profiles!messages_sender_id_fkey(*), reply_to:messages!messages_reply_to_id_fkey(*, sender:profiles!messages_sender_id_fkey(*))')
       .eq('conversation_id', conversationId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true })
@@ -259,16 +263,21 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       throw error
     }
 
-    // Update local state
-    const pinnedMessage = messages.find(m => m.id === messageId)
-    if (pinnedMessage) {
-      const updated = { ...pinnedMessage, is_pinned: true, pinned_at: new Date().toISOString(), pinned_by: userId }
+    // Re-fetch the full message from DB to get accurate state
+    const { data: fullMessage } = await supabase
+      .from('messages')
+      .select('*, sender:profiles!messages_sender_id_fkey(*)')
+      .eq('id', messageId)
+      .single()
+
+    if (fullMessage) {
+      const updated = { ...fullMessage, is_pinned: true, pinned_at: new Date().toISOString(), pinned_by: userId } as MessageWithSender
       setPinnedMessages(prev => [updated, ...prev])
       setMessages(prev =>
         prev.map(m => m.id === messageId ? updated : m)
       )
     }
-  }, [supabase, userId, messages])
+  }, [supabase, userId])
 
   // Unpin a message (via RPC with SECURITY DEFINER)
   const unpinMessage = useCallback(async (messageId: string) => {
@@ -812,7 +821,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
   // Setup realtime subscriptions
   useEffect(() => {
     const setupSubscriptions = async () => {
-      // Messages subscription
+      // Messages subscription (INSERT, UPDATE for edits/soft-deletes)
       const messagesChannel = supabase
         .channel('messages-changes')
         .on(
@@ -823,10 +832,10 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
             table: 'messages',
           },
           async (payload) => {
-            // Fetch the complete message with sender
+            // Fetch the complete message with sender + reply_to
             const { data } = await supabase
               .from('messages')
-              .select('*, sender:profiles!messages_sender_id_fkey(*)')
+              .select('*, sender:profiles!messages_sender_id_fkey(*), reply_to:messages!messages_reply_to_id_fkey(*, sender:profiles!messages_sender_id_fkey(*))')
               .eq('id', payload.new.id)
               .single()
 
@@ -845,12 +854,139 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
                 })
               }
 
-              // Refresh conversations to update last message
-              fetchConversations()
+              // Refresh conversations to update last message (via ref to avoid dep cycle)
+              fetchConversationsRef.current()
             }
           }
         )
-        .subscribe()
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'messages',
+          },
+          async (payload) => {
+            const updated = payload.new as MessageWithSender
+            if (activeConversation?.id === updated.conversation_id) {
+              if (updated.deleted_at) {
+                // Soft delete — update the message in place so it shows "deleted" state
+                setMessages(prev =>
+                  prev.map(m => m.id === updated.id ? { ...m, deleted_at: updated.deleted_at, deleted_by: updated.deleted_by } : m)
+                )
+              } else {
+                // Edit — fetch full message with sender data
+                const { data } = await supabase
+                  .from('messages')
+                  .select('*, sender:profiles!messages_sender_id_fkey(*), reply_to:messages!messages_reply_to_id_fkey(*, sender:profiles!messages_sender_id_fkey(*))')
+                  .eq('id', updated.id)
+                  .single()
+
+                if (data) {
+                  setMessages(prev =>
+                    prev.map(m => m.id === data.id ? { ...data, reactions: m.reactions, read_receipts: m.read_receipts } as MessageWithSender : m)
+                  )
+                }
+              }
+
+              // Also update pinned messages if applicable
+              if (updated.is_pinned !== undefined) {
+                if (updated.is_pinned) {
+                  const { data } = await supabase
+                    .from('messages')
+                    .select('*, sender:profiles!messages_sender_id_fkey(*)')
+                    .eq('id', updated.id)
+                    .single()
+                  if (data) {
+                    setPinnedMessages(prev => {
+                      if (prev.find(m => m.id === data.id)) return prev
+                      return [data as MessageWithSender, ...prev]
+                    })
+                  }
+                } else {
+                  setPinnedMessages(prev => prev.filter(m => m.id !== updated.id))
+                }
+              }
+            }
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR') console.error('Realtime messages channel error:', err)
+        })
+
+      // Reactions subscription (INSERT/DELETE)
+      const reactionsChannel = supabase
+        .channel('reactions-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'message_reactions',
+          },
+          (payload) => {
+            const newReaction = payload.new as { id: string; message_id: string; user_id: string; emoji: string; created_at: string }
+            // Skip if this is our own reaction (already handled optimistically)
+            if (newReaction.user_id === userId) return
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === newReaction.message_id
+                  ? { ...m, reactions: [...(m.reactions || []), newReaction] }
+                  : m
+              )
+            )
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'message_reactions',
+          },
+          (payload) => {
+            const deleted = payload.old as { id: string; message_id: string; user_id: string }
+            // Skip if this is our own reaction removal (already handled optimistically)
+            if (deleted.user_id === userId) return
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === deleted.message_id
+                  ? { ...m, reactions: m.reactions?.filter(r => r.id !== deleted.id) }
+                  : m
+              )
+            )
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR') console.error('Realtime reactions channel error:', err)
+        })
+
+      // Read receipts subscription (INSERT)
+      const readReceiptsChannel = supabase
+        .channel('read-receipts-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'message_read_receipts',
+          },
+          (payload) => {
+            const newReceipt = payload.new as { id: string; message_id: string; user_id: string; read_at: string }
+            // Skip our own receipts
+            if (newReceipt.user_id === userId) return
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === newReceipt.message_id
+                  ? { ...m, read_receipts: [...(m.read_receipts || []), newReceipt] }
+                  : m
+              )
+            )
+          }
+        )
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR') console.error('Realtime read receipts channel error:', err)
+        })
 
       // Notifications subscription
       const notificationsChannel = supabase
@@ -867,7 +1003,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
             setNotifications(prev => [payload.new as Notification, ...prev])
           }
         )
-        .subscribe()
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR') console.error('Realtime notifications channel error:', err)
+        })
 
       // Profile status subscription
       const profilesChannel = supabase
@@ -880,13 +1018,15 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
             table: 'profiles',
           },
           () => {
-            // Refresh conversations to update participant statuses
-            fetchConversations()
+            // Refresh conversations to update participant statuses (via ref)
+            fetchConversationsRef.current()
           }
         )
-        .subscribe()
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR') console.error('Realtime profiles channel error:', err)
+        })
 
-      channelsRef.current = [messagesChannel, notificationsChannel, profilesChannel]
+      channelsRef.current = [messagesChannel, reactionsChannel, readReceiptsChannel, notificationsChannel, profilesChannel]
     }
 
     setupSubscriptions()
@@ -895,7 +1035,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       channelsRef.current.forEach(channel => supabase.removeChannel(channel))
       channelsRef.current = []
     }
-  }, [supabase, userId, activeConversation?.id, fetchConversations])
+  }, [supabase, userId, activeConversation?.id])
 
   // Setup typing subscription for active conversation
   useEffect(() => {
@@ -946,14 +1086,69 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
 
     init()
 
+    // Set online on mount
+    supabase
+      .from('profiles')
+      .update({ status: 'online' })
+      .eq('id', userId)
+      .then()
+
     // Update status to offline on unmount
     return () => {
       supabase
         .from('profiles')
         .update({ status: 'offline', last_seen_at: new Date().toISOString() })
         .eq('id', userId)
+        .then()
     }
   }, [fetchCurrentUser, fetchConversations, fetchNotifications, supabase, userId])
+
+  // Browser visibility and unload handlers for automatic status tracking
+  useEffect(() => {
+    let previousStatus: string | null = null
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab hidden — set away (preserve current status for restore)
+        previousStatus = currentUser?.status ?? 'online'
+        if (previousStatus !== 'dnd' && previousStatus !== 'offline') {
+          supabase
+            .from('profiles')
+            .update({ status: 'away' })
+            .eq('id', userId)
+            .then()
+        }
+      } else {
+        // Tab visible again — restore previous status
+        const restoreTo = previousStatus === 'away' || previousStatus === 'online' ? 'online' : previousStatus
+        if (restoreTo && restoreTo !== 'offline') {
+          supabase
+            .from('profiles')
+            .update({ status: restoreTo })
+            .eq('id', userId)
+            .then()
+        }
+        previousStatus = null
+      }
+    }
+
+    const handleBeforeUnload = () => {
+      // Best-effort offline status on page close (visibilitychange is more reliable)
+      supabase
+        .from('profiles')
+        .update({ status: 'offline', last_seen_at: new Date().toISOString() })
+        .eq('id', userId)
+        .then()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [supabase, userId, currentUser?.status])
 
   // Fetch messages when active conversation changes
   useEffect(() => {
