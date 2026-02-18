@@ -95,11 +95,24 @@ Key pattern: When user selects "invisible", store `offline` in database but pres
 
 ### Real-time Subscriptions
 
-Three subscription patterns in `chat-provider.tsx`:
+Five persistent channels + per-conversation typing in `chat-provider.tsx`:
 
-1. **PostgreSQL Changes** - Messages, notifications, profile updates via `postgres_changes`
-2. **Broadcast Channels** - Typing indicators via `supabase.channel(`typing:${conversationId}`)`
-3. **Presence** - Online status tracked via profile `status` field updates
+1. **Messages** (`messagesChannel`) — INSERT for new messages, UPDATE for edits/soft-deletes/pin changes
+2. **Reactions** (`reactionsChannel`) — INSERT/DELETE on `message_reactions` (skips own user's events)
+3. **Read Receipts** (`readReceiptsChannel`) — INSERT on `message_read_receipts` (skips own)
+4. **Notifications** (`notificationsChannel`) — INSERT on `notifications` filtered to current user
+5. **Profiles** (`profilesChannel`) — UPDATE on `profiles` for status changes
+6. **Typing** (per-conversation) — Broadcast channel `typing:${conversationId}`
+
+All channels are stored in `channelsRef.current` and cleaned up on unmount. When adding new channels, always add them to this array.
+
+### Browser Status Tracking
+
+The app automatically manages online status via browser events:
+- **Mount:** Sets status to `online`
+- **`visibilitychange`:** Sets `away` when tab hidden, restores previous status when visible (respects DND)
+- **`beforeunload`:** Best-effort `offline` on page close
+- **Unmount:** Sets `offline` with `last_seen_at` timestamp
 
 ### Server Actions Pattern
 
