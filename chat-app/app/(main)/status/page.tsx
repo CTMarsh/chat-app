@@ -144,29 +144,12 @@ export default function StatusPage() {
             Last checked: {lastChecked} at {lastCheckedTime}
           </p>
 
-          {/* Infrastructure links */}
+          {/* Contact */}
           <div className="rounded-xl border border-border/50 bg-card/30 p-6 text-center">
             <p className="text-sm text-muted-foreground">
               Experiencing issues? Contact us at{' '}
               <a href="mailto:support@chatark.io" className="text-primary hover:underline">
                 support@chatark.io
-              </a>. For infrastructure status, see{' '}
-              <a
-                href="https://status.supabase.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Supabase Status
-              </a>{' '}
-              and{' '}
-              <a
-                href="https://www.vercel-status.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Vercel Status
               </a>.
             </p>
           </div>
