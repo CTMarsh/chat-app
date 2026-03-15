@@ -83,9 +83,9 @@ export async function GET(request: NextRequest) {
       visitorName: msg.visitor_name,
       visitorEmail: msg.visitor_email,
       sender: msg.sender ? {
-        id: (msg.sender as { id: string }).id,
-        displayName: (msg.sender as { display_name: string }).display_name,
-        avatarUrl: (msg.sender as { avatar_url: string }).avatar_url,
+        id: (msg.sender as unknown as { id: string }).id,
+        displayName: (msg.sender as unknown as { display_name: string }).display_name,
+        avatarUrl: (msg.sender as unknown as { avatar_url: string }).avatar_url,
       } : undefined,
     }))
 
