@@ -1,0 +1,29 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: chat-app-tls
+  namespace: chat-app
+spec:
+  secretName: chat-app-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - chat.noahsark.me
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: chat-app
+  namespace: chat-app
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`chat.noahsark.me`)
+      services:
+        - name: chat-app
+          port: 3000
+  tls:
+    secretName: chat-app-tls
