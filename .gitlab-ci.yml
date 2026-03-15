@@ -66,6 +66,8 @@ build:
     - /kaniko/executor
       --context "$CI_PROJECT_DIR/chat-app"
       --dockerfile "$CI_PROJECT_DIR/chat-app/Dockerfile"
+      --build-arg "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL"
+      --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY"
       --destination "$IMAGE:$CI_COMMIT_SHORT_SHA"
       --destination "$IMAGE:latest"
       --cache=true
