@@ -50,7 +50,7 @@ export async function scanFile(file: File): Promise<ScanResult> {
 }
 
 export function isScanningEnabled(): boolean {
-  // You can add logic here to check if scanning should be enabled
-  // For example, based on environment variables or feature flags
-  return true
+  // Edge Functions are not available on self-hosted Supabase (k8s)
+  // Disable scanning when no Edge Functions runtime exists
+  return false
 }
