@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+docs
+.env*
+k8s
+proxy.ts
