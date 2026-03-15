@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef, us
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, ConversationWithParticipants, MessageWithSender, Notification } from '@/lib/types/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { scanFile } from '@/lib/utils/scan-file'
+import { scanFile, isScanningEnabled } from '@/lib/utils/scan-file'
 import { getPreferences } from '@/lib/actions/settings'
 import { getPlatformSettingValue } from '@/lib/actions/platform-settings'
 import { endConversation as endConversationAction } from '@/lib/actions/conversations'
@@ -359,18 +359,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         throw new Error(`File must be less than ${maxFileSizeMb}MB`)
       }
 
-      // Scan file for viruses before uploading
-      try {
-        const scanResult = await scanFile(file)
-        if (!scanResult.isClean) {
-          throw new Error(`File rejected: ${scanResult.message}`)
+      // Scan file for viruses before uploading (requires Edge Functions)
+      if (isScanningEnabled()) {
+        try {
+          const scanResult = await scanFile(file)
+          if (!scanResult.isClean) {
+            throw new Error(`File rejected: ${scanResult.message}`)
+          }
+          if (!scanResult.skipped) {
+            console.log('File scan passed:', scanResult.message)
+          }
+        } catch (scanError) {
+          console.error('File scan failed:', scanError)
+          throw scanError
         }
-        if (!scanResult.skipped) {
-          console.log('File scan passed:', scanResult.message)
-        }
-      } catch (scanError) {
-        console.error('File scan failed:', scanError)
-        throw scanError
       }
 
       const fileExt = file.name.split('.').pop()
@@ -485,18 +487,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         throw new Error(`File must be less than ${maxFileSizeMb}MB`)
       }
 
-      // Scan file for viruses before uploading
-      try {
-        const scanResult = await scanFile(file)
-        if (!scanResult.isClean) {
-          throw new Error(`File rejected: ${scanResult.message}`)
+      // Scan file for viruses before uploading (requires Edge Functions)
+      if (isScanningEnabled()) {
+        try {
+          const scanResult = await scanFile(file)
+          if (!scanResult.isClean) {
+            throw new Error(`File rejected: ${scanResult.message}`)
+          }
+          if (!scanResult.skipped) {
+            console.log('File scan passed:', scanResult.message)
+          }
+        } catch (scanError) {
+          console.error('File scan failed:', scanError)
+          throw scanError
         }
-        if (!scanResult.skipped) {
-          console.log('File scan passed:', scanResult.message)
-        }
-      } catch (scanError) {
-        console.error('File scan failed:', scanError)
-        throw scanError
       }
 
       const fileExt = file.name.split('.').pop()
@@ -543,13 +547,9 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
     if (urls.length > 0) {
       const previewPromises = urls.slice(0, 3).map(async (url) => {
         try {
-          const { data: { session } } = await supabase.auth.getSession()
-          const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-link-preview`, {
+          const response = await fetch('/api/link-preview', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session?.access_token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url }),
           })
           if (response.ok) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { RateLimiter } from '@/lib/utils/rate-limiter'
 
 // Per-IP rate limiters for the public widget config endpoint
@@ -20,7 +21,7 @@ function getRateLimiter(ip: string): RateLimiter {
 }
 
 // Public endpoint - no auth required
-// Proxies to the Supabase edge function to get widget config
+// Queries widget config directly from database (replaces edge function proxy)
 export async function GET(request: NextRequest) {
   // Rate limit by IP
   const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -35,29 +36,23 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabase = createServiceRoleClient()
 
-    // Call the existing widget-init edge function
-    const response = await fetch(`${supabaseUrl}/functions/v1/widget-init`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        embedToken: token,
-        origin: request.headers.get('origin') || '*'
-      })
-    })
+    const { data: widget, error } = await supabase
+      .from('widgets')
+      .select('name, primary_color, position')
+      .eq('embed_token', token)
+      .eq('is_active', true)
+      .single()
 
-    if (!response.ok) {
+    if (error || !widget) {
       return NextResponse.json({ error: 'Widget not found' }, { status: 404 })
     }
 
-    const widgetConfig = await response.json()
-
-    // Return only the config needed for the button styling
     return NextResponse.json({
-      primaryColor: widgetConfig.primaryColor,
-      position: widgetConfig.position || 'bottom-right',
-      name: widgetConfig.name
+      primaryColor: widget.primary_color,
+      position: widget.position || 'bottom-right',
+      name: widget.name
     })
   } catch (err) {
     console.error('Widget config error:', err)

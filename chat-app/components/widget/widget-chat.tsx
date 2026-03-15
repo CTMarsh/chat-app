@@ -59,13 +59,11 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   const pollingRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageTimeRef = useRef<string | null>(null)
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-
   // Initialize widget
   useEffect(() => {
     const initWidget = async () => {
       try {
-        const response = await fetch(`${supabaseUrl}/functions/v1/widget-init`, {
+        const response = await fetch('/api/widget/init', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -96,12 +94,12 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
     }
 
     initWidget()
-  }, [embedToken, supabaseUrl])
+  }, [embedToken])
 
   // Resume existing session
   const resumeSession = async (sessionToken: string) => {
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/visitor-session`, {
+      const response = await fetch('/api/widget/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ embedToken, sessionToken }),
@@ -129,7 +127,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   // Create new session
   const createSession = async (email: string, name: string) => {
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/visitor-session`, {
+      const response = await fetch('/api/widget/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ embedToken, email, name }),
@@ -168,7 +166,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
       }
 
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/visitor-messages?${params.toString()}`,
+        `/api/widget/messages?${params.toString()}`,
         { method: 'GET' }
       )
 
@@ -196,13 +194,13 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
     } catch (err) {
       console.error('Failed to load messages:', err)
     }
-  }, [supabaseUrl])
+  }, [])
 
   // Check if conversation is ended
   const checkConversationStatus = useCallback(async (convId: string) => {
     try {
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/visitor-messages?sessionToken=${session?.sessionToken}&conversationId=${convId}&statusOnly=true`,
+        `/api/widget/messages?sessionToken=${session?.sessionToken}&conversationId=${convId}&statusOnly=true`,
         { method: 'GET' }
       )
 
@@ -221,7 +219,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
     } catch (err) {
       console.error('Failed to check conversation status:', err)
     }
-  }, [supabaseUrl, session?.sessionToken, isEnded])
+  }, [session?.sessionToken, isEnded])
 
   // Generate and download transcript
   const downloadTranscript = () => {
@@ -299,7 +297,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
 
     setIsSending(true)
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/visitor-message`, {
+      const response = await fetch('/api/widget/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
