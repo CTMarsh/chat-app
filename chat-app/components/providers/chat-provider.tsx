@@ -459,6 +459,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
+
+    // Fire-and-forget push notification via Notify service
+    if (inserted) {
+      fetch('/api/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          messageId: inserted.id,
+          content,
+          senderName: currentUser?.display_name || currentUser?.username,
+        }),
+      }).catch(() => {}) // Silently ignore push failures
+    }
   }, [supabase, userId, currentUser, maxFileSizeMb])
 
   // Send message with mentions
@@ -633,6 +647,20 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId)
+
+    // Fire-and-forget push notification via Notify service
+    if (inserted) {
+      fetch('/api/push-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId,
+          messageId: inserted.id,
+          content,
+          senderName: currentUser?.display_name || currentUser?.username,
+        }),
+      }).catch(() => {}) // Silently ignore push failures
+    }
   }, [supabase, userId, currentUser, maxFileSizeMb])
 
   // Mark conversation as read
