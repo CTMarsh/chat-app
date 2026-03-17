@@ -85,7 +85,7 @@ deploy:k8s:
   script:
     - git clone https://oauth2:${GITLAB_MANIFEST_PAT}@gitlab.noahsark.me/ctmarsh/k8s-manifests.git
     - cd k8s-manifests
-    - sed -i "s|image: ${IMAGE}:.*|image: ${IMAGE}:${CI_COMMIT_SHORT_SHA}|" apps/chat-app/deployment.yaml
+    - 'sed -i "s|image: ${IMAGE}:.*|image: ${IMAGE}:${CI_COMMIT_SHORT_SHA}|" apps/chat-app/deployment.yaml'
     - git config user.email "ci-bot@noahsark.me"
     - git config user.name "GitLab CI"
     - git add apps/chat-app/deployment.yaml
