@@ -89,10 +89,11 @@ deploy:k8s:
     - git config user.email "ci-bot@noahsark.me"
     - git config user.name "GitLab CI"
     - git add apps/chat-app/deployment.yaml
-    - 'git commit -m "ci(chat-app): deploy ${CI_COMMIT_SHORT_SHA}
+    - |
+      git commit -m "ci(chat-app): deploy ${CI_COMMIT_SHORT_SHA}
 
-Pipeline: ${CI_PIPELINE_URL}
-Triggered by: ${GITLAB_USER_LOGIN}"'
+      Pipeline: ${CI_PIPELINE_URL}
+      Triggered by: ${GITLAB_USER_LOGIN}"
     - git push
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
