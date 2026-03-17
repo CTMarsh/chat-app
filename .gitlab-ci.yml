@@ -78,23 +78,23 @@ build:
 # ── Stage 3: Deploy to Kubernetes ────────────────────────────
 deploy:k8s:
   stage: deploy
-  image:
-    name: alpine/k8s:1.35.2
-    entrypoint: [""]
+  image: alpine/git:latest
   needs:
     - job: build
   resource_group: production
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
   script:
-    - echo "=== Updating image tag ==="
-    - kubectl set image deployment/chat-app chat-app="$IMAGE:$CI_COMMIT_SHORT_SHA" -n chat-app
-    - echo "=== Waiting for rollout ==="
-    - kubectl rollout status deployment/chat-app -n chat-app --timeout=300s
-    - echo "=== Deployment complete ==="
+    - git clone https://oauth2:${GITLAB_MANIFEST_PAT}@gitlab.noahsark.me/ctmarsh/k8s-manifests.git
+    - cd k8s-manifests
+    - 'sed -i "s|image: ${IMAGE}:.*|image: ${IMAGE}:${CI_COMMIT_SHORT_SHA}|" apps/chat-app/deployment.yaml'
+    - git config user.email "ci-bot@noahsark.me"
+    - git config user.name "GitLab CI"
+    - git add apps/chat-app/deployment.yaml
+    - |
+      git commit -m "ci(chat-app): deploy ${CI_COMMIT_SHORT_SHA}
+
+      Pipeline: ${CI_PIPELINE_URL}
+      Triggered by: ${GITLAB_USER_LOGIN}"
+    - git push
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   environment:
