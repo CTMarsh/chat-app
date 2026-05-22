@@ -78,13 +78,18 @@ build:
 # ── Stage 3: Deploy to Kubernetes ────────────────────────────
 deploy:k8s:
   stage: deploy
-  image: alpine/git:latest
+  image: alpine/git:2.47.2
   needs:
     - job: build
   resource_group: production
+  variables:
+    MANIFEST_PROJECT_ID: "41"
   script:
+    - apk add --no-cache curl
     - git clone https://oauth2:${GITLAB_MANIFEST_PAT}@gitlab.noahsark.me/ctmarsh/k8s-manifests.git
     - cd k8s-manifests
+    - DEPLOY_BRANCH="ci/chat-app-deploy-${CI_COMMIT_SHORT_SHA}"
+    - git checkout -b "$DEPLOY_BRANCH"
     - 'sed -i "s|image: ${IMAGE}:.*|image: ${IMAGE}:${CI_COMMIT_SHORT_SHA}|" apps/chat-app/deployment.yaml'
     - git config user.email "ci-bot@noahsark.me"
     - git config user.name "GitLab CI"
@@ -94,7 +99,26 @@ deploy:k8s:
 
       Pipeline: ${CI_PIPELINE_URL}
       Triggered by: ${GITLAB_USER_LOGIN}"
-    - git push
+    - git push -u origin "$DEPLOY_BRANCH"
+    # Create MR via GitLab API - k8s-manifests main is protected, direct push is rejected
+    - |
+      MR_RESPONSE=$(curl -sf --request POST \
+        --url "https://gitlab.noahsark.me/api/v4/projects/${MANIFEST_PROJECT_ID}/merge_requests" \
+        --header "PRIVATE-TOKEN: ${GITLAB_MANIFEST_PAT}" \
+        --header "Content-Type: application/json" \
+        --data "{
+          \"source_branch\": \"${DEPLOY_BRANCH}\",
+          \"target_branch\": \"main\",
+          \"title\": \"ci(chat-app): deploy ${CI_COMMIT_SHORT_SHA}\",
+          \"description\": \"Automated deploy from chat-app pipeline ${CI_PIPELINE_ID}.\\n\\nPipeline: ${CI_PIPELINE_URL}\\nTriggered by: ${GITLAB_USER_LOGIN}\",
+          \"assignee_id\": 5,
+          \"reviewer_ids\": [1],
+          \"remove_source_branch\": true,
+          \"squash\": true
+        }")
+      MR_IID=$(echo "$MR_RESPONSE" | grep -o '"iid":[0-9]*' | head -1 | grep -o '[0-9]*')
+      echo "MR !${MR_IID} created - merge to deploy"
+      echo "https://gitlab.noahsark.me/ctmarsh/k8s-manifests/-/merge_requests/${MR_IID}"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
   environment:
