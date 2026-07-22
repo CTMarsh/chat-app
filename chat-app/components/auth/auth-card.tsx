@@ -3,14 +3,6 @@
 import { ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 
 interface AuthCardProps {
@@ -18,148 +10,119 @@ interface AuthCardProps {
   title: string
   description?: ReactNode
   footer?: ReactNode
+  /** Accepted for API compatibility; the split shell carries the brand mark instead. */
   icon?: ReactNode
   className?: string
 }
 
 /**
- * Constellation auth shell (Noah's Ark DESIGN-SYSTEM.md §4/§5).
- *
- * Split-pane showcase: the app's Higgsfield hero full-bleed under a navy
- * scrim on the left, a glassy form column over the constellation texture on
- * the right. On mobile the hero becomes the scrimmed backdrop and the card
- * floats over it. The hero pane deliberately commits to the dark brand world
- * in both themes; the form column follows the active theme for AA contrast.
+ * Constellation auth shell (Noah's Ark DESIGN-SYSTEM.md §4/§5) — the estate's
+ * split login composition, matching PhotoVault's AuthShell and MixVault's
+ * Login (the gold standard): full-bleed Higgsfield hero as the left pane with
+ * the brand statement anchored bottom-left, the form in a fixed-width right
+ * pane that blends into the void via the scrim gradient. On mobile the hero
+ * goes full-bleed behind a glassy card. The `dark` class scopes the whole
+ * surface to the Constellation dark theme regardless of the site theme —
+ * every login in the estate commits to the dark brand world.
  */
 export function AuthCard({
   children,
   title,
   description,
   footer,
-  icon,
   className,
 }: AuthCardProps) {
   return (
-    <div className="relative flex min-h-screen bg-ark-void">
-      {/* Hero pane — full-bleed splash + navy scrim */}
-      <div className="absolute inset-0 lg:relative lg:flex-1">
+    <div className="dark relative flex min-h-[100dvh] bg-ark-void text-foreground">
+      {/* Hero art — full-bleed on mobile (behind the card), left pane on desktop */}
+      <div className="absolute inset-0 overflow-hidden lg:relative lg:inset-auto lg:flex-1">
         <Image
           src="/brand/chat-app-splash.png"
           alt=""
           fill
           priority
-          sizes="(max-width: 1024px) 100vw, 60vw"
+          sizes="(max-width: 1024px) 100vw, 66vw"
           className="object-cover"
         />
-        {/* Navy scrim — lighter on desktop where copy sits, heavier on mobile behind the card */}
-        <div className="absolute inset-0 bg-gradient-to-t from-ark-void via-ark-void/45 to-ark-void/15" />
-        <div className="absolute inset-0 bg-ark-void/60 lg:hidden" />
+        {/* Navy scrim: keeps the art luminous but text readable; blends into
+            the void form pane on the right edge (desktop). */}
+        <div className="absolute inset-0 bg-gradient-to-t from-ark-void via-ark-void/50 to-ark-void/20 lg:bg-gradient-to-r lg:from-ark-void/40 lg:via-transparent lg:to-ark-void" />
 
-        {/* Desktop hero statement */}
-        <div className="absolute inset-0 hidden flex-col justify-between p-10 xl:p-14 lg:flex">
+        {/* Brand statement over the art, anchored bottom-left (desktop only) */}
+        <div className="absolute bottom-12 left-12 right-24 z-10 hidden lg:block">
           <Link
             href="/"
-            className="flex w-fit items-center gap-3 transition-opacity hover:opacity-80"
+            className="mb-5 flex w-fit items-center gap-3 transition-opacity hover:opacity-80"
           >
             <Image
               src="/chatark-logo.png"
-              alt="ChatArk"
+              alt=""
               width={40}
               height={40}
               className="rounded-xl shadow-glow"
             />
-            <span className="font-display text-xl font-semibold tracking-tight text-ark-ink">
+            <span className="font-display text-lg font-semibold tracking-tight text-ark-ink">
               Chat<span className="text-ark-blue-bright">Ark</span>
             </span>
           </Link>
-
-          <div className="max-w-lg">
-            <p className="ark-label mb-4 text-ark-cyan">
-              Noah&apos;s Ark &middot; Secure comms
-            </p>
-            <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight text-ark-ink xl:text-5xl">
-              Every conversation, one constellation.
-            </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-ark-ink-2">
-              Real-time messaging for the whole crew — end-to-end accounted
-              for, MFA on every hatch.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-2">
-              <span className="ark-badge border border-ark-line bg-ark-surface/80 text-ark-ink-2">
-                Realtime
-              </span>
-              <span className="ark-badge border border-ark-line bg-ark-surface/80 text-ark-ink-2">
-                MFA enforced
-              </span>
-              <span className="ark-badge border border-ark-line bg-ark-surface/80 text-ark-ink-2">
-                Self-hosted
-              </span>
-            </div>
-          </div>
+          <h2 className="font-display text-3xl font-semibold leading-tight text-ark-ink xl:text-4xl">
+            Every conversation, one constellation.
+          </h2>
+          <p className="mt-3 max-w-md text-sm text-ark-ink-2">
+            Self-hosted messaging for the people who matter — private by
+            design, real-time by default.
+          </p>
         </div>
       </div>
 
-      {/* Form column */}
-      <div
-        className={cn(
-          'relative z-10 flex w-full flex-col items-center justify-center px-4 py-12',
-          'lg:w-[480px] lg:shrink-0 xl:w-[540px]',
-          'lg:border-l lg:border-ark-line lg:bg-background',
-          'ark-texture'
-        )}
-      >
-        <div className="w-full max-w-md">
-          {/* Wordmark (mobile — sits over the scrimmed hero) */}
-          <div className="mb-8 flex justify-center lg:hidden">
+      {/* Form pane — fixed width on desktop, over the hero on mobile */}
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
+        <div className="w-full max-w-sm">
+          {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
+          <div
+            className={cn(
+              'rounded-2xl border border-ark-line bg-ark-surface/80 p-6 shadow-card backdrop-blur-md sm:p-8',
+              'lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none',
+              className
+            )}
+          >
+            {/* Compact brand header — mobile only (desktop carries it on the hero) */}
             <Link
               href="/"
-              className="flex items-center gap-2 transition-opacity hover:opacity-80"
+              className="mb-8 flex w-fit items-center gap-3 transition-opacity hover:opacity-80 lg:hidden"
             >
               <Image
                 src="/chatark-logo.png"
-                alt="ChatArk"
-                width={44}
-                height={44}
+                alt=""
+                width={40}
+                height={40}
                 className="rounded-xl shadow-glow"
               />
-              <span className="font-display text-xl font-semibold tracking-tight text-ark-ink">
+              <span className="font-display text-lg font-semibold tracking-tight text-ark-ink">
                 Chat<span className="text-ark-blue-bright">Ark</span>
               </span>
             </Link>
-          </div>
 
-          {/* Card */}
-          <Card className={cn('overflow-hidden py-0', className)}>
-            {/* Constellation accent — blue into cyan */}
-            <div className="h-1 bg-gradient-to-r from-ark-blue via-ark-cyan to-transparent" />
+            <p className="ark-label mb-2 text-ark-cyan">
+              Noah&apos;s Ark &middot; Secure comms
+            </p>
+            <h1 className="font-display text-2xl font-semibold text-ark-ink">
+              {title}
+            </h1>
+            {description && (
+              <p className="mt-1 text-sm text-ark-ink-2">{description}</p>
+            )}
 
-            <CardHeader className="pb-4 pt-6 text-center">
-              {icon && (
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 shadow-glow">
-                  {icon}
-                </div>
-              )}
-              <CardTitle className="font-display text-2xl font-semibold tracking-tight">
-                {title}
-              </CardTitle>
-              {description && (
-                <CardDescription className="text-muted-foreground">
-                  {description}
-                </CardDescription>
-              )}
-            </CardHeader>
-
-            <CardContent className="px-6 pb-6">{children}</CardContent>
+            <div className="mt-7">{children}</div>
 
             {footer && (
-              <CardFooter className="justify-center border-t bg-muted/40 px-6 py-4">
+              <div className="mt-6 text-center text-sm text-ark-ink-2">
                 {footer}
-              </CardFooter>
+              </div>
             )}
-          </Card>
+          </div>
 
-          {/* Bottom text */}
-          <p className="mt-6 text-center text-xs text-ark-ink-2 lg:text-muted-foreground">
+          <p className="mt-8 text-center text-xs text-ark-ink-3">
             By continuing, you agree to our{' '}
             <Link
               href="/terms"
@@ -174,6 +137,9 @@ export function AuthCard({
             >
               Privacy Policy
             </Link>
+          </p>
+          <p className="mt-4 text-center font-mono text-[11px] uppercase tracking-wide text-ark-ink-3">
+            ChatArk &middot; Noah&apos;s Ark
           </p>
         </div>
       </div>
