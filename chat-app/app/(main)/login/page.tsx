@@ -102,7 +102,7 @@ export default function LoginPage() {
   return (
     <AuthCard
       title="Welcome back"
-      description="Sign in to your account to continue"
+      description="Sign in to pick up the conversation."
       icon={<LogIn className="h-7 w-7 text-primary" />}
       footer={
         <p className="text-sm text-muted-foreground">
