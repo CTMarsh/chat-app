@@ -71,11 +71,11 @@ export default function AdminUsersPage() {
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
-      case 'online': return 'bg-green-500'
-      case 'away': return 'bg-yellow-500'
-      case 'dnd': return 'bg-red-500'
-      case 'suspended': return 'bg-red-700'
-      default: return 'bg-gray-400'
+      case 'online': return 'bg-ark-good'
+      case 'away': return 'bg-ark-warn'
+      case 'dnd': return 'bg-ark-crit'
+      case 'suspended': return 'bg-ark-crit'
+      default: return 'bg-ark-ink-3'
     }
   }
 
@@ -160,7 +160,7 @@ export default function AdminUsersPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ark-crit" />
         </div>
       ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
@@ -198,7 +198,7 @@ export default function AdminUsersPage() {
                     </Badge>
                   )}
                   {user.status === 'suspended' && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-500 text-red-500">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-ark-crit text-ark-crit">
                       Suspended
                     </Badge>
                   )}
@@ -332,9 +332,9 @@ export default function AdminUsersPage() {
                   )}
                 </Button>
 
-                <div className="flex items-start gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600" />
-                  <div className="text-yellow-700 dark:text-yellow-400">
+                <div className="flex items-start gap-2 rounded-lg border border-ark-warn/20 bg-ark-warn/10 p-3 text-sm">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ark-warn" />
+                  <div className="text-ark-warn">
                     <p className="font-medium">This password will not be shown again.</p>
                     <p className="mt-1">Share it securely with the user.</p>
                     {sendConfirmation && (

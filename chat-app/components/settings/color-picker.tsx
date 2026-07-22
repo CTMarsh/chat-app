@@ -104,7 +104,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
               type="text"
               value={customColor}
               onChange={handleCustomColorChange}
-              placeholder="#3b82f6"
+              placeholder="#2f8fff"
               className="h-8 font-mono text-xs"
             />
           </div>

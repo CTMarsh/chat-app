@@ -74,7 +74,7 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
               aria-label={copied ? 'Copied' : 'Copy invite link'}
             >
               {copied ? (
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-ark-good" />
               ) : (
                 <Copy className="h-4 w-4" />
               )}
@@ -93,7 +93,7 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
           </div>
 
           {copied && (
-            <p className="text-center text-sm text-green-600 dark:text-green-400" role="status">
+            <p className="text-center text-sm text-ark-good" role="status">
               Link copied to clipboard!
             </p>
           )}

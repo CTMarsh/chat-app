@@ -103,17 +103,17 @@ export function ConversationList({ onSelect }: ConversationListProps) {
   const getStatusConfig = (status: string | null | undefined) => {
     switch (status) {
       case 'online':
-        return { icon: Circle, bgColor: 'bg-green-500', textColor: 'text-white' }
+        return { icon: Circle, bgColor: 'bg-ark-good', textColor: 'text-white' }
       case 'away':
-        return { icon: Clock, bgColor: 'bg-yellow-500', textColor: 'text-white' }
+        return { icon: Clock, bgColor: 'bg-ark-warn', textColor: 'text-white' }
       case 'dnd':
-        return { icon: MinusCircle, bgColor: 'bg-red-500', textColor: 'text-white' }
+        return { icon: MinusCircle, bgColor: 'bg-ark-crit', textColor: 'text-white' }
       case 'invisible':
-        return { icon: EyeOff, bgColor: 'bg-gray-400', textColor: 'text-white' }
+        return { icon: EyeOff, bgColor: 'bg-ark-ink-3', textColor: 'text-white' }
       case 'suspended':
-        return { icon: Ban, bgColor: 'bg-red-700', textColor: 'text-white' }
+        return { icon: Ban, bgColor: 'bg-ark-crit', textColor: 'text-white' }
       default:
-        return { icon: Circle, bgColor: 'bg-gray-400', textColor: 'text-white' }
+        return { icon: Circle, bgColor: 'bg-ark-ink-3', textColor: 'text-white' }
     }
   }
 
@@ -181,7 +181,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer text-red-600 focus:text-red-600">
+                    <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer text-ark-crit focus:text-ark-crit">
                       <ShieldAlert className="mr-2 h-4 w-4" />
                       Platform Admin
                     </DropdownMenuItem>

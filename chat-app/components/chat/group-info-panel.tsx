@@ -103,7 +103,7 @@ export function GroupInfoPanel({ open, onOpenChange, conversation }: GroupInfoPa
   const getRoleBadge = (participant: ConversationWithParticipants['participants'][0]) => {
     if (participant.user_id === conversation.created_by) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+        <span className="inline-flex items-center gap-1 rounded-full bg-ark-warn/10 px-2 py-0.5 text-xs font-medium text-ark-warn">
           <Crown className="h-3 w-3" />
           Creator
         </span>
@@ -119,7 +119,7 @@ export function GroupInfoPanel({ open, onOpenChange, conversation }: GroupInfoPa
     }
     if (participant.role === 'moderator') {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+        <span className="inline-flex items-center gap-1 rounded-full bg-ark-blue/10 px-2 py-0.5 text-xs font-medium text-ark-blue">
           <Shield className="h-3 w-3" />
           Moderator
         </span>
@@ -434,10 +434,10 @@ export function GroupInfoPanel({ open, onOpenChange, conversation }: GroupInfoPa
                         </Avatar>
                         <span className={cn(
                           'absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background',
-                          profile.status === 'online' && 'bg-green-500',
-                          profile.status === 'away' && 'bg-yellow-500',
-                          profile.status === 'dnd' && 'bg-red-500',
-                          (!profile.status || profile.status === 'offline') && 'bg-gray-400'
+                          profile.status === 'online' && 'bg-ark-good',
+                          profile.status === 'away' && 'bg-ark-warn',
+                          profile.status === 'dnd' && 'bg-ark-crit',
+                          (!profile.status || profile.status === 'offline') && 'bg-ark-ink-3'
                         )} />
                       </div>
 

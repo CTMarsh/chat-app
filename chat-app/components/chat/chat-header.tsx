@@ -163,18 +163,18 @@ export function ChatHeader() {
             <div className="relative">
               <Avatar className={cn(
                 "h-10 w-10 ring-2 ring-offset-2 ring-offset-background transition-all",
-                isEnded ? "ring-gray-300" : "ring-indigo-200"
+                isEnded ? "ring-border" : "ring-primary/30"
               )}>
                 <AvatarFallback className={cn(
                   "font-medium",
-                  isEnded ? "bg-gray-100 text-gray-500" : "bg-indigo-100 text-indigo-600"
+                  isEnded ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"
                 )}>
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
               <span className={cn(
                 'absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background',
-                isEnded ? 'bg-gray-400' : 'bg-indigo-500'
+                isEnded ? 'bg-ark-ink-3' : 'bg-ark-blue'
               )}>
                 <Headphones className="h-3 w-3 text-white" />
               </span>
@@ -193,11 +193,11 @@ export function ChatHeader() {
                 </Avatar>
                 <span className={cn(
                   'absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background',
-                  status === 'online' && 'bg-green-500',
-                  status === 'away' && 'bg-yellow-500',
-                  status === 'dnd' && 'bg-red-500',
-                  status === 'suspended' && 'bg-red-700',
-                  (!status || status === 'offline') && 'bg-gray-400'
+                  status === 'online' && 'bg-ark-good',
+                  status === 'away' && 'bg-ark-warn',
+                  status === 'dnd' && 'bg-ark-crit',
+                  status === 'suspended' && 'bg-ark-crit',
+                  (!status || status === 'offline') && 'bg-ark-ink-3'
                 )} />
               </button>
             </ProfilePopover>
@@ -213,12 +213,12 @@ export function ChatHeader() {
           <div>
             <h2 className={cn("font-semibold", isEnded && "text-muted-foreground")}>{displayName}</h2>
             {isWidget && activeConversation.widget?.workspace?.name ? (
-              <p className={cn("text-xs flex items-center gap-1", isEnded ? "text-red-500" : "text-muted-foreground")}>
+              <p className={cn("text-xs flex items-center gap-1", isEnded ? "text-ark-crit" : "text-muted-foreground")}>
                 <Building2 className="h-3 w-3" />
                 {isEnded ? 'Conversation ended' : activeConversation.widget.workspace.name}
               </p>
             ) : (
-              <p className={cn("text-xs", isEnded ? "text-red-500" : "text-muted-foreground")}>{getStatusText()}</p>
+              <p className={cn("text-xs", isEnded ? "text-ark-crit" : "text-muted-foreground")}>{getStatusText()}</p>
             )}
           </div>
         </div>

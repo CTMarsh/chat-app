@@ -70,10 +70,10 @@ export default function AppearanceSettingsPage() {
           >
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
-              'bg-gradient-to-br from-amber-100 to-orange-100',
+              'bg-gradient-to-br from-[#eef3fb] to-[#dbe7f8]',
               currentTheme === 'light' && 'scale-110 shadow-lg'
             )}>
-              <Sun className="h-8 w-8 text-amber-600" />
+              <Sun className="h-8 w-8 text-ark-amber" />
             </div>
             <span className="font-medium">{currentTheme === 'light' ? 'Active' : 'Select'}</span>
           </button>
@@ -92,10 +92,10 @@ export default function AppearanceSettingsPage() {
           >
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
-              'bg-gradient-to-br from-slate-700 to-slate-900',
+              'bg-gradient-to-br from-[#16223a] to-ark-navy',
               currentTheme === 'dark' && 'scale-110 shadow-lg'
             )}>
-              <Moon className="h-8 w-8 text-slate-300" />
+              <Moon className="h-8 w-8 text-ark-ink-2" />
             </div>
             <span className="font-medium">{currentTheme === 'dark' ? 'Active' : 'Select'}</span>
           </button>
@@ -114,7 +114,7 @@ export default function AppearanceSettingsPage() {
           >
             <div className={cn(
               'flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200',
-              'bg-gradient-to-br from-amber-100 to-slate-800',
+              'bg-gradient-to-br from-[#eef3fb] to-ark-navy',
               currentTheme === 'system' && 'scale-110 shadow-lg'
             )}>
               <Monitor className="h-8 w-8 text-white" />

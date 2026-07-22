@@ -384,7 +384,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ark-crit" />
       </div>
     )
   }
@@ -503,7 +503,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? 'border-red-500 text-red-600 dark:text-red-400'
+                  ? 'border-ark-crit text-ark-crit'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
               }`}
             >
@@ -903,10 +903,10 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
 
           <div className="space-y-2">
             {/* Owner */}
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/10">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-ark-amber/10">
               <Avatar className="h-9 w-9">
-                <AvatarFallback className="bg-yellow-100 dark:bg-yellow-900/30">
-                  <Crown className="h-4 w-4 text-yellow-600" />
+                <AvatarFallback className="bg-ark-amber/15">
+                  <Crown className="h-4 w-4 text-ark-warn" />
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
@@ -1037,7 +1037,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
 
           {widgetsLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ark-crit" />
             </div>
           ) : widgetsList.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">
@@ -1056,8 +1056,8 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
                   key={widget.id}
                   onClick={() => router.push(`/admin/workspaces/${resolvedParams.id}/widgets/${widget.id}`)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10">
-                    <Code className="h-5 w-5 text-indigo-500" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-ark-blue/10">
+                    <Code className="h-5 w-5 text-ark-blue" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{widget.name}</p>

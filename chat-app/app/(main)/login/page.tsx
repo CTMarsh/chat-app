@@ -121,7 +121,7 @@ export default function LoginPage() {
         )}
 
         {isLockedOut && (
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg border border-ark-warn/30 bg-ark-warn/10 p-3 text-sm text-ark-warn">
             Account temporarily locked. Try again in {lockoutRemaining}s
           </div>
         )}
