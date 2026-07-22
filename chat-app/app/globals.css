@@ -63,9 +63,12 @@
   --color-ark-cyan:         var(--ark-cyan);
   --color-ark-amber:        var(--ark-amber);
   --color-ark-amber-soft:   var(--ark-amber-soft);
-  --color-ark-good:         var(--ark-good);
-  --color-ark-warn:         var(--ark-warn);
-  --color-ark-crit:         var(--ark-crit);
+  /* Semantic status colours — theme-aware (same pattern as --destructive):
+   * the flagship dark theme uses the raw brand constants; Constellation Day
+   * swaps in darkened AA-legible variants for text/icon use on paper. */
+  --color-ark-good:         var(--ark-good-ui);
+  --color-ark-warn:         var(--ark-warn-ui);
+  --color-ark-crit:         var(--ark-crit-ui);
 
   --color-ark-primary:      var(--primary);
   --color-ark-primary-bg:   color-mix(in oklab, var(--primary) 12%, transparent);
@@ -163,6 +166,10 @@
   --sidebar-accent-foreground: #1c2940;
   --sidebar-border: #cfdcef;
   --sidebar-ring: var(--ark-blue);
+  /* Darkened semantic variants — AA on paper (crit matches --destructive) */
+  --ark-good-ui: #0f8a5f;
+  --ark-warn-ui: #9c6a10;
+  --ark-crit-ui: #e0344a;
 }
 
 /* Constellation — the flagship dark theme. Exact --ark-* tokens:
@@ -199,6 +206,10 @@
   --sidebar-accent-foreground: var(--ark-ink);
   --sidebar-border: var(--ark-line);
   --sidebar-ring: var(--ark-blue);
+  /* Flagship dark theme uses the raw brand constants */
+  --ark-good-ui: var(--ark-good);
+  --ark-warn-ui: var(--ark-warn);
+  --ark-crit-ui: var(--ark-crit);
 }
 
 @layer base {
@@ -268,9 +279,9 @@
     border-radius: 6px;
     font-variant-numeric: tabular-nums;
   }
-  .ark-badge-good { background: rgba(53, 214, 160, 0.15); color: var(--ark-good); }
-  .ark-badge-warn { background: rgba(244, 168, 58, 0.15); color: var(--ark-warn); }
-  .ark-badge-crit { background: rgba(255, 93, 108, 0.15); color: var(--ark-crit); }
+  .ark-badge-good { background: rgba(53, 214, 160, 0.15); color: var(--ark-good-ui); }
+  .ark-badge-warn { background: rgba(244, 168, 58, 0.15); color: var(--ark-warn-ui); }
+  .ark-badge-crit { background: rgba(255, 93, 108, 0.15); color: var(--ark-crit-ui); }
 
   /* Uppercase label treatment */
   .ark-label {

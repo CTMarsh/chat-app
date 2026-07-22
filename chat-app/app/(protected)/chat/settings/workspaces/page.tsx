@@ -181,7 +181,7 @@ export default function WorkspacesSettingsPage() {
                     <h3 className="font-medium">{workspace.name}</h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1" title="Owners & Admins">
-                        <Crown className="h-4 w-4 text-yellow-500" />
+                        <Crown className="h-4 w-4 text-ark-warn" />
                         {ownerCount + adminCount}
                       </span>
                       <span className="flex items-center gap-1" title="Agents">

@@ -23,10 +23,10 @@ interface ProfilePopoverProps {
 }
 
 const statusOptions = [
-  { value: 'online', label: 'Online', icon: Circle, color: 'text-green-500', bgColor: 'bg-green-500' },
-  { value: 'away', label: 'Away', icon: Clock, color: 'text-yellow-500', bgColor: 'bg-yellow-500' },
-  { value: 'dnd', label: 'Do Not Disturb', icon: MinusCircle, color: 'text-red-500', bgColor: 'bg-red-500' },
-  { value: 'invisible', label: 'Invisible', icon: EyeOff, color: 'text-gray-400', bgColor: 'bg-gray-400' },
+  { value: 'online', label: 'Online', icon: Circle, color: 'text-ark-good', bgColor: 'bg-ark-good' },
+  { value: 'away', label: 'Away', icon: Clock, color: 'text-ark-warn', bgColor: 'bg-ark-warn' },
+  { value: 'dnd', label: 'Do Not Disturb', icon: MinusCircle, color: 'text-ark-crit', bgColor: 'bg-ark-crit' },
+  { value: 'invisible', label: 'Invisible', icon: EyeOff, color: 'text-ark-ink-3', bgColor: 'bg-ark-ink-3' },
 ] as const
 
 type StatusValue = typeof statusOptions[number]['value']
@@ -60,17 +60,17 @@ export function ProfilePopover({
   const getStatusConfig = (status: string | null) => {
     switch (status) {
       case 'online':
-        return { icon: Circle, bgColor: 'bg-green-500', label: 'Online' }
+        return { icon: Circle, bgColor: 'bg-ark-good', label: 'Online' }
       case 'away':
-        return { icon: Clock, bgColor: 'bg-yellow-500', label: 'Away' }
+        return { icon: Clock, bgColor: 'bg-ark-warn', label: 'Away' }
       case 'dnd':
-        return { icon: MinusCircle, bgColor: 'bg-red-500', label: 'Do Not Disturb' }
+        return { icon: MinusCircle, bgColor: 'bg-ark-crit', label: 'Do Not Disturb' }
       case 'invisible':
-        return { icon: EyeOff, bgColor: 'bg-gray-400', label: 'Invisible' }
+        return { icon: EyeOff, bgColor: 'bg-ark-ink-3', label: 'Invisible' }
       case 'suspended':
-        return { icon: Ban, bgColor: 'bg-red-700', label: 'Suspended' }
+        return { icon: Ban, bgColor: 'bg-ark-crit', label: 'Suspended' }
       default:
-        return { icon: Circle, bgColor: 'bg-gray-400', label: 'Offline' }
+        return { icon: Circle, bgColor: 'bg-ark-ink-3', label: 'Offline' }
     }
   }
 

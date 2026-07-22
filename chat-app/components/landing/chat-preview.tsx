@@ -6,9 +6,9 @@ import { CheckCheck, Smile, Paperclip, Send, Hash, Circle } from 'lucide-react'
 // ── Mock Data ──────────────────────────────────────────────
 
 const mockUsers = [
-  { id: 'sarah', name: 'Sarah Chen', avatar: 'SC', color: 'from-violet-500 to-purple-600', online: true },
-  { id: 'james', name: 'James Wright', avatar: 'JW', color: 'from-blue-500 to-cyan-600', online: true },
-  { id: 'emma', name: 'Emma Davis', avatar: 'ED', color: 'from-pink-500 to-rose-600', online: false },
+  { id: 'sarah', name: 'Sarah Chen', avatar: 'SC', color: 'from-ark-cyan to-ark-blue', online: true },
+  { id: 'james', name: 'James Wright', avatar: 'JW', color: 'from-ark-blue to-ark-cyan', online: true },
+  { id: 'emma', name: 'Emma Davis', avatar: 'ED', color: 'from-ark-crit to-ark-amber', online: false },
   { id: 'you', name: 'You', avatar: 'YO', color: 'from-primary to-primary/70', online: true },
 ]
 
@@ -81,7 +81,7 @@ const mockConversations = [
     time: '2m',
     unread: 3,
     online: false,
-    color: 'from-violet-500 to-purple-600',
+    color: 'from-ark-cyan to-ark-blue',
   },
   {
     id: 2,
@@ -91,7 +91,7 @@ const mockConversations = [
     time: '15m',
     unread: 0,
     online: true,
-    color: 'from-blue-500 to-cyan-600',
+    color: 'from-ark-blue to-ark-cyan',
   },
   {
     id: 3,
@@ -101,7 +101,7 @@ const mockConversations = [
     time: '1h',
     unread: 1,
     online: false,
-    color: 'from-pink-500 to-rose-600',
+    color: 'from-ark-crit to-ark-amber',
   },
   {
     id: 4,
@@ -111,7 +111,7 @@ const mockConversations = [
     time: '3h',
     unread: 0,
     online: true,
-    color: 'from-emerald-500 to-green-600',
+    color: 'from-ark-good to-ark-cyan',
   },
 ]
 
@@ -291,8 +291,8 @@ export function ChatPreview() {
             </div>
             <div className="flex-1 min-w-0">
               <span className="text-[11px] font-semibold truncate block">Your Name</span>
-              <span className="flex items-center gap-1 text-[9px] text-green-600">
-                <Circle className="h-1.5 w-1.5 fill-green-500 text-green-500" />
+              <span className="flex items-center gap-1 text-[9px] text-ark-good">
+                <Circle className="h-1.5 w-1.5 fill-ark-good text-ark-good" />
                 Online
               </span>
             </div>
@@ -325,7 +325,7 @@ export function ChatPreview() {
                   {!conv.isGroup && conv.avatar}
                 </div>
                 {conv.online && !conv.isGroup && (
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-ark-good" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -353,7 +353,7 @@ export function ChatPreview() {
         <div className="flex items-center justify-between border-b px-3 py-2">
           <div className="flex items-center gap-2">
             <div className="relative">
-              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white shadow-sm">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-ark-cyan to-ark-blue flex items-center justify-center text-white shadow-sm">
                 <Hash className="h-3.5 w-3.5" />
               </div>
             </div>

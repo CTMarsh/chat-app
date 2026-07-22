@@ -301,9 +301,9 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'owner':
-        return <Crown className="h-4 w-4 text-yellow-500" />
+        return <Crown className="h-4 w-4 text-ark-warn" />
       case 'admin':
-        return <Shield className="h-4 w-4 text-blue-500" />
+        return <Shield className="h-4 w-4 text-ark-blue" />
       case 'member':
         return <Eye className="h-4 w-4 text-muted-foreground" />
       default:
@@ -365,7 +365,7 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
           <SelectContent>
             <SelectItem value="admin">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-blue-500" />
+                <Shield className="h-4 w-4 text-ark-blue" />
                 Admin
               </div>
             </SelectItem>
@@ -830,16 +830,16 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
             {/* Owners & Admins Section */}
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                <Crown className="h-4 w-4 text-yellow-500" />
+                <Crown className="h-4 w-4 text-ark-warn" />
                 Owners & Admins
               </h4>
               <div className="space-y-2">
                 {/* Workspace Owner (always first, cannot be removed) */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/20">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-ark-amber/10 border border-ark-amber/20">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-yellow-100 dark:bg-yellow-900/30">
-                        <Crown className="h-5 w-5 text-yellow-600" />
+                      <AvatarFallback className="bg-ark-amber/15">
+                        <Crown className="h-5 w-5 text-ark-warn" />
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -848,8 +848,8 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Crown className="h-4 w-4 text-yellow-600" />
-                    <span className="text-yellow-700 dark:text-yellow-500">Owner</span>
+                    <Crown className="h-4 w-4 text-ark-warn" />
+                    <span className="text-ark-warn">Owner</span>
                   </div>
                 </div>
 

@@ -42,7 +42,7 @@ export default async function AdminLayout({
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Admin Header Bar */}
         <div className="relative border-b">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-500 via-red-400 to-orange-400" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-ark-crit via-ark-crit to-ark-amber" />
           <div className="flex h-14 items-center px-6">
             <h1 className="text-lg font-semibold">Platform Admin</h1>
           </div>

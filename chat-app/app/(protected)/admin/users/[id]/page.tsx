@@ -143,7 +143,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ark-crit" />
       </div>
     )
   }
@@ -188,7 +188,7 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 </Badge>
               )}
               {isSuspended && (
-                <Badge variant="outline" className="border-red-500 text-red-500">
+                <Badge variant="outline" className="border-ark-crit text-ark-crit">
                   Suspended
                 </Badge>
               )}
@@ -309,8 +309,8 @@ export default function AdminUserDetailPage({ params }: PageProps) {
                 href={`/admin/workspaces/${ws.id}`}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/20">
-                  <Crown className="h-4 w-4 text-yellow-600" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-ark-amber/15">
+                  <Crown className="h-4 w-4 text-ark-warn" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium">{ws.name}</p>

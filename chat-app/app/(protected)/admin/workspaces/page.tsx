@@ -175,7 +175,7 @@ export default function AdminWorkspacesPage() {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-ark-crit" />
         </div>
       ) : workspaces.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 text-center">

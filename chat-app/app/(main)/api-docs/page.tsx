@@ -59,8 +59,8 @@ export default function ApiDocsPage() {
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           endpoint.status === 'Available'
-                            ? 'bg-green-500/10 text-green-600 dark:text-green-400'
-                            : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                            ? 'bg-ark-good/10 text-ark-good'
+                            : 'bg-ark-warn/10 text-ark-warn'
                         }`}
                       >
                         {endpoint.status}

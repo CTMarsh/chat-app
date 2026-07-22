@@ -226,7 +226,7 @@ export default function SecuritySettingsPage() {
         <div
           className={`rounded-lg p-4 text-sm ${
             message.type === 'success'
-              ? 'bg-green-500/10 text-green-600 border border-green-200 dark:border-green-900'
+              ? 'bg-ark-good/10 text-ark-good border border-ark-good/30'
               : 'bg-destructive/10 text-destructive border border-destructive/20'
           }`}
         >
@@ -245,30 +245,30 @@ export default function SecuritySettingsPage() {
             accent
           >
             {hasMFA ? (
-              <div className="flex items-center gap-4 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
-                  <ShieldCheck className="h-6 w-6 text-green-600" />
+              <div className="flex items-center gap-4 rounded-lg border border-ark-good/30 bg-ark-good/10 p-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ark-good/15">
+                  <ShieldCheck className="h-6 w-6 text-ark-good" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-green-900 dark:text-green-100">
+                  <p className="font-medium text-foreground">
                     2FA Enabled
                   </p>
-                  <p className="text-sm text-green-700 dark:text-green-300">
+                  <p className="text-sm text-ark-good">
                     {mfaFactors.length} authenticator{mfaFactors.length > 1 ? 's' : ''} configured
                   </p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center gap-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
-                    <ShieldOff className="h-6 w-6 text-yellow-600" />
+                <div className="flex items-center gap-4 rounded-lg border border-ark-warn/30 bg-ark-warn/10 p-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-ark-warn/15">
+                    <ShieldOff className="h-6 w-6 text-ark-warn" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                    <p className="font-medium text-foreground">
                       Not Protected
                     </p>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    <p className="text-sm text-ark-warn">
                       Enable 2FA for better security
                     </p>
                   </div>
@@ -448,22 +448,22 @@ export default function SecuritySettingsPage() {
                   <div
                     key={session.id}
                     className={`flex items-center justify-between gap-4 p-4 ${
-                      session.is_current ? 'bg-green-50/50 dark:bg-green-950/20' : ''
+                      session.is_current ? 'bg-ark-good/5' : ''
                     }`}
                   >
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                        session.is_current ? 'bg-green-100 dark:bg-green-900' : 'bg-muted'
+                        session.is_current ? 'bg-ark-good/15' : 'bg-muted'
                       }`}>
                         <DeviceIcon className={`h-5 w-5 ${
-                          session.is_current ? 'text-green-600' : 'text-muted-foreground'
+                          session.is_current ? 'text-ark-good' : 'text-muted-foreground'
                         }`} />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-medium">{device}</p>
                           {session.is_current && (
-                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                            <span className="rounded-full bg-ark-good/15 px-2 py-0.5 text-xs font-medium text-ark-good">
                               This device
                             </span>
                           )}

@@ -23,11 +23,11 @@ export function FileMessage({ fileUrl, fileName, fileSize, fileType }: FileMessa
   }
 
   const getFileIcon = () => {
-    if (fileType.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-blue-500" />
-    if (fileType === 'application/pdf') return <FileText className="h-5 w-5 text-red-500" />
-    if (fileType.includes('word') || fileType.includes('document')) return <FileText className="h-5 w-5 text-blue-600" />
-    if (fileType.includes('sheet') || fileType.includes('excel')) return <FileSpreadsheet className="h-5 w-5 text-green-500" />
-    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('archive')) return <Archive className="h-5 w-5 text-yellow-500" />
+    if (fileType.startsWith('image/')) return <ImageIcon className="h-5 w-5 text-ark-blue" />
+    if (fileType === 'application/pdf') return <FileText className="h-5 w-5 text-ark-crit" />
+    if (fileType.includes('word') || fileType.includes('document')) return <FileText className="h-5 w-5 text-ark-blue" />
+    if (fileType.includes('sheet') || fileType.includes('excel')) return <FileSpreadsheet className="h-5 w-5 text-ark-good" />
+    if (fileType.includes('zip') || fileType.includes('rar') || fileType.includes('archive')) return <Archive className="h-5 w-5 text-ark-warn" />
     return <File className="h-5 w-5 text-muted-foreground" />
   }
 
