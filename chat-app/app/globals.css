@@ -78,6 +78,12 @@
   --color-ark-text:         var(--foreground);
   --color-ark-text-muted:   var(--muted-foreground);
 
+  /* Ink constants — dark-committed surfaces (auth shell, hero copy) that
+   * must stay Constellation ink regardless of the active theme. */
+  --color-ark-ink:          var(--ark-ink);
+  --color-ark-ink-2:        var(--ark-ink-2);
+  --color-ark-ink-3:        var(--ark-ink-3);
+
   --color-ark-danger:       var(--destructive);
 
   /* Constellation glow signature (DESIGN-SYSTEM.md §1) —
@@ -206,6 +212,40 @@
     font-family: var(--font-display-brand), var(--font-body), sans-serif;
     letter-spacing: -0.02em;
     text-wrap: balance;
+  }
+
+  /* Global chrome (DESIGN-SYSTEM.md §7) — the off-brand details a rebrand
+     misses: scrollbars, selection, caret, native controls, autofill.
+     Theme vars (not raw ark constants) keep Constellation Day legible. */
+  * {
+    scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--background); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 8px;
+    border: 2px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ark-blue); }
+
+  ::selection {
+    background: rgba(47, 143, 255, 0.35);
+    color: var(--foreground);
+  }
+
+  :root { color-scheme: light; }
+  .dark { color-scheme: dark; }
+  html {
+    caret-color: var(--ark-blue);
+    accent-color: var(--ark-blue);
+  }
+
+  ::placeholder { color: var(--muted-foreground); }
+  input:-webkit-autofill {
+    -webkit-text-fill-color: var(--foreground);
+    -webkit-box-shadow: 0 0 0 1000px var(--muted) inset;
   }
 }
 
