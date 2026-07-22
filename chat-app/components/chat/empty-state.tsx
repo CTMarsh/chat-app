@@ -1,38 +1,49 @@
 'use client'
 
-import { MessageSquare, Sparkles } from 'lucide-react'
+import Image from 'next/image'
+
+const FEATURES = ['Direct messages', 'Group chats', 'File sharing', 'Reactions']
 
 export function EmptyState() {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center p-8 text-center">
-      {/* Background decorations */}
+    <div className="ark-texture relative flex h-full flex-col items-center justify-center p-8 text-center">
+      {/* Constellation glow bed */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute left-1/4 top-1/4 h-64 w-64 rounded-full bg-ark-blue/10 blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 h-64 w-64 rounded-full bg-ark-cyan/10 blur-3xl" />
       </div>
 
       <div className="relative">
-        {/* Icon with gradient background */}
-        <div className="relative mx-auto">
-          <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent shadow-xl shadow-primary/10">
-            <MessageSquare className="h-12 w-12 text-primary" />
-          </div>
-          <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary shadow-lg">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
+        {/* Higgsfield empty-state art, feathered into the ground */}
+        <div className="relative mx-auto h-52 w-52 md:h-64 md:w-64">
+          <div className="absolute inset-0 rounded-full bg-ark-blue/15 blur-2xl" />
+          <div className="relative h-full w-full overflow-hidden rounded-full border border-ark-line shadow-glow">
+            <Image
+              src="/brand/empty-constellation.png"
+              alt=""
+              fill
+              sizes="(max-width: 768px) 208px, 256px"
+              className="object-cover"
+            />
+            {/* keep the art anchored to the navy ground in both themes */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-ark-void/50 to-transparent" />
           </div>
         </div>
 
-        <h2 className="mt-8 text-2xl font-bold tracking-tight">Welcome to Chat</h2>
+        <h2 className="mt-8 font-display text-2xl font-semibold tracking-tight">
+          Your constellation is quiet
+        </h2>
         <p className="mt-3 max-w-md text-muted-foreground">
-          Select a conversation from the sidebar or start a new chat to begin messaging.
+          Pick a conversation from the sidebar, or start a new one — each chat
+          becomes another light on the map.
         </p>
 
         {/* Feature hints */}
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          {['Direct Messages', 'Group Chats', 'File Sharing', 'Reactions'].map((feature) => (
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          {FEATURES.map((feature) => (
             <span
               key={feature}
-              className="rounded-full border border-border/50 bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground"
+              className="ark-badge border border-border bg-muted/60 text-muted-foreground"
             >
               {feature}
             </span>

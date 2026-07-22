@@ -74,7 +74,14 @@ export function PreferencesProvider({ children }: PreferencesProviderProps) {
     root.setAttribute('data-message-density', preferences.message_density)
 
     // Accent Color - set CSS variable and data attribute
-    if (preferences.accent_color && preferences.accent_color !== '#4A8BC2') {
+    // '#2F8FFF' is the Constellation brand default; '#4A8BC2' was the legacy
+    // NauticalTheme default — both map to "no custom accent" so existing users
+    // land on the new brand automatically.
+    const defaultAccents = ['#2f8fff', '#4a8bc2']
+    if (
+      preferences.accent_color &&
+      !defaultAccents.includes(preferences.accent_color.toLowerCase())
+    ) {
       root.style.setProperty('--user-accent-color', preferences.accent_color)
       root.setAttribute('data-accent-color', 'custom')
     } else {
@@ -167,7 +174,7 @@ export function useAppearancePreferences() {
     theme: preferences?.theme ?? 'system',
     uiScale: preferences?.ui_scale ?? 'comfortable',
     fontSize: preferences?.font_size ?? 'medium',
-    accentColor: preferences?.accent_color ?? '#4A8BC2',
+    accentColor: preferences?.accent_color ?? '#2F8FFF',
     messageDensity: preferences?.message_density ?? 'default',
     setTheme: (theme: UserPreferences['theme']) => updatePreference('theme', theme),
     setUiScale: (scale: UserPreferences['ui_scale']) => updatePreference('ui_scale', scale),

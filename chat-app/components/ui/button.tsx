@@ -9,13 +9,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25",
+        // Constellation .btn-primary — electric blue + signature glow (DESIGN-SYSTEM.md §6)
+        default: "bg-primary text-primary-foreground font-semibold shadow-glow hover:bg-ark-blue-bright hover:shadow-glow-lg",
         destructive:
           "bg-destructive text-white shadow-md shadow-destructive/20 hover:bg-destructive/90 hover:shadow-lg hover:shadow-destructive/25 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+        // Constellation .btn-ghost — glassy surface, hairline that lights up blue on hover
         outline:
-          "border border-border/50 bg-background shadow-xs hover:bg-accent hover:text-accent-foreground hover:border-border dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-border bg-secondary/60 text-foreground shadow-xs hover:border-primary dark:hover:text-ark-blue-bright",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md",
+          "bg-secondary text-secondary-foreground border border-border shadow-sm hover:border-primary dark:hover:text-ark-blue-bright",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

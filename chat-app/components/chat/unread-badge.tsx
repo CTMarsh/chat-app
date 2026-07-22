@@ -13,7 +13,8 @@ export function UnreadBadge({ count, className }: UnreadBadgeProps) {
   return (
     <span
       className={cn(
-        'flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-medium text-primary-foreground',
+        // Constellation amber — the warm highlight is reserved for key numbers
+        'flex h-5 min-w-5 items-center justify-center rounded-full bg-ark-amber/15 px-1.5 font-mono text-xs font-semibold tabular-nums text-amber-700 dark:text-ark-amber',
         className
       )}
     >

@@ -9,9 +9,9 @@ export function Hero() {
     <section className="relative overflow-hidden py-20 md:py-32">
       {/* Background decorations */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-0 left-1/2 h-64 w-64 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-ark-blue/10 blur-3xl" />
+        <div className="absolute right-0 top-1/4 h-80 w-80 rounded-full bg-ark-cyan/10 blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 h-64 w-64 rounded-full bg-ark-blue/10 blur-3xl" />
       </div>
       <div className="container mx-auto px-4 relative">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 items-center">
@@ -51,7 +51,7 @@ export function Hero() {
           {/* Right Column - Image */}
           <div className="relative lg:ml-auto">
             <div className="relative rounded-2xl border border-border/50 bg-gradient-to-b from-card/80 to-card p-2 shadow-2xl shadow-primary/10 backdrop-blur-sm">
-              <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
+              <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-ark-blue via-ark-cyan to-transparent" />
               <div className="h-[360px] md:h-[400px] rounded-xl bg-background/80 overflow-hidden">
                 <ChatPreview />
               </div>

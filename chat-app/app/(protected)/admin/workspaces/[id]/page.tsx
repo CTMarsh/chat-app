@@ -163,7 +163,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
   // Settings tab state
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsLoaded, setSettingsLoaded] = useState(false)
-  const [defaultPrimaryColor, setDefaultPrimaryColor] = useState('#6366f1')
+  const [defaultPrimaryColor, setDefaultPrimaryColor] = useState('#2f8fff')
   const [defaultWelcomeMessage, setDefaultWelcomeMessage] = useState('')
   const [defaultOfflineMessage, setDefaultOfflineMessage] = useState('')
   const [businessHoursEnabled, setBusinessHoursEnabled] = useState(false)
@@ -224,7 +224,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
       adminGetWorkspaceSettings(resolvedParams.id).then(({ data }) => {
         if (data) {
           const s = data as Record<string, unknown>
-          setDefaultPrimaryColor((s.default_primary_color as string) || '#6366f1')
+          setDefaultPrimaryColor((s.default_primary_color as string) || '#2f8fff')
           setDefaultWelcomeMessage((s.default_welcome_message as string) || '')
           setDefaultOfflineMessage((s.default_offline_message as string) || '')
           setBusinessHoursEnabled(s.business_hours_enabled as boolean ?? false)
@@ -634,7 +634,7 @@ export default function AdminWorkspaceDetailPage({ params }: PageProps) {
                   <Input
                     value={defaultPrimaryColor}
                     onChange={(e) => setDefaultPrimaryColor(e.target.value)}
-                    placeholder="#6366f1"
+                    placeholder="#2f8fff"
                     className="w-32"
                   />
                 </div>

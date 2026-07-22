@@ -51,7 +51,7 @@ export async function Header() {
             height={40}
             className="rounded-xl shadow-lg shadow-primary/25"
           />
-          <span className="text-xl font-bold">Chat<span className="text-primary">Ark</span></span>
+          <span className="font-display text-xl font-semibold tracking-tight">Chat<span className="text-primary">Ark</span></span>
         </Link>
 
         {/* Desktop Navigation */}

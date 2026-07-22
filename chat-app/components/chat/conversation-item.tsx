@@ -103,8 +103,9 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
       onClick={handleClick}
       className={cn(
         'group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200',
+        // Constellation active node — glassy blue + hairline ring + signature glow
         isActive
-          ? 'bg-primary text-primary-foreground shadow-md'
+          ? 'bg-primary/15 ring-1 ring-primary/40 shadow-[0_0_18px_rgba(47,143,255,0.25)]'
           : 'hover:bg-muted/80'
       )}
     >
@@ -114,20 +115,14 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
           <div className="relative">
             <Avatar className={cn(
               'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
-              isActive && 'ring-2 ring-primary-foreground/30'
+              isActive && 'ring-2 ring-primary/40'
             )}>
-              <AvatarFallback className={cn(
-                'text-sm font-medium',
-                isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-indigo-100 text-indigo-600'
-              )}>
+              <AvatarFallback className="bg-ark-cyan/15 text-sm font-medium text-secondary-foreground dark:text-ark-cyan">
                 {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>
-            <span className={cn(
-              'absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2',
-              isActive ? 'border-primary bg-indigo-400' : 'border-background bg-indigo-500'
-            )}>
-              <Headphones className="h-3 w-3 text-white" />
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-ark-cyan">
+              <Headphones className="h-3 w-3 text-ark-void" />
             </span>
           </div>
         ) : conversation.type === 'direct' && otherParticipant?.profile ? (
@@ -141,13 +136,10 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
             >
               <Avatar className={cn(
                 'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
-                isActive && 'ring-2 ring-primary-foreground/30'
+                isActive && 'ring-2 ring-primary/40'
               )}>
                 <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className={cn(
-                  'text-sm font-medium',
-                  isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
-                )}>
+                <AvatarFallback className="bg-primary/10 text-sm font-medium text-secondary-foreground dark:text-ark-blue-bright">
                   {getInitials(displayName)}
                 </AvatarFallback>
               </Avatar>
@@ -156,8 +148,7 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
                 const StatusIcon = statusConfig.icon
                 return (
                   <span className={cn(
-                    'absolute bottom-0 right-0 flex items-center justify-center rounded-full border-2',
-                    isActive ? 'border-primary' : 'border-background',
+                    'absolute bottom-0 right-0 flex items-center justify-center rounded-full border-2 border-background',
                     isActive ? statusConfig.bgColorActive : statusConfig.bgColor,
                     statusConfig.hasIcon ? 'h-5 w-5' : 'h-3.5 w-3.5'
                   )}>
@@ -170,13 +161,10 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
         ) : (
           <Avatar className={cn(
             'h-12 w-12 transition-transform duration-200 group-hover:scale-105',
-            isActive && 'ring-2 ring-primary-foreground/30'
+            isActive && 'ring-2 ring-primary/40'
           )}>
             <AvatarImage src={avatarUrl || undefined} />
-            <AvatarFallback className={cn(
-              'text-sm font-medium',
-              isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'
-            )}>
+            <AvatarFallback className="bg-primary/10 text-sm font-medium text-secondary-foreground dark:text-ark-blue-bright">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
@@ -193,10 +181,7 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
           </span>
           <div className="flex items-center gap-2 shrink-0">
             {lastMessage?.created_at && (
-              <span className={cn(
-                'text-xs',
-                isActive ? 'text-primary-foreground/70' : 'text-muted-foreground'
-              )}>
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {formatTime(lastMessage.created_at)}
               </span>
             )}
@@ -205,11 +190,9 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
         <div className="flex items-center justify-between gap-2 mt-0.5">
           <p className={cn(
             'truncate text-sm',
-            isActive
-              ? 'text-primary-foreground/80'
-              : hasUnread
-                ? 'font-medium text-foreground'
-                : 'text-muted-foreground'
+            hasUnread && !isActive
+              ? 'font-medium text-foreground'
+              : 'text-muted-foreground'
           )}>
             {lastMessagePreview}
           </p>
@@ -218,14 +201,8 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
         {/* Workspace name for widget conversations */}
         {isWidget && conversation.widget?.workspace?.name && (
           <div className="flex items-center gap-1.5 mt-1">
-            <Building2 className={cn(
-              'h-3 w-3 shrink-0',
-              isActive ? 'text-primary-foreground/60' : 'text-muted-foreground/70'
-            )} />
-            <span className={cn(
-              'text-xs truncate',
-              isActive ? 'text-primary-foreground/60' : 'text-muted-foreground/70'
-            )}>
+            <Building2 className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+            <span className="text-xs truncate text-muted-foreground/70">
               {conversation.widget.workspace.name}
             </span>
           </div>

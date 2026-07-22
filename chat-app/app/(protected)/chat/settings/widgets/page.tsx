@@ -237,7 +237,7 @@ export default function WidgetsSettingsPage() {
                       className="flex h-12 w-12 items-center justify-center rounded-lg"
                       style={{ backgroundColor: `${widget.primary_color}20` }}
                     >
-                      <Code className="h-6 w-6" style={{ color: widget.primary_color || '#6366f1' }} />
+                      <Code className="h-6 w-6" style={{ color: widget.primary_color || '#2f8fff' }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
