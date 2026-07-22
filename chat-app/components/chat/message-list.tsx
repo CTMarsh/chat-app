@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
+import Image from 'next/image'
 import { useChat } from '@/components/providers/chat-provider'
 import { usePrivacyPreferences } from '@/components/providers/preferences-provider'
 import { MessageItem } from './message-item'
@@ -69,14 +70,31 @@ export function MessageList() {
       />
       <div ref={containerRef} className="flex-1 overflow-y-auto p-4" role="log" aria-label="Messages" aria-live="off">
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent shadow-lg shadow-primary/10">
-              <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+          <div className="relative flex h-full flex-col items-center justify-center">
+            {/* Constellation glow bed */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+              <div className="absolute left-1/3 top-1/3 h-48 w-48 -translate-x-1/2 rounded-full bg-ark-blue/10 blur-3xl" />
+              <div className="absolute bottom-1/3 right-1/3 h-48 w-48 translate-x-1/2 rounded-full bg-ark-cyan/10 blur-3xl" />
             </div>
-            <p className="mt-4 font-medium text-foreground">No messages yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">Start the conversation!</p>
+
+            {/* Higgsfield first-signal art — two nodes making first contact */}
+            <div className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-ark-line shadow-glow md:max-w-md">
+              <Image
+                src="/brand/first-signal.png"
+                alt=""
+                width={960}
+                height={480}
+                sizes="(max-width: 768px) 384px, 448px"
+                className="h-auto w-full object-cover"
+              />
+              {/* anchor the art to the navy ground in both themes */}
+              <div className="absolute inset-0 bg-gradient-to-t from-ark-void/40 to-transparent" />
+            </div>
+
+            <p className="mt-6 font-medium text-foreground">No messages yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Send the first signal — start the conversation.
+            </p>
           </div>
         ) : (
           <ol className="space-y-4 list-none" aria-label="Message list">
