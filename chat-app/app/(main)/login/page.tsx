@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthCard, AuthInputWrapper } from '@/components/auth/auth-card'
-import { Mail, Lock, Loader2, LogIn } from 'lucide-react'
+import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
 
 const MAX_ATTEMPTS = 5
 const LOCKOUT_BASE_MS = 15_000 // 15 seconds
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [lockoutRemaining, setLockoutRemaining] = useState(0)
   const router = useRouter()
   const failedAttempts = useRef(0)
@@ -103,7 +104,6 @@ export default function LoginPage() {
     <AuthCard
       title="Welcome back"
       description="Sign in to pick up the conversation."
-      icon={<LogIn className="h-7 w-7 text-primary" />}
       footer={
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
@@ -113,7 +113,7 @@ export default function LoginPage() {
         </p>
       }
     >
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleLogin} className="space-y-5">
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
             {error}
@@ -127,7 +127,7 @@ export default function LoginPage() {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="font-semibold">Email</Label>
           <AuthInputWrapper icon={<Mail className="h-4 w-4" />}>
             <Input
               id="email"
@@ -135,7 +135,7 @@ export default function LoginPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-11 pl-10 transition-shadow focus:shadow-md"
+              className="h-12 pl-[42px] text-[15px] placeholder:text-ark-ink-3"
               required
             />
           </AuthInputWrapper>
@@ -143,10 +143,10 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="font-semibold">Password</Label>
             <Link
               href="/forgot-password"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
+              className="text-[13px] text-ark-blue-bright transition-colors hover:underline"
             >
               Forgot password?
             </Link>
@@ -154,26 +154,30 @@ export default function LoginPage() {
           <AuthInputWrapper icon={<Lock className="h-4 w-4" />}>
             <Input
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-11 pl-10 transition-shadow focus:shadow-md"
+              className="h-12 pl-[42px] pr-11 text-[15px] placeholder:text-ark-ink-3"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ark-ink-3 transition-colors hover:text-ark-ink-2"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </AuthInputWrapper>
         </div>
 
         <Button
           type="submit"
-          className="h-11 w-full text-base"
+          className="mt-6 h-12 w-full text-[15px]"
           disabled={loading || isLockedOut}
         >
-          {loading ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <LogIn className="mr-2 h-4 w-4" />
-          )}
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isLockedOut ? `Locked (${lockoutRemaining}s)` : 'Sign In'}
         </Button>
       </form>
