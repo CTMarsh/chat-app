@@ -79,7 +79,7 @@ export function AuthCard({
       {/* ~38% form pane against the ~62% hero (canonical split), floored so the
           form never collapses at the lg breakpoint */}
       <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[38%] lg:min-w-[28rem] lg:flex-none">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[400px]">
           {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
           <div
             className={cn(
@@ -105,42 +105,26 @@ export function AuthCard({
               </span>
             </Link>
 
-            <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-ark-cyan">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-ark-cyan">
               Noah&apos;s Ark &middot; Secure comms
             </p>
-            <h1 className="font-display text-3xl font-semibold text-ark-ink">
+            <h1 className="mb-1 font-display text-3xl font-semibold text-ark-ink">
               {title}
             </h1>
             {description && (
-              <p className="mt-1 text-sm text-ark-ink-2">{description}</p>
+              <p className="text-[15px] text-ark-ink-2">{description}</p>
             )}
 
-            <div className="mt-7">{children}</div>
+            <div className="mt-8">{children}</div>
 
             {footer && (
-              <div className="mt-6 text-center text-sm text-ark-ink-2">
+              <div className="mt-5 text-center text-sm text-ark-ink-2">
                 {footer}
               </div>
             )}
           </div>
 
-          <p className="mt-8 text-center text-xs text-ark-ink-3">
-            By continuing, you agree to our{' '}
-            <Link
-              href="/terms"
-              className="underline transition-colors hover:text-ark-blue-bright"
-            >
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link
-              href="/privacy"
-              className="underline transition-colors hover:text-ark-blue-bright"
-            >
-              Privacy Policy
-            </Link>
-          </p>
-          <p className="mt-4 text-center font-mono text-[11px] uppercase tracking-wide text-ark-ink-3">
+          <p className="mt-10 text-center font-mono text-[11px] uppercase tracking-[0.1em] text-ark-ink-3">
             ChatArk &middot; Noah&apos;s Ark
           </p>
         </div>
@@ -157,7 +141,7 @@ interface AuthInputWrapperProps {
 export function AuthInputWrapper({ children, icon }: AuthInputWrapperProps) {
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute left-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-muted-foreground">
+      <div className="pointer-events-none absolute left-3.5 top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center text-ark-ink-3">
         {icon}
       </div>
       {children}
