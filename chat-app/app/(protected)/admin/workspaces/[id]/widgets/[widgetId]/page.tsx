@@ -87,7 +87,7 @@ export default function AdminWidgetDetailPage({ params }: PageProps) {
 
   // Form state
   const [name, setName] = useState('')
-  const [primaryColor, setPrimaryColor] = useState('#6366f1')
+  const [primaryColor, setPrimaryColor] = useState('#2f8fff')
   const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right')
   const [welcomeMessage, setWelcomeMessage] = useState('')
   const [offlineMessage, setOfflineMessage] = useState('')
@@ -107,7 +107,7 @@ export default function AdminWidgetDetailPage({ params }: PageProps) {
       } else if (data) {
         setWidget(data)
         setName(data.name)
-        setPrimaryColor(data.primary_color || '#6366f1')
+        setPrimaryColor(data.primary_color || '#2f8fff')
         setPosition((data.position as 'bottom-right' | 'bottom-left') || 'bottom-right')
         setWelcomeMessage(data.welcome_message || '')
         setOfflineMessage(data.offline_message || '')
@@ -373,7 +373,7 @@ export default function AdminWidgetDetailPage({ params }: PageProps) {
               <Input
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
-                placeholder="#6366f1"
+                placeholder="#2f8fff"
                 className="flex-1"
               />
             </div>

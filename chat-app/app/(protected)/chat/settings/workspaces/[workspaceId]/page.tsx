@@ -70,7 +70,7 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
   const [activeTab, setActiveTab] = useState<Tab>('general')
 
   // Settings form state
-  const [defaultPrimaryColor, setDefaultPrimaryColor] = useState('#6366f1')
+  const [defaultPrimaryColor, setDefaultPrimaryColor] = useState('#2f8fff')
   const [defaultWelcomeMessage, setDefaultWelcomeMessage] = useState('')
   const [defaultOfflineMessage, setDefaultOfflineMessage] = useState('')
   const [businessHoursEnabled, setBusinessHoursEnabled] = useState(false)
@@ -159,7 +159,7 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
       if (settingsResult.data) {
         const s = settingsResult.data
         setSettings(s)
-        setDefaultPrimaryColor(s.default_primary_color || '#6366f1')
+        setDefaultPrimaryColor(s.default_primary_color || '#2f8fff')
         setDefaultWelcomeMessage(s.default_welcome_message || '')
         setDefaultOfflineMessage(s.default_offline_message || '')
         setBusinessHoursEnabled(s.business_hours_enabled)
@@ -517,7 +517,7 @@ export default function WorkspaceDetailPage({ params }: PageProps) {
                   <Input
                     value={defaultPrimaryColor}
                     onChange={(e) => setDefaultPrimaryColor(e.target.value)}
-                    placeholder="#6366f1"
+                    placeholder="#2f8fff"
                     className="w-32"
                   />
                 </div>

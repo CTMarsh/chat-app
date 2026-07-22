@@ -271,9 +271,10 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
           <div
             className={cn(
               'relative rounded-2xl p-3 transition-all duration-200',
+              // Constellation bubbles — sent = electric blue, received = glassy surface
               isOwn
-                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                : 'bg-muted/80 shadow-sm hover:shadow-md'
+                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                : 'border border-border bg-card shadow-sm hover:border-primary/30'
             )}
           >
             {isEditing ? (
@@ -387,7 +388,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
         />
 
         <div className="mt-1 flex items-center gap-1">
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground tabular-nums">
             {formatTime(message.created_at)}
           </span>
           {message.is_edited && (

@@ -21,7 +21,7 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="ark-texture flex h-screen overflow-hidden bg-background">
       <SkipLink href="main-content">Skip to main content</SkipLink>
 
       {/* Desktop sidebar */}

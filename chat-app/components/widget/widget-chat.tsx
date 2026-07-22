@@ -383,7 +383,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
     )
   }
 
-  const primaryColor = config.primaryColor || '#6366f1'
+  const primaryColor = config.primaryColor || '#2f8fff'
 
   return (
     <div

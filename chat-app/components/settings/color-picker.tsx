@@ -11,12 +11,13 @@ import {
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 
+// Constellation presets (Noah's Ark DESIGN-SYSTEM.md) — Signal is the brand default
 const presetColors = [
-  { name: 'Ocean', value: '#4A8BC2' },
-  { name: 'Navy', value: '#1A2938' },
-  { name: 'Golden', value: '#D4A04A' },
-  { name: 'Seafoam', value: '#2BA89E' },
-  { name: 'Coral', value: '#D06050' },
+  { name: 'Signal', value: '#2F8FFF' },
+  { name: 'Cyan', value: '#33D6E6' },
+  { name: 'Amber', value: '#F4A83A' },
+  { name: 'Aurora', value: '#35D6A0' },
+  { name: 'Coral', value: '#FF5D6C' },
   { name: 'Dusk', value: '#6B5B95' },
 ]
 
