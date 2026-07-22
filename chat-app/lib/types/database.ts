@@ -1234,6 +1234,9 @@ export type MessageWithSender = Message & {
   reply_to?: Message & { sender: Profile }
   reactions?: MessageReaction[]
   read_receipts?: MessageReadReceipt[]
+  // Client-only: true while an optimistic message is in flight (not yet
+  // confirmed by the server). Never persisted; used purely for send feedback.
+  pending?: boolean
 }
 
 // Widget-specific message type (for visitor messages without full sender profile)

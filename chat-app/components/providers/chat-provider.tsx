@@ -346,94 +346,23 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       throw new Error('Message too long (max 10,000 characters)')
     }
 
-    let fileUrl: string | null = null
-    let fileName: string | null = null
-    let fileSize: number | null = null
-    let fileType: string | null = null
-
-    // Upload file if provided
-    if (file) {
-      // Enforce max_file_size_mb
-      const maxBytes = maxFileSizeMb * 1024 * 1024
-      if (file.size > maxBytes) {
-        throw new Error(`File must be less than ${maxFileSizeMb}MB`)
-      }
-
-      // Scan file for viruses before uploading (requires Edge Functions)
-      if (isScanningEnabled()) {
-        try {
-          const scanResult = await scanFile(file)
-          if (!scanResult.isClean) {
-            throw new Error(`File rejected: ${scanResult.message}`)
-          }
-          if (!scanResult.skipped) {
-            console.log('File scan passed:', scanResult.message)
-          }
-        } catch (scanError) {
-          console.error('File scan failed:', scanError)
-          throw scanError
-        }
-      }
-
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('message-attachments')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError)
-        throw uploadError
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('message-attachments')
-        .getPublicUrl(filePath)
-
-      fileUrl = publicUrl
-      fileName = file.name
-      fileSize = file.size
-      fileType = file.type
-    }
-
     const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
-
     const now = new Date().toISOString()
+    const tempId = `temp-${crypto.randomUUID()}`
 
-    const { data: inserted, error } = await supabase
-      .from('messages')
-      .insert({
+    // Optimistic bubble: show the message immediately in a pending state so the
+    // sender gets instant feedback while the upload/insert is still in flight.
+    if (currentUser) {
+      setMessages(prev => [...prev, {
+        id: tempId,
         content,
         conversation_id: conversationId,
         sender_id: userId,
         type: messageType,
-        file_url: fileUrl,
-        file_name: fileName,
-        file_size: fileSize,
-        file_type: fileType,
-        reply_to_id: replyToId || null,
-      })
-      .select('id')
-      .single()
-
-    if (error) {
-      console.error('Error sending message:', error)
-      throw error
-    }
-
-    // Immediate UI update using the real DB ID
-    if (currentUser && inserted) {
-      const newMessage: MessageWithSender = {
-        id: inserted.id,
-        content,
-        conversation_id: conversationId,
-        sender_id: userId,
-        type: messageType,
-        file_url: fileUrl,
-        file_name: fileName,
-        file_size: fileSize,
-        file_type: fileType,
+        file_url: null,
+        file_name: null,
+        file_size: null,
+        file_type: null,
         created_at: now,
         updated_at: now,
         deleted_at: null,
@@ -450,28 +379,143 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         sender: currentUser,
         reactions: [],
         read_receipts: [],
-      }
-      setMessages(prev => [...prev, newMessage])
+        pending: true,
+      }])
     }
 
-    // Update conversation timestamp
-    await supabase
-      .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId)
+    try {
+      let fileUrl: string | null = null
+      let fileName: string | null = null
+      let fileSize: number | null = null
+      let fileType: string | null = null
 
-    // Fire-and-forget push notification via Notify service
-    if (inserted) {
-      fetch('/api/push-notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          messageId: inserted.id,
+      // Upload file if provided
+      if (file) {
+        // Enforce max_file_size_mb
+        const maxBytes = maxFileSizeMb * 1024 * 1024
+        if (file.size > maxBytes) {
+          throw new Error(`File must be less than ${maxFileSizeMb}MB`)
+        }
+
+        // Scan file for viruses before uploading (requires Edge Functions)
+        if (isScanningEnabled()) {
+          try {
+            const scanResult = await scanFile(file)
+            if (!scanResult.isClean) {
+              throw new Error(`File rejected: ${scanResult.message}`)
+            }
+            if (!scanResult.skipped) {
+              console.log('File scan passed:', scanResult.message)
+            }
+          } catch (scanError) {
+            console.error('File scan failed:', scanError)
+            throw scanError
+          }
+        }
+
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('message-attachments')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError)
+          throw uploadError
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('message-attachments')
+          .getPublicUrl(filePath)
+
+        fileUrl = publicUrl
+        fileName = file.name
+        fileSize = file.size
+        fileType = file.type
+      }
+
+      const { data: inserted, error } = await supabase
+        .from('messages')
+        .insert({
           content,
-          senderName: currentUser?.display_name || currentUser?.username,
-        }),
-      }).catch(() => {}) // Silently ignore push failures
+          conversation_id: conversationId,
+          sender_id: userId,
+          type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
+          file_type: fileType,
+          reply_to_id: replyToId || null,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        console.error('Error sending message:', error)
+        throw error
+      }
+
+      // Reconcile the optimistic bubble with the confirmed row from the server.
+      if (currentUser && inserted) {
+        const newMessage: MessageWithSender = {
+          id: inserted.id,
+          content,
+          conversation_id: conversationId,
+          sender_id: userId,
+          type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
+          file_type: fileType,
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+          deleted_by: null,
+          reply_to_id: replyToId || null,
+          is_pinned: false,
+          pinned_at: null,
+          pinned_by: null,
+          link_previews: null,
+          is_edited: false,
+          visitor_name: null,
+          visitor_email: null,
+          search_vector: null,
+          sender: currentUser,
+          reactions: [],
+          read_receipts: [],
+        }
+        setMessages(prev => {
+          const withoutTemp = prev.filter(m => m.id !== tempId)
+          // The realtime INSERT may have already appended the confirmed row.
+          if (withoutTemp.some(m => m.id === inserted.id)) return withoutTemp
+          return [...withoutTemp, newMessage]
+        })
+      }
+
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+
+      // Fire-and-forget push notification via Notify service
+      if (inserted) {
+        fetch('/api/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            messageId: inserted.id,
+            content,
+            senderName: currentUser?.display_name || currentUser?.username,
+          }),
+        }).catch(() => {}) // Silently ignore push failures
+      }
+    } catch (err) {
+      // Roll back the optimistic bubble; MessageInput restores the draft for retry.
+      setMessages(prev => prev.filter(m => m.id !== tempId))
+      throw err
     }
   }, [supabase, userId, currentUser, maxFileSizeMb])
 
@@ -488,131 +532,23 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
       throw new Error('Message too long (max 10,000 characters)')
     }
 
-    let fileUrl: string | null = null
-    let fileName: string | null = null
-    let fileSize: number | null = null
-    let fileType: string | null = null
-
-    // Upload file if provided
-    if (file) {
-      // Enforce max_file_size_mb
-      const maxBytes = maxFileSizeMb * 1024 * 1024
-      if (file.size > maxBytes) {
-        throw new Error(`File must be less than ${maxFileSizeMb}MB`)
-      }
-
-      // Scan file for viruses before uploading (requires Edge Functions)
-      if (isScanningEnabled()) {
-        try {
-          const scanResult = await scanFile(file)
-          if (!scanResult.isClean) {
-            throw new Error(`File rejected: ${scanResult.message}`)
-          }
-          if (!scanResult.skipped) {
-            console.log('File scan passed:', scanResult.message)
-          }
-        } catch (scanError) {
-          console.error('File scan failed:', scanError)
-          throw scanError
-        }
-      }
-
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('message-attachments')
-        .upload(filePath, file)
-
-      if (uploadError) {
-        console.error('Error uploading file:', uploadError)
-        throw uploadError
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('message-attachments')
-        .getPublicUrl(filePath)
-
-      fileUrl = publicUrl
-      fileName = file.name
-      fileSize = file.size
-      fileType = file.type
-    }
-
     const messageType = file?.type.startsWith('image/') ? 'image' : file ? 'file' : 'text'
-
-    // Extract URLs for link previews (with SSRF protection)
-    const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,:;"')\]!?])/g
-    const rawUrls = content.match(urlRegex) || []
-    const urls = rawUrls.filter(u => {
-      try {
-        const parsed = new URL(u)
-        if (!['http:', 'https:'].includes(parsed.protocol)) return false
-        const h = parsed.hostname
-        if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return false
-        if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(h)) return false
-        if (u.length > 2048) return false
-        return true
-      } catch { return false }
-    })
-    let linkPreviews: Array<{url: string; title?: string; description?: string; image?: string; siteName?: string}> = []
-
-    // Fetch link previews (limit to first 3 URLs)
-    if (urls.length > 0) {
-      const previewPromises = urls.slice(0, 3).map(async (url) => {
-        try {
-          const response = await fetch('/api/link-preview', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url }),
-          })
-          if (response.ok) {
-            return await response.json()
-          }
-          return { url }
-        } catch {
-          return { url }
-        }
-      })
-      linkPreviews = await Promise.all(previewPromises)
-    }
-
     const now = new Date().toISOString()
+    const tempId = `temp-${crypto.randomUUID()}`
 
-    const { data: inserted, error } = await supabase
-      .from('messages')
-      .insert({
+    // Optimistic bubble first — so the message appears instantly even when it
+    // contains links (whose previews are fetched below before the DB insert).
+    if (currentUser) {
+      setMessages(prev => [...prev, {
+        id: tempId,
         content,
         conversation_id: conversationId,
         sender_id: userId,
         type: messageType,
-        file_url: fileUrl,
-        file_name: fileName,
-        file_size: fileSize,
-        file_type: fileType,
-        link_previews: linkPreviews.length > 0 ? linkPreviews : null,
-        reply_to_id: replyToId || null,
-      })
-      .select('id')
-      .single()
-
-    if (error) {
-      console.error('Error sending message:', error)
-      throw error
-    }
-
-    // Immediate UI update using the real DB ID
-    if (currentUser && inserted) {
-      const newMessage: MessageWithSender = {
-        id: inserted.id,
-        content,
-        conversation_id: conversationId,
-        sender_id: userId,
-        type: messageType,
-        file_url: fileUrl,
-        file_name: fileName,
-        file_size: fileSize,
-        file_type: fileType,
+        file_url: null,
+        file_name: null,
+        file_size: null,
+        file_type: null,
         created_at: now,
         updated_at: now,
         deleted_at: null,
@@ -621,7 +557,7 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         is_pinned: false,
         pinned_at: null,
         pinned_by: null,
-        link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+        link_previews: null,
         is_edited: false,
         visitor_name: null,
         visitor_email: null,
@@ -629,37 +565,189 @@ export function ChatProvider({ children, userId }: { children: ReactNode; userId
         sender: currentUser,
         reactions: [],
         read_receipts: [],
+        pending: true,
+      }])
+    }
+
+    try {
+      let fileUrl: string | null = null
+      let fileName: string | null = null
+      let fileSize: number | null = null
+      let fileType: string | null = null
+
+      // Upload file if provided
+      if (file) {
+        // Enforce max_file_size_mb
+        const maxBytes = maxFileSizeMb * 1024 * 1024
+        if (file.size > maxBytes) {
+          throw new Error(`File must be less than ${maxFileSizeMb}MB`)
+        }
+
+        // Scan file for viruses before uploading (requires Edge Functions)
+        if (isScanningEnabled()) {
+          try {
+            const scanResult = await scanFile(file)
+            if (!scanResult.isClean) {
+              throw new Error(`File rejected: ${scanResult.message}`)
+            }
+            if (!scanResult.skipped) {
+              console.log('File scan passed:', scanResult.message)
+            }
+          } catch (scanError) {
+            console.error('File scan failed:', scanError)
+            throw scanError
+          }
+        }
+
+        const fileExt = file.name.split('.').pop()
+        const filePath = `${userId}/${conversationId}/${Date.now()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('message-attachments')
+          .upload(filePath, file)
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError)
+          throw uploadError
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('message-attachments')
+          .getPublicUrl(filePath)
+
+        fileUrl = publicUrl
+        fileName = file.name
+        fileSize = file.size
+        fileType = file.type
       }
-      setMessages(prev => [...prev, newMessage])
-    }
 
-    // Create mentions using the real inserted message ID
-    if (mentionedUserIds.length > 0 && inserted) {
-      const mentions = mentionedUserIds.map(mentionedUserId => ({
-        message_id: inserted.id,
-        mentioned_user_id: mentionedUserId,
-      }))
-      await supabase.from('message_mentions').insert(mentions)
-    }
+      // Extract URLs for link previews (with SSRF protection)
+      const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,:;"')\]!?])/g
+      const rawUrls = content.match(urlRegex) || []
+      const urls = rawUrls.filter(u => {
+        try {
+          const parsed = new URL(u)
+          if (!['http:', 'https:'].includes(parsed.protocol)) return false
+          const h = parsed.hostname
+          if (h === 'localhost' || h === '127.0.0.1' || h === '::1') return false
+          if (/^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(h)) return false
+          if (u.length > 2048) return false
+          return true
+        } catch { return false }
+      })
+      let linkPreviews: Array<{url: string; title?: string; description?: string; image?: string; siteName?: string}> = []
 
-    // Update conversation timestamp
-    await supabase
-      .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId)
+      // Fetch link previews (limit to first 3 URLs)
+      if (urls.length > 0) {
+        const previewPromises = urls.slice(0, 3).map(async (url) => {
+          try {
+            const response = await fetch('/api/link-preview', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url }),
+            })
+            if (response.ok) {
+              return await response.json()
+            }
+            return { url }
+          } catch {
+            return { url }
+          }
+        })
+        linkPreviews = await Promise.all(previewPromises)
+      }
 
-    // Fire-and-forget push notification via Notify service
-    if (inserted) {
-      fetch('/api/push-notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          messageId: inserted.id,
+      const { data: inserted, error } = await supabase
+        .from('messages')
+        .insert({
           content,
-          senderName: currentUser?.display_name || currentUser?.username,
-        }),
-      }).catch(() => {}) // Silently ignore push failures
+          conversation_id: conversationId,
+          sender_id: userId,
+          type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
+          file_type: fileType,
+          link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+          reply_to_id: replyToId || null,
+        })
+        .select('id')
+        .single()
+
+      if (error) {
+        console.error('Error sending message:', error)
+        throw error
+      }
+
+      // Reconcile the optimistic bubble with the confirmed row from the server.
+      if (currentUser && inserted) {
+        const newMessage: MessageWithSender = {
+          id: inserted.id,
+          content,
+          conversation_id: conversationId,
+          sender_id: userId,
+          type: messageType,
+          file_url: fileUrl,
+          file_name: fileName,
+          file_size: fileSize,
+          file_type: fileType,
+          created_at: now,
+          updated_at: now,
+          deleted_at: null,
+          deleted_by: null,
+          reply_to_id: replyToId || null,
+          is_pinned: false,
+          pinned_at: null,
+          pinned_by: null,
+          link_previews: linkPreviews.length > 0 ? linkPreviews : null,
+          is_edited: false,
+          visitor_name: null,
+          visitor_email: null,
+          search_vector: null,
+          sender: currentUser,
+          reactions: [],
+          read_receipts: [],
+        }
+        setMessages(prev => {
+          const withoutTemp = prev.filter(m => m.id !== tempId)
+          // The realtime INSERT may have already appended the confirmed row.
+          if (withoutTemp.some(m => m.id === inserted.id)) return withoutTemp
+          return [...withoutTemp, newMessage]
+        })
+      }
+
+      // Create mentions using the real inserted message ID
+      if (mentionedUserIds.length > 0 && inserted) {
+        const mentions = mentionedUserIds.map(mentionedUserId => ({
+          message_id: inserted.id,
+          mentioned_user_id: mentionedUserId,
+        }))
+        await supabase.from('message_mentions').insert(mentions)
+      }
+
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId)
+
+      // Fire-and-forget push notification via Notify service
+      if (inserted) {
+        fetch('/api/push-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            messageId: inserted.id,
+            content,
+            senderName: currentUser?.display_name || currentUser?.username,
+          }),
+        }).catch(() => {}) // Silently ignore push failures
+      }
+    } catch (err) {
+      // Roll back the optimistic bubble; MessageInput restores the draft for retry.
+      setMessages(prev => prev.filter(m => m.id !== tempId))
+      throw err
     }
   }, [supabase, userId, currentUser, maxFileSizeMb])
 

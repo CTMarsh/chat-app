@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useMemo, useContext } from 'react'
-import { Send, AlertTriangle, X, Reply } from 'lucide-react'
+import { Send, AlertTriangle, X, Reply, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useChat } from '@/components/providers/chat-provider'
 import { EmojiPicker } from './emoji-picker'
@@ -26,19 +26,6 @@ function isEmojiOnly(text: string): boolean {
 export function MessageInput() {
   const { activeConversation, currentUser, sendMessageWithMentions, setTyping, maxFileSizeMb, replyTo, clearReplyTo } = useChat()
 
-  // Check if conversation is ended (widget only)
-  const isEnded = activeConversation?.type === 'widget' && !!activeConversation.ended_at
-
-  // If conversation is ended, show a message instead of input
-  if (isEnded) {
-    return (
-      <div className="border-t bg-muted/30 p-4 text-center">
-        <p className="text-sm text-muted-foreground">
-          This conversation has been ended
-        </p>
-      </div>
-    )
-  }
   const [content, setContent] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -207,16 +194,21 @@ export function MessageInput() {
       )
     } catch (error) {
       console.error('Failed to send message:', error)
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send message'
+      const rawMessage = error instanceof Error ? error.message : ''
       // Check if it's a file scan error
-      if (errorMessage.includes('File rejected') || errorMessage.includes('scan')) {
-        setUploadError(errorMessage)
+      if (rawMessage.includes('File rejected') || rawMessage.includes('scan')) {
+        setUploadError(rawMessage)
         setSelectedFile(null) // Clear the infected file
-        setContent(messageContent) // Keep the text
+        setContent(messageContent) // Keep the text so it isn't lost
       } else {
+        // Restore the draft so the user can retry with one tap on Send.
         setContent(messageContent)
         setSelectedFile(fileToSend)
-        setUploadError(errorMessage)
+        setUploadError(
+          rawMessage
+            ? `Message not sent: ${rawMessage}. Your text was kept — press Send to try again.`
+            : 'Message not sent. Check your connection — your text was kept, press Send to try again.'
+        )
       }
     } finally {
       setIsSending(false)
@@ -290,6 +282,20 @@ export function MessageInput() {
       setContent(content + emoji)
     }
     handleTyping()
+  }
+
+  // Widget conversations that have ended show a notice instead of the input.
+  // Evaluated AFTER all hooks so hook order stays stable when ended_at flips
+  // (a realtime update can end the conversation while it is open) — Rules of Hooks.
+  const isEnded = activeConversation?.type === 'widget' && !!activeConversation.ended_at
+  if (isEnded) {
+    return (
+      <div className="border-t bg-muted/30 p-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          This conversation has been ended
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -373,9 +379,13 @@ export function MessageInput() {
           size="icon"
           disabled={(!content.trim() && !selectedFile) || isSending}
           className="h-12 w-12 rounded-xl bg-primary shadow-lg shadow-primary/25 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 disabled:opacity-50 disabled:shadow-none disabled:scale-100"
-          aria-label="Send message"
+          aria-label={isSending ? 'Sending message' : 'Send message'}
         >
-          <Send className="h-5 w-5" aria-hidden="true" />
+          {isSending ? (
+            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          ) : (
+            <Send className="h-5 w-5" aria-hidden="true" />
+          )}
         </Button>
       </div>
     </form>
