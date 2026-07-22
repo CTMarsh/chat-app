@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { format } from 'date-fns'
-import { Trash2, MoreVertical, Pin, PinOff, Pencil, Reply, X, Check } from 'lucide-react'
+import { Trash2, MoreVertical, Pin, PinOff, Pencil, Reply, X, Check, Clock } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,6 +43,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
   const { linkPreviewsEnabled } = useMessagePreferences()
   const { showReadReceipts } = usePrivacyPreferences()
   const isDeleted = !!message.deleted_at
+  const isPending = !!message.pending
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(message.content || '')
   const editTextareaRef = useRef<HTMLTextAreaElement>(null)
@@ -211,7 +212,8 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
       data-slot="message-item"
       className={cn(
         'group flex gap-3',
-        isOwn && 'flex-row-reverse'
+        isOwn && 'flex-row-reverse',
+        isPending && 'opacity-60'
       )}
     >
       {showAvatar ? (
@@ -321,6 +323,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             )}
           </div>
 
+          {!isPending && (
           <div className="flex items-center gap-0.5">
             <ReactionPicker
               onReact={handleToggleReaction}
@@ -374,6 +377,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          )}
         </div>
 
         <ReactionDisplay
@@ -389,7 +393,13 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
           {message.is_edited && (
             <span className="text-xs text-muted-foreground">(edited)</span>
           )}
-          {isOwn && showReadReceipts && (
+          {isPending && (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3 w-3" aria-hidden="true" />
+              Sending…
+            </span>
+          )}
+          {isOwn && showReadReceipts && !isPending && (
             <ReadReceiptIndicator
               isRead={(message.read_receipts?.length || 0) > 0}
               readBy={message.read_receipts?.map(r => r.user_id) || []}
