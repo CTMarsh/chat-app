@@ -107,7 +107,7 @@ export default function LoginPage() {
       footer={
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-primary hover:underline">
+          <Link href="/signup" className="font-medium text-ark-blue-bright hover:underline">
             Sign up
           </Link>
         </p>
@@ -166,7 +166,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          className="h-11 w-full text-base font-medium shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30"
+          className="h-11 w-full text-base"
           disabled={loading || isLockedOut}
         >
           {loading ? (
