@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { Search, X, Loader2 } from 'lucide-react'
 import { useDebounce } from 'use-debounce'
 import { format } from 'date-fns'
@@ -158,8 +159,20 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
             )}
 
             {!isLoading && query && results.length === 0 && (
-              <div className="py-8 text-center text-muted-foreground">
-                No messages found for &ldquo;{query}&rdquo;
+              <div className="flex flex-col items-center py-8 text-center">
+                {/* Higgsfield empty-signal art — a ping with no reply */}
+                <div className="relative h-20 w-20 overflow-hidden rounded-full border border-ark-line">
+                  <Image
+                    src="/brand/empty-signal.png"
+                    alt=""
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                </div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No messages found for &ldquo;{query}&rdquo;
+                </p>
               </div>
             )}
 
