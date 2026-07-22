@@ -76,7 +76,9 @@ export function AuthCard({
       </div>
 
       {/* Form pane — fixed width on desktop, over the hero on mobile */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
+      {/* ~38% form pane against the ~62% hero (canonical split), floored so the
+          form never collapses at the lg breakpoint */}
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[38%] lg:min-w-[28rem] lg:flex-none">
         <div className="w-full max-w-sm">
           {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
           <div
@@ -103,10 +105,10 @@ export function AuthCard({
               </span>
             </Link>
 
-            <p className="ark-label mb-2 text-ark-cyan">
+            <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-ark-cyan">
               Noah&apos;s Ark &middot; Secure comms
             </p>
-            <h1 className="font-display text-2xl font-semibold text-ark-ink">
+            <h1 className="font-display text-3xl font-semibold text-ark-ink">
               {title}
             </h1>
             {description && (
