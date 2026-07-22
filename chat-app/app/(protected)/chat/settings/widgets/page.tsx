@@ -243,11 +243,11 @@ export default function WidgetsSettingsPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium">{widget.name}</h3>
                         {widget.is_active ? (
-                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          <span className="rounded-full bg-ark-good/15 px-2 py-0.5 text-xs font-medium text-ark-good">
                             Active
                           </span>
                         ) : (
-                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Inactive
                           </span>
                         )}

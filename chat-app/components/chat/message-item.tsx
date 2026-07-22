@@ -198,7 +198,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
             <p className="text-sm">This message was deleted</p>
           </div>
           <div className="mt-1 flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground tabular-nums">
               {formatTime(message.created_at)}
             </span>
           </div>
@@ -290,7 +290,7 @@ export function MessageItem({ message, isOwn, showAvatar }: MessageItemProps) {
                 />
                 <div className="mt-1 flex items-center gap-1">
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleSaveEdit}>
-                    <Check className="h-3.5 w-3.5 text-green-500" />
+                    <Check className="h-3.5 w-3.5 text-ark-good" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCancelEdit}>
                     <X className="h-3.5 w-3.5 text-muted-foreground" />

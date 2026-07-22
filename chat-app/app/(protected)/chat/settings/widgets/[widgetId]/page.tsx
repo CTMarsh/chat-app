@@ -255,8 +255,8 @@ export default function WidgetConfigPage({ params }: PageProps) {
       )}
 
       {isDirty && (
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-amber-500/10 border border-amber-500/20 px-4 py-2">
-          <span className="text-sm text-amber-700 dark:text-amber-400">You have unsaved changes</span>
+        <div className="sticky top-0 z-10 flex items-center justify-between rounded-lg bg-ark-warn/10 border border-ark-warn/20 px-4 py-2">
+          <span className="text-sm text-ark-warn">You have unsaved changes</span>
           <div className="flex gap-2">
             <Button size="sm" variant="ghost" onClick={resetForm}>Discard</Button>
             <Button size="sm" onClick={handleSave} disabled={isSaving}>

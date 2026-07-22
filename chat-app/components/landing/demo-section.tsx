@@ -104,11 +104,11 @@ const demoScript: DemoMessage[] = [
 ]
 
 const demoConversations = [
-  { id: 1, name: 'Alex Rivera', initials: 'AR', color: 'from-blue-500 to-indigo-600', online: true, lastMsg: 'She\'ll nail the animations', time: 'now', unread: 0, active: true },
-  { id: 2, name: 'Design Team', initials: '#', color: 'from-violet-500 to-purple-600', online: false, lastMsg: 'Sarah: New mockups ready', time: '5m', unread: 3, isGroup: true },
-  { id: 3, name: 'Emma Wilson', initials: 'EW', color: 'from-pink-500 to-rose-600', online: true, lastMsg: 'On it!', time: '12m', unread: 0 },
-  { id: 4, name: 'Project Alpha', initials: '#', color: 'from-emerald-500 to-green-600', online: false, lastMsg: 'James: Build passed', time: '1h', unread: 1, isGroup: true },
-  { id: 5, name: 'Tom Bradley', initials: 'TB', color: 'from-amber-500 to-orange-600', online: false, lastMsg: 'See you Monday!', time: '3h', unread: 0 },
+  { id: 1, name: 'Alex Rivera', initials: 'AR', color: 'from-ark-blue to-ark-blue-bright', online: true, lastMsg: 'She\'ll nail the animations', time: 'now', unread: 0, active: true },
+  { id: 2, name: 'Design Team', initials: '#', color: 'from-ark-cyan to-ark-blue', online: false, lastMsg: 'Sarah: New mockups ready', time: '5m', unread: 3, isGroup: true },
+  { id: 3, name: 'Emma Wilson', initials: 'EW', color: 'from-ark-crit to-ark-amber', online: true, lastMsg: 'On it!', time: '12m', unread: 0 },
+  { id: 4, name: 'Project Alpha', initials: '#', color: 'from-ark-good to-ark-cyan', online: false, lastMsg: 'James: Build passed', time: '1h', unread: 1, isGroup: true },
+  { id: 5, name: 'Tom Bradley', initials: 'TB', color: 'from-ark-amber to-ark-amber-soft', online: false, lastMsg: 'See you Monday!', time: '3h', unread: 0 },
 ]
 
 const featureHighlights = [
@@ -125,7 +125,7 @@ const featureHighlights = [
 function TypingDots() {
   return (
     <div className="flex items-center gap-2 px-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-medium text-white flex-shrink-0 shadow-sm">
+      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-ark-blue to-ark-blue-bright flex items-center justify-center text-[10px] font-medium text-white flex-shrink-0 shadow-sm">
         AR
       </div>
       <div className="rounded-2xl rounded-bl-md bg-muted px-3 py-2">
@@ -157,7 +157,7 @@ function DemoBubble({
       }`}
     >
       {!isOwn && (
-        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-[10px] font-medium text-white flex-shrink-0 shadow-sm mt-0.5">
+        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-ark-blue to-ark-blue-bright flex items-center justify-center text-[10px] font-medium text-white flex-shrink-0 shadow-sm mt-0.5">
           AR
         </div>
       )}
@@ -171,7 +171,7 @@ function DemoBubble({
         >
           {message.isPinned && (
             <div className={`absolute -top-2 ${isOwn ? '-left-2' : '-right-2'}`}>
-              <div className="h-4 w-4 rounded-full bg-amber-500 flex items-center justify-center shadow-sm">
+              <div className="h-4 w-4 rounded-full bg-ark-warn flex items-center justify-center shadow-sm">
                 <Pin className="h-2.5 w-2.5 text-white" />
               </div>
             </div>
@@ -192,7 +192,7 @@ function DemoBubble({
               isOwn ? 'border-primary-foreground/20' : 'border-border'
             }`}>
               <div className={`h-28 flex items-center justify-center ${
-                isOwn ? 'bg-primary-foreground/10' : 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30'
+                isOwn ? 'bg-primary-foreground/10' : 'bg-ark-blue/10'
               }`}>
                 <div className="flex flex-col items-center gap-1.5 opacity-60">
                   <Image className="h-8 w-8" />
@@ -405,8 +405,8 @@ export function DemoSection() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className="text-sm font-semibold block">Your Name</span>
-                      <span className="flex items-center gap-1 text-[11px] text-green-600">
-                        <Circle className="h-1.5 w-1.5 fill-green-500 text-green-500" />
+                      <span className="flex items-center gap-1 text-[11px] text-ark-good">
+                        <Circle className="h-1.5 w-1.5 fill-ark-good text-ark-good" />
                         Online
                       </span>
                     </div>
@@ -437,7 +437,7 @@ export function DemoSection() {
                           {conv.isGroup ? '#' : conv.initials}
                         </div>
                         {conv.online && !conv.isGroup && (
-                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-green-500" />
+                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-ark-good" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -465,14 +465,14 @@ export function DemoSection() {
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="relative">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-xs font-medium text-white shadow-sm">
+                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-ark-blue to-ark-blue-bright flex items-center justify-center text-xs font-medium text-white shadow-sm">
                         AR
                       </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-ark-good" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold">Alex Rivera</p>
-                      <p className="text-[11px] text-green-600 font-medium">Online</p>
+                      <p className="text-[11px] text-ark-good font-medium">Online</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -544,8 +544,8 @@ export function DemoSection() {
                 All powered by real-time WebSocket connections and secured with mandatory MFA.
               </p>
               <div className="flex items-center gap-2 mt-3">
-                <Shield className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-medium text-green-600">End-to-end secured with RLS + MFA</span>
+                <Shield className="h-4 w-4 text-ark-good" />
+                <span className="text-xs font-medium text-ark-good">End-to-end secured with RLS + MFA</span>
               </div>
             </div>
           </div>

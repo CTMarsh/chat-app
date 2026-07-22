@@ -124,7 +124,7 @@ export default function SignupPage() {
             We&apos;ve sent a confirmation link to <strong className="text-foreground">{email}</strong>
           </>
         }
-        icon={<CheckCircle className="h-7 w-7 text-green-500" />}
+        icon={<CheckCircle className="h-7 w-7 text-ark-good" />}
         footer={
           <Link href="/login">
             <Button variant="outline" className="shadow-sm">

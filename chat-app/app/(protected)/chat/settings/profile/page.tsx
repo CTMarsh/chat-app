@@ -154,7 +154,7 @@ export default function ProfileSettingsPage() {
       return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
     }
     if (savedField === field) {
-      return <Check className="h-4 w-4 text-green-500" />
+      return <Check className="h-4 w-4 text-ark-good" />
     }
     return null
   }

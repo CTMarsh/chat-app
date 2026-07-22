@@ -63,7 +63,7 @@ export function FileUploadButton({ onFileSelect, isUploading, selectedFile, onCl
           aria-label={`Selected file: ${selectedFile.name}, ${formatFileSize(selectedFile.size)}`}
         >
           {isImage ? (
-            <ImageIcon className="h-5 w-5 text-blue-500" aria-hidden="true" />
+            <ImageIcon className="h-5 w-5 text-ark-blue" aria-hidden="true" />
           ) : (
             <File className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
           )}

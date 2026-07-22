@@ -98,7 +98,7 @@ export function SearchDialog({ trigger }: SearchDialogProps) {
       <p className="line-clamp-2 text-sm text-muted-foreground">
         {parts.map((part, i) =>
           part.toLowerCase() === query.toLowerCase() ? (
-            <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 rounded px-0.5">
+            <mark key={i} className="bg-ark-amber/30 dark:bg-ark-amber/25 rounded px-0.5">
               {part}
             </mark>
           ) : (

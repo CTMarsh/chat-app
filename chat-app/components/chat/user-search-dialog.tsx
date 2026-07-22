@@ -207,7 +207,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
                     </div>
                     {user.status === 'online' && (
                       <span
-                        className="h-2.5 w-2.5 rounded-full bg-green-500 shadow-sm shadow-green-500/50"
+                        className="h-2.5 w-2.5 rounded-full bg-ark-good shadow-sm shadow-ark-good/50"
                         aria-label="Online"
                         title="Online"
                       />

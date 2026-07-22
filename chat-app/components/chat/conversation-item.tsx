@@ -45,17 +45,17 @@ export function ConversationItem({ conversation, onSelect }: ConversationItemPro
   const getStatusConfig = (status: string | null | undefined) => {
     switch (status) {
       case 'online':
-        return { icon: Circle, bgColor: 'bg-green-500', bgColorActive: 'bg-green-400', hasIcon: true }
+        return { icon: Circle, bgColor: 'bg-ark-good', bgColorActive: 'bg-ark-good', hasIcon: true }
       case 'away':
-        return { icon: Clock, bgColor: 'bg-yellow-500', bgColorActive: 'bg-yellow-400', hasIcon: true }
+        return { icon: Clock, bgColor: 'bg-ark-warn', bgColorActive: 'bg-ark-warn', hasIcon: true }
       case 'dnd':
-        return { icon: MinusCircle, bgColor: 'bg-red-500', bgColorActive: 'bg-red-400', hasIcon: true }
+        return { icon: MinusCircle, bgColor: 'bg-ark-crit', bgColorActive: 'bg-ark-crit', hasIcon: true }
       case 'invisible':
-        return { icon: EyeOff, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: true }
+        return { icon: EyeOff, bgColor: 'bg-ark-ink-3', bgColorActive: 'bg-ark-ink-3', hasIcon: true }
       case 'suspended':
-        return { icon: Ban, bgColor: 'bg-red-700', bgColorActive: 'bg-red-600', hasIcon: true }
+        return { icon: Ban, bgColor: 'bg-ark-crit', bgColorActive: 'bg-ark-crit', hasIcon: true }
       default:
-        return { icon: Circle, bgColor: 'bg-gray-400', bgColorActive: 'bg-gray-300', hasIcon: false }
+        return { icon: Circle, bgColor: 'bg-ark-ink-3', bgColorActive: 'bg-ark-ink-3', hasIcon: false }
     }
   }
 

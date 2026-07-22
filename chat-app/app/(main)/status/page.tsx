@@ -26,7 +26,7 @@ function UptimeBar({ name }: { name: string }) {
         {Array.from({ length: 30 }, (_, i) => (
           <div
             key={i}
-            className="h-6 flex-1 rounded-sm bg-green-500/70 transition-colors hover:bg-green-500"
+            className="h-6 flex-1 rounded-sm bg-ark-good/70 transition-colors hover:bg-ark-good"
             title={`Day ${30 - i}: Operational`}
           />
         ))}
@@ -60,9 +60,9 @@ export default function StatusPage() {
           </p>
 
           {/* All systems operational banner */}
-          <div className="mb-8 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/5 px-5 py-4">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+          <div className="mb-8 flex items-center gap-3 rounded-xl border border-ark-good/30 bg-ark-good/5 px-5 py-4">
+            <CheckCircle2 className="h-5 w-5 text-ark-good" />
+            <span className="text-sm font-medium text-ark-good">
               All systems operational
             </span>
           </div>
@@ -79,7 +79,7 @@ export default function StatusPage() {
                   <p className="text-xs text-muted-foreground">{service.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="h-2 w-2 rounded-full bg-ark-good" />
                   <span className="text-xs text-muted-foreground">Operational</span>
                 </div>
               </div>
@@ -107,7 +107,7 @@ export default function StatusPage() {
             <h2 className="text-xl font-semibold mb-4">Recent incidents</h2>
             <div className="rounded-xl border border-border/50 bg-card/30 p-6">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                <CheckCircle2 className="h-5 w-5 text-ark-good shrink-0" />
                 <p className="text-sm text-muted-foreground">
                   No incidents in the past 90 days.
                 </p>
