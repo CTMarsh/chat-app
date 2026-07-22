@@ -52,7 +52,7 @@ export default function WidgetConfigPage({ params }: PageProps) {
 
   // Form state
   const [name, setName] = useState('')
-  const [primaryColor, setPrimaryColor] = useState('#6366f1')
+  const [primaryColor, setPrimaryColor] = useState('#2f8fff')
   const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>('bottom-right')
   const [welcomeMessage, setWelcomeMessage] = useState('')
   const [offlineMessage, setOfflineMessage] = useState('')
@@ -113,7 +113,7 @@ export default function WidgetConfigPage({ params }: PageProps) {
         setWidget(data)
         const formValues = {
           name: data.name,
-          primaryColor: data.primary_color || '#6366f1',
+          primaryColor: data.primary_color || '#2f8fff',
           position: (data.position as 'bottom-right' | 'bottom-left') || 'bottom-right',
           welcomeMessage: data.welcome_message || '',
           offlineMessage: data.offline_message || '',
@@ -380,7 +380,7 @@ export default function WidgetConfigPage({ params }: PageProps) {
               <Input
                 value={primaryColor}
                 onChange={(e) => setPrimaryColor(e.target.value)}
-                placeholder="#6366f1"
+                placeholder="#2f8fff"
                 className="flex-1"
               />
             </div>

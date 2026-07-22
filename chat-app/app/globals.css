@@ -6,8 +6,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono-brand);
+  --font-display: var(--font-display-brand);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -45,100 +46,153 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* --- Noah's Ark canonical namespace ---
-   * Aliases to the existing shadcn tokens so the same OKLCH values back
-   * both `bg-primary` (shadcn) AND `bg-ark-primary` (cross-app Ark
-   * namespace). This is purely additive — no JSX or shadcn behaviour
-   * changes. Future cross-app components from @noahs-ark/tokens can
-   * consume these directly. */
+  /* --- Noah's Ark "Constellation" namespace ---
+   * The estate-wide brand tokens (DESIGN-SYSTEM.md). Base/surface tokens
+   * follow the active theme; the brand accents are constants so `bg-ark-blue`,
+   * `text-ark-amber`, `from-ark-cyan` etc. are identical in every app. */
+  --color-ark-void:         var(--ark-void);
+  --color-ark-navy:         var(--ark-navy);
   --color-ark-bg:           var(--background);
   --color-ark-surface:      var(--card);
   --color-ark-surface-2:    var(--muted);
   --color-ark-border:       var(--border);
+  --color-ark-line:         var(--ark-line);
+
+  --color-ark-blue:         var(--ark-blue);
+  --color-ark-blue-bright:  var(--ark-blue-bright);
+  --color-ark-cyan:         var(--ark-cyan);
+  --color-ark-amber:        var(--ark-amber);
+  --color-ark-amber-soft:   var(--ark-amber-soft);
+  --color-ark-good:         var(--ark-good);
+  --color-ark-warn:         var(--ark-warn);
+  --color-ark-crit:         var(--ark-crit);
 
   --color-ark-primary:      var(--primary);
   --color-ark-primary-bg:   color-mix(in oklab, var(--primary) 12%, transparent);
   --color-ark-on-primary:   var(--primary-foreground);
 
-  --color-ark-warm:         var(--accent);
-  --color-ark-warm-bg:      color-mix(in oklab, var(--accent) 12%, transparent);
-  --color-ark-on-warm:      var(--accent-foreground);
+  --color-ark-warm:         var(--ark-amber);
+  --color-ark-warm-bg:      color-mix(in oklab, var(--ark-amber) 12%, transparent);
+  --color-ark-on-warm:      var(--ark-void);
 
   --color-ark-text:         var(--foreground);
   --color-ark-text-muted:   var(--muted-foreground);
 
   --color-ark-danger:       var(--destructive);
+
+  /* Constellation glow signature (DESIGN-SYSTEM.md §1) —
+   * `shadow-glow` / `shadow-glow-lg` on primary CTAs and active nodes,
+   * `shadow-card` for glassy surface elevation. Never glow body text. */
+  --shadow-glow:    0 0 24px rgba(47, 143, 255, 0.45);
+  --shadow-glow-lg: 0 0 28px rgba(47, 143, 255, 0.6);
+  --shadow-glow-cyan: 0 0 20px rgba(51, 214, 230, 0.4);
+  --shadow-card:    0 8px 30px rgba(5, 10, 25, 0.5);
 }
 
-/* ChatArk Light Theme — Ocean blue primary, warm golden accents */
+/* ============================================================
+   Noah's Ark "Constellation" — brand constants (every theme)
+   Palette source of truth: Higgsfield DESIGN-SYSTEM.md §1
+   ============================================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.005 230);
-  --foreground: oklch(0.18 0.04 240);
-  --card: oklch(0.995 0.002 230);
-  --card-foreground: oklch(0.18 0.04 240);
-  --popover: oklch(0.995 0.002 230);
-  --popover-foreground: oklch(0.18 0.04 240);
-  --primary: oklch(0.55 0.14 240);
-  --primary-foreground: oklch(0.99 0.005 230);
-  --secondary: oklch(0.95 0.015 240);
-  --secondary-foreground: oklch(0.22 0.04 240);
-  --muted: oklch(0.95 0.015 240);
-  --muted-foreground: oklch(0.52 0.04 240);
-  --accent: oklch(0.75 0.14 75);
-  --accent-foreground: oklch(0.22 0.04 240);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.02 235);
-  --input: oklch(0.90 0.02 235);
-  --ring: oklch(0.55 0.14 240);
-  --chart-1: oklch(0.55 0.14 240);
-  --chart-2: oklch(0.75 0.14 75);
-  --chart-3: oklch(0.45 0.08 230);
-  --chart-4: oklch(0.65 0.12 200);
-  --chart-5: oklch(0.70 0.16 60);
-  --sidebar: oklch(0.97 0.008 235);
-  --sidebar-foreground: oklch(0.18 0.04 240);
-  --sidebar-primary: oklch(0.55 0.14 240);
-  --sidebar-primary-foreground: oklch(0.99 0.005 230);
-  --sidebar-accent: oklch(0.95 0.015 240);
-  --sidebar-accent-foreground: oklch(0.22 0.04 240);
-  --sidebar-border: oklch(0.90 0.02 235);
-  --sidebar-ring: oklch(0.55 0.14 240);
+  --ark-void:         #05070e;
+  --ark-navy:         #0a0f1c;
+  --ark-surface:      #111a2d;
+  --ark-surface-2:    #16223a;
+  --ark-line:         #1f2f4a;
+
+  --ark-blue:         #2f8fff;
+  --ark-blue-bright:  #58b0ff;
+  --ark-cyan:         #33d6e6;
+  --ark-amber:        #f4a83a;
+  --ark-amber-soft:   #ffc879;
+
+  --ark-ink:          #e8eef8;
+  --ark-ink-2:        #9fb0c8;
+  --ark-ink-3:        #64768f;
+
+  --ark-good:         #35d6a0;
+  --ark-warn:         #f4a83a;
+  --ark-crit:         #ff5d6c;
+
+  --ark-glow-blue: 0 0 24px rgba(47, 143, 255, 0.45);
+  --ark-glow-cyan: 0 0 20px rgba(51, 214, 230, 0.4);
+
+  --ark-r-sm: 8px;
+  --ark-r: 12px;
+  --ark-r-lg: 16px;
 }
 
-/* ChatArk Dark Theme — Deep navy background, ocean blue primary */
+/* Constellation Day — light counterpart. Identical brand accents
+   (blue / cyan / amber), blue-tinted paper ground. */
+:root {
+  --radius: 0.75rem; /* 12px → sm 8 / lg 12 / xl 16, matching --ark-r-* */
+  --background: #eef3fb;
+  --foreground: #0e1626;
+  --card: #ffffff;
+  --card-foreground: #0e1626;
+  --popover: #ffffff;
+  --popover-foreground: #0e1626;
+  --primary: var(--ark-blue);
+  --primary-foreground: #ffffff;
+  --secondary: #e2eaf6;
+  --secondary-foreground: #1c2940;
+  --muted: #e2eaf6;
+  --muted-foreground: #4d5e79;
+  --accent: #dbe7f8;
+  --accent-foreground: #1c2940;
+  --destructive: #e0344a;
+  --border: #cfdcef;
+  --input: #cfdcef;
+  --ring: var(--ark-blue);
+  --chart-1: var(--ark-blue);
+  --chart-2: var(--ark-cyan);
+  --chart-3: var(--ark-amber);
+  --chart-4: var(--ark-good);
+  --chart-5: var(--ark-blue-bright);
+  --sidebar: #f6f9fe;
+  --sidebar-foreground: #0e1626;
+  --sidebar-primary: var(--ark-blue);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e2eaf6;
+  --sidebar-accent-foreground: #1c2940;
+  --sidebar-border: #cfdcef;
+  --sidebar-ring: var(--ark-blue);
+}
+
+/* Constellation — the flagship dark theme. Exact --ark-* tokens:
+   navy ground, glassy surfaces, blue-tinted hairlines, ink text. */
 .dark {
-  --background: oklch(0.16 0.04 245);
-  --foreground: oklch(0.93 0.01 230);
-  --card: oklch(0.20 0.04 245);
-  --card-foreground: oklch(0.93 0.01 230);
-  --popover: oklch(0.20 0.04 245);
-  --popover-foreground: oklch(0.93 0.01 230);
-  --primary: oklch(0.65 0.14 235);
-  --primary-foreground: oklch(0.14 0.04 245);
-  --secondary: oklch(0.26 0.04 245);
-  --secondary-foreground: oklch(0.93 0.01 230);
-  --muted: oklch(0.26 0.04 245);
-  --muted-foreground: oklch(0.65 0.04 235);
-  --accent: oklch(0.72 0.14 75);
-  --accent-foreground: oklch(0.14 0.04 245);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.55 0.12 235);
-  --chart-1: oklch(0.60 0.15 235);
-  --chart-2: oklch(0.72 0.14 75);
-  --chart-3: oklch(0.55 0.10 200);
-  --chart-4: oklch(0.65 0.12 180);
-  --chart-5: oklch(0.70 0.16 60);
-  --sidebar: oklch(0.18 0.04 245);
-  --sidebar-foreground: oklch(0.93 0.01 230);
-  --sidebar-primary: oklch(0.65 0.14 235);
-  --sidebar-primary-foreground: oklch(0.93 0.01 230);
-  --sidebar-accent: oklch(0.26 0.04 245);
-  --sidebar-accent-foreground: oklch(0.93 0.01 230);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.55 0.12 235);
+  --background: var(--ark-navy);
+  --foreground: var(--ark-ink);
+  --card: var(--ark-surface);
+  --card-foreground: var(--ark-ink);
+  --popover: var(--ark-surface);
+  --popover-foreground: var(--ark-ink);
+  --primary: var(--ark-blue);
+  --primary-foreground: #ffffff;
+  --secondary: var(--ark-surface-2);
+  --secondary-foreground: var(--ark-ink);
+  --muted: var(--ark-surface-2);
+  --muted-foreground: var(--ark-ink-2);
+  --accent: #1b2a45;
+  --accent-foreground: var(--ark-ink);
+  --destructive: var(--ark-crit);
+  --border: var(--ark-line);
+  --input: var(--ark-line);
+  --ring: var(--ark-blue);
+  --chart-1: var(--ark-blue);
+  --chart-2: var(--ark-cyan);
+  --chart-3: var(--ark-amber);
+  --chart-4: var(--ark-good);
+  --chart-5: var(--ark-blue-bright);
+  --sidebar: #0d1526;
+  --sidebar-foreground: var(--ark-ink);
+  --sidebar-primary: var(--ark-blue);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--ark-surface-2);
+  --sidebar-accent-foreground: var(--ark-ink);
+  --sidebar-border: var(--ark-line);
+  --sidebar-ring: var(--ark-blue);
 }
 
 @layer base {
@@ -147,6 +201,63 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display-brand), var(--font-body), sans-serif;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+}
+
+/* ============================================================
+   Constellation component recipes (DESIGN-SYSTEM.md §6)
+   Shared utilities so this app renders the SAME primitives as
+   every other Noah's Ark app. Buttons/inputs/cards implement the
+   recipes through the shadcn primitives (see components/ui/*).
+   ============================================================ */
+@layer components {
+  /* Badge / chip — mono, uppercase, tracked */
+  .ark-badge {
+    font-family: var(--font-mono-brand), ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.7rem;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .ark-badge-good { background: rgba(53, 214, 160, 0.15); color: var(--ark-good); }
+  .ark-badge-warn { background: rgba(244, 168, 58, 0.15); color: var(--ark-warn); }
+  .ark-badge-crit { background: rgba(255, 93, 108, 0.15); color: var(--ark-crit); }
+
+  /* Uppercase label treatment */
+  .ark-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  /* Page backdrop texture — bg-texture at low opacity behind content */
+  .ark-texture {
+    position: relative;
+    isolation: isolate;
+  }
+  .ark-texture::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("/brand/bg-texture-01.png");
+    background-size: cover;
+    background-position: center;
+    opacity: 0.06;
+    pointer-events: none;
+  }
+  :root:not(.dark) .ark-texture::before {
+    opacity: 0.04;
   }
 }
 
@@ -300,7 +411,7 @@
 
 /* Accent Color Override - Uses CSS variable set by PreferencesProvider */
 :root {
-  --user-accent-color: #4a8bc2;
+  --user-accent-color: #2f8fff;
 }
 
 /* Apply user accent color to primary elements when custom color is set */

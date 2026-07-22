@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Bell, LogOut, Settings, Users, MessageSquare, Circle, Clock, MinusCircle, EyeOff, Headphones, MessagesSquare, Keyboard, Link, ShieldAlert, Ban } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -120,7 +121,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
     <div className="flex h-full flex-col bg-card/50 backdrop-blur-sm">
       {/* Header with gradient accent */}
       <div className="relative">
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-ark-blue via-ark-cyan to-transparent" />
         <div className="flex items-center justify-between border-b px-4 py-4">
           <div className="flex items-center gap-3">
             {currentUser && (
@@ -272,14 +273,20 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       <nav className="flex-1 overflow-y-auto px-2" aria-label="Conversations">
         {filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-              <MessageSquare className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <div className="relative h-24 w-24 overflow-hidden rounded-full border border-border shadow-glow">
+              <Image
+                src="/brand/empty-nodes.png"
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
             </div>
             <p className="mt-4 text-sm font-medium text-muted-foreground">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
             <p className="mt-1 text-xs text-muted-foreground/70">
-              Start a new chat to begin messaging
+              Start a new chat to light the first node
             </p>
           </div>
         ) : (

@@ -141,7 +141,7 @@ export async function createWidget(
     .insert({
       workspace_id: workspaceId,
       name: config.name || 'Default Widget',
-      primary_color: config.primaryColor || '#6366f1',
+      primary_color: config.primaryColor || '#2f8fff',
       position: config.position || 'bottom-right',
       welcome_message: config.welcomeMessage || 'Hi! How can we help you today?',
       offline_message: config.offlineMessage || "We're currently offline. Leave a message and we'll get back to you!",
