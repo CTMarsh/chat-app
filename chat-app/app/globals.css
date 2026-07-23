@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@noahsark/constellation/tokens.css"; /* canonical --ark-* tokens (single source of truth across the estate) */
 
 @custom-variant dark (&:is(.dark *));
 
@@ -102,34 +103,9 @@
    Noah's Ark "Constellation" — brand constants (every theme)
    Palette source of truth: Higgsfield DESIGN-SYSTEM.md §1
    ============================================================ */
-:root {
-  --ark-void:         #05070e;
-  --ark-navy:         #0a0f1c;
-  --ark-surface:      #111a2d;
-  --ark-surface-2:    #16223a;
-  --ark-line:         #1f2f4a;
-
-  --ark-blue:         #2f8fff;
-  --ark-blue-bright:  #58b0ff;
-  --ark-cyan:         #33d6e6;
-  --ark-amber:        #f4a83a;
-  --ark-amber-soft:   #ffc879;
-
-  --ark-ink:          #e8eef8;
-  --ark-ink-2:        #9fb0c8;
-  --ark-ink-3:        #64768f;
-
-  --ark-good:         #35d6a0;
-  --ark-warn:         #f4a83a;
-  --ark-crit:         #ff5d6c;
-
-  --ark-glow-blue: 0 0 24px rgba(47, 143, 255, 0.45);
-  --ark-glow-cyan: 0 0 20px rgba(51, 214, 230, 0.4);
-
-  --ark-r-sm: 8px;
-  --ark-r: 12px;
-  --ark-r-lg: 16px;
-}
+/* Canonical --ark-* tokens now come from @noahsark/constellation/tokens.css
+   (imported at the top). Removed the hand-copied duplicate; they're fixed
+   brand accents (identical in light + dark), so the theme system is unaffected. */
 
 /* Constellation Day — light counterpart. Identical brand accents
    (blue / cyan / amber), blue-tinted paper ground. */

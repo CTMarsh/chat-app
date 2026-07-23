@@ -78,12 +78,12 @@ export function AuthCard({
       {/* Form pane — fixed width on desktop, over the hero on mobile */}
       {/* ~38% form pane against the ~62% hero (canonical split), floored so the
           form never collapses at the lg breakpoint */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[38%] lg:min-w-[28rem] lg:flex-none">
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
         <div className="w-full max-w-[400px]">
           {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
           <div
             className={cn(
-              'rounded-2xl border border-ark-line bg-ark-surface/80 p-6 shadow-card backdrop-blur-md sm:p-8',
+              'rounded-[16px] border border-ark-line bg-ark-surface/80 p-6 shadow-card backdrop-blur-md sm:p-8',
               'lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none',
               className
             )}
