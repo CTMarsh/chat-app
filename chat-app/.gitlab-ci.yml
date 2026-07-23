@@ -27,9 +27,6 @@ lint:
   image: node:20-alpine
   needs: []
   interruptible: true
-  variables:
-    # auth to the project-63 registry for @noahsark/constellation (.npmrc uses ${NPM_TOKEN})
-    NPM_TOKEN: "$CI_JOB_TOKEN"
   cache:
     key:
       files:
@@ -67,7 +64,7 @@ build:
     - /kaniko/executor
       --context "$CI_PROJECT_DIR"
       --dockerfile "$CI_PROJECT_DIR/Dockerfile"
-      --build-arg "NPM_TOKEN=$CI_JOB_TOKEN"
+      --build-arg "NPM_TOKEN=$NPM_TOKEN"
       --destination "$IMAGE:$CI_COMMIT_SHORT_SHA"
       --destination "$IMAGE:latest"
       --cache=true
