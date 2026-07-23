@@ -61,6 +61,13 @@ build:
       - runner_system_failure
       - stuck_or_timeout_failure
   script:
+    # kaniko's --build-arg wasn't delivering NPM_TOKEN into the deps stage
+    # (npm 404 "Project not found" = unauthenticated), even with the var
+    # unmasked. Write the .npmrc with the LITERAL token into the build context
+    # so the committed ${NPM_TOKEN} placeholder is already resolved before
+    # kaniko COPYs it — removes the build-arg/env dependency entirely.
+    - echo "NPM_TOKEN length=${#NPM_TOKEN}"
+    - printf '@noahsark:registry=https://gitlab.noahsark.me/api/v4/projects/63/packages/npm/\n//gitlab.noahsark.me/api/v4/projects/63/packages/npm/:_authToken=%s\nlegacy-peer-deps=true\n' "$NPM_TOKEN" > "$CI_PROJECT_DIR/.npmrc"
     - /kaniko/executor
       --context "$CI_PROJECT_DIR"
       --dockerfile "$CI_PROJECT_DIR/Dockerfile"
