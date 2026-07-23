@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AuthCard, AuthInputWrapper } from '@/components/auth/auth-card'
-import { Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Loader2, Eye, EyeOff, KeyRound } from 'lucide-react'
 
 const MAX_ATTEMPTS = 5
 const LOCKOUT_BASE_MS = 15_000 // 15 seconds
@@ -20,6 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
   const [lockoutRemaining, setLockoutRemaining] = useState(0)
   const router = useRouter()
   const failedAttempts = useRef(0)
@@ -96,6 +97,29 @@ export default function LoginPage() {
       router.push('/chat')
     }
     router.refresh()
+  }
+
+  // Sign in with Authentik (Noah's Ark SSO). Self-hosted GoTrue exposes Authentik
+  // through its generic OIDC ("keycloak") external provider, so a single click
+  // hands off to auth.noahsark.me and returns via /auth/callback. Mandatory MFA
+  // still applies — the middleware routes the returning session to /mfa/* exactly
+  // as the password path does, so SSO doesn't weaken the AAL2 requirement.
+  const handleAuthentik = async () => {
+    setError(null)
+    setOauthLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'keycloak',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: 'openid email profile',
+      },
+    })
+    if (error) {
+      setError(error.message)
+      setOauthLoading(false)
+    }
+    // On success the browser is redirected to Authentik; nothing more to do here.
   }
 
   const isLockedOut = lockoutRemaining > 0
@@ -181,6 +205,33 @@ export default function LoginPage() {
           {isLockedOut ? `Locked (${lockoutRemaining}s)` : 'Sign In'}
         </Button>
       </form>
+
+      {/* Estate SSO — same Constellation .btn-ghost (outline) used across every app's login */}
+      <div className="relative my-6" role="separator" aria-label="or">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+          <span className="w-full border-t border-ark-line" />
+        </div>
+        <div className="relative flex justify-center">
+          <span className="bg-ark-surface px-3 font-mono text-[11px] uppercase tracking-[0.1em] text-ark-ink-3 lg:bg-ark-void">
+            or
+          </span>
+        </div>
+      </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleAuthentik}
+        disabled={oauthLoading || loading || isLockedOut}
+        className="h-12 w-full text-[15px]"
+      >
+        {oauthLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <KeyRound className="mr-2 h-4 w-4" />
+        )}
+        Sign in with Authentik
+      </Button>
     </AuthCard>
   )
 }
