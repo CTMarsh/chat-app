@@ -2,8 +2,12 @@ FROM node:20-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps
+# NPM_TOKEN (CI_JOB_TOKEN via kaniko --build-arg) authenticates npm to the
+# project-63 GitLab registry for @noahsark/constellation. Committed .npmrc uses
+# ${NPM_TOKEN}; the ARG isn't baked into the final runner image.
+ARG NPM_TOKEN
+COPY package.json package-lock.json .npmrc ./
+RUN NPM_TOKEN="$NPM_TOKEN" npm ci --legacy-peer-deps
 
 FROM base AS builder
 WORKDIR /app
