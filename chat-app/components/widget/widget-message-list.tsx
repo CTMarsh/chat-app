@@ -37,7 +37,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center p-4">
-        <p className="text-gray-400 text-sm">No messages yet. Start the conversation!</p>
+        <p className="text-muted-foreground text-sm">No messages yet. Start the conversation!</p>
       </div>
     )
   }
@@ -59,7 +59,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
             >
               {/* Avatar for agent messages */}
               {!message.isFromVisitor && (
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                   {message.sender?.avatarUrl ? (
                     <img
                       src={message.sender.avatarUrl}
@@ -67,7 +67,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
                       className="w-7 h-7 rounded-full object-cover"
                     />
                   ) : (
-                    <User className="w-4 h-4 text-gray-500" />
+                    <User className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
               )}
@@ -76,7 +76,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
                 className={`relative rounded-2xl px-3.5 py-2 ${
                   message.isFromVisitor
                     ? 'text-white rounded-br-[4px]'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-[4px]'
+                    : 'bg-muted text-foreground rounded-bl-[4px]'
                 }`}
                 style={message.isFromVisitor ? { backgroundColor: primaryColor } : undefined}
               >
@@ -90,13 +90,13 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
                 >
                   <path
                     d={message.isFromVisitor ? 'M0 0V10Q3.5 10 7 0Z' : 'M7 0V10Q3.5 10 0 0Z'}
-                    fill={message.isFromVisitor ? primaryColor : '#f3f4f6'}
+                    style={{ fill: message.isFromVisitor ? primaryColor : 'var(--muted)' }}
                   />
                 </svg>
 
                 {/* Agent name for agent messages */}
                 {!message.isFromVisitor && message.sender?.displayName && (
-                  <p className="text-xs font-medium text-gray-600 mb-0.5">
+                  <p className="text-xs font-medium text-muted-foreground mb-0.5">
                     {message.sender.displayName}
                   </p>
                 )}
@@ -107,7 +107,7 @@ export function WidgetMessageList({ messages, primaryColor }: WidgetMessageListP
 
                 <p
                   className={`text-[10px] mt-1 ${
-                    message.isFromVisitor ? 'text-white/70' : 'text-gray-400'
+                    message.isFromVisitor ? 'text-white/70' : 'text-muted-foreground'
                   }`}
                 >
                   {formatMessageTime(message.createdAt)}

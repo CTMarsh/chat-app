@@ -41,10 +41,10 @@ export function WidgetOffline({
         >
           <Send className="w-8 h-8" style={{ color: primaryColor }} />
         </div>
-        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           Message Sent!
         </h3>
-        <p className="text-gray-500 text-sm">
+        <p className="text-muted-foreground text-sm">
           We&apos;ll get back to you as soon as possible.
         </p>
         <button
@@ -67,7 +67,7 @@ export function WidgetOffline({
         >
           <Clock className="w-7 h-7" style={{ color: primaryColor }} />
         </div>
-        <p className="text-gray-600 mb-6 max-w-xs">
+        <p className="text-muted-foreground mb-6 max-w-xs">
           {offlineMessage}
         </p>
 
@@ -78,7 +78,7 @@ export function WidgetOffline({
             placeholder="Leave us a message..."
             rows={4}
             disabled={isSending}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-none mb-3"
+            className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent resize-none mb-3"
             style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
           />
           <button

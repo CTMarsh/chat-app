@@ -59,7 +59,7 @@ export function WidgetForm({
     <div className="flex-1 flex flex-col p-4">
       <div className="flex-1 flex flex-col justify-center">
         <div className="mb-6">
-          <p className="text-gray-700 text-center">{welcomeMessage}</p>
+          <p className="text-foreground text-center">{welcomeMessage}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,9 +67,9 @@ export function WidgetForm({
             <div>
               <label
                 htmlFor="widget-name"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
-                Your Name {collectName && <span className="text-red-500">*</span>}
+                Your Name {collectName && <span className="text-destructive">*</span>}
               </label>
               <input
                 id="widget-name"
@@ -77,7 +77,7 @@ export function WidgetForm({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                 disabled={isSubmitting}
               />
@@ -88,9 +88,9 @@ export function WidgetForm({
             <div>
               <label
                 htmlFor="widget-email"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-foreground mb-1"
               >
-                Your Email <span className="text-red-500">*</span>
+                Your Email <span className="text-destructive">*</span>
               </label>
               <input
                 id="widget-email"
@@ -98,7 +98,7 @@ export function WidgetForm({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
                 style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
                 disabled={isSubmitting}
               />
@@ -106,7 +106,7 @@ export function WidgetForm({
           )}
 
           {error && (
-            <p className="text-sm text-red-500">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           )}
 
           <button
@@ -130,7 +130,7 @@ export function WidgetForm({
         </form>
       </div>
 
-      <p className="text-xs text-gray-400 text-center mt-4">
+      <p className="text-xs text-muted-foreground text-center mt-4">
         We&apos;ll use your information to respond to your inquiry
       </p>
     </div>
