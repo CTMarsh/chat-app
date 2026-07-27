@@ -28,7 +28,7 @@ export function WidgetHeader({ title, agentsOnline, primaryColor, isEnded, onClo
             <>
               <span
                 className={`w-2 h-2 rounded-full ${
-                  agentsOnline ? 'bg-green-400' : 'bg-gray-300'
+                  agentsOnline ? 'bg-ark-good' : 'bg-muted-foreground/40'
                 }`}
               />
               <span className="text-white/80 text-xs">
