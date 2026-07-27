@@ -74,8 +74,30 @@ export default function AdminAuditPage() {
     return date.toLocaleString()
   }
 
+  // Humanize an unknown snake_case action into Title Case ("user_created" →
+  // "User Created") and pick a variant heuristically so every pill is styled
+  // consistently — no raw grey snake_case leaking through.
+  const humanize = (raw: string) =>
+    raw
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+
+  const inferVariant = (action: string): 'default' | 'destructive' | 'secondary' | 'outline' => {
+    if (/(delete|suspend|remove|revoke|ban|block)/.test(action)) return 'destructive'
+    if (/(create|add|activate|grant|enable)/.test(action)) return 'default'
+    if (/(update|change|edit|reset|set)/.test(action)) return 'secondary'
+    return 'outline'
+  }
+
   const getActionInfo = (action: string) => {
-    return ACTION_LABELS[action] || { label: action, variant: 'secondary' as const }
+    return ACTION_LABELS[action] || { label: humanize(action), variant: inferVariant(action) }
+  }
+
+  // Present metadata as readable key/value chips instead of a raw JSON dump.
+  const formatMetaValue = (value: unknown): string => {
+    if (value === null || value === undefined) return '—'
+    if (typeof value === 'object') return JSON.stringify(value)
+    return String(value)
   }
 
   return (
@@ -163,8 +185,16 @@ export default function AdminAuditPage() {
                     <span>{formatDate(log.created_at)}</span>
                   </div>
                   {Object.keys(log.metadata).length > 0 && (
-                    <div className="mt-1 text-xs text-muted-foreground font-mono">
-                      {JSON.stringify(log.metadata)}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {Object.entries(log.metadata).map(([key, value]) => (
+                        <span
+                          key={key}
+                          className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs"
+                        >
+                          <span className="font-medium text-muted-foreground">{humanize(key)}:</span>
+                          <span className="font-mono text-foreground">{formatMetaValue(value)}</span>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>

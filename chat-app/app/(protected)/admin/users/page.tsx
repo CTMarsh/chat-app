@@ -172,7 +172,13 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <AdminTable>
-          {users.map((user) => (
+          {users.map((user) => {
+            // Fall back to the email local-part (then a dash) so a user with no
+            // display_name/username never renders a bare "?" avatar or "@" handle.
+            const emailLocal = user.email?.split('@')[0] || null
+            const primaryLabel = user.display_name || user.username || emailLocal || '—'
+            const avatarInitial = primaryLabel === '—' ? '?' : primaryLabel[0].toUpperCase()
+            return (
             <AdminTableRow
               key={user.id}
               onClick={() => router.push(`/admin/users/${user.id}`)}
@@ -181,7 +187,7 @@ export default function AdminUsersPage() {
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={user.avatar_url || undefined} />
                   <AvatarFallback>
-                    {(user.display_name || user.username || '?')[0].toUpperCase()}
+                    {avatarInitial}
                   </AvatarFallback>
                 </Avatar>
                 <span className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-background ${getStatusColor(user.status)}`} />
@@ -189,7 +195,7 @@ export default function AdminUsersPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-medium truncate">
-                    {user.display_name || user.username}
+                    {primaryLabel}
                   </p>
                   {user.is_platform_admin && (
                     <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
@@ -204,7 +210,8 @@ export default function AdminUsersPage() {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground truncate">
-                  @{user.username} {user.email ? `· ${user.email}` : ''}
+                  {user.username ? `@${user.username}` : (user.email || 'No username')}
+                  {user.username && user.email ? ` · ${user.email}` : ''}
                 </p>
               </div>
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -215,7 +222,8 @@ export default function AdminUsersPage() {
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </AdminTableRow>
-          ))}
+            )
+          })}
         </AdminTable>
       )}
 

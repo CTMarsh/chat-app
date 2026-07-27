@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { SkipLink } from '@/components/ui/skip-link'
 import { ConversationList } from './conversation-list'
 import { useChat } from '@/components/providers/chat-provider'
@@ -45,6 +45,9 @@ export function ChatLayout({ children }: { children: React.ReactNode }) {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-80 p-0" aria-label="Conversations">
+          {/* Radix Dialog requires a title for a11y; visually hidden since the
+              drawer's own header already labels it. */}
+          <SheetTitle className="sr-only">Conversations</SheetTitle>
           <ConversationList onSelect={() => setSidebarOpen(false)} />
         </SheetContent>
       </Sheet>

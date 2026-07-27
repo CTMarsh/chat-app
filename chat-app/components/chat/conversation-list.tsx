@@ -160,8 +160,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover:bg-primary/10">
-                  <Settings className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="hover:bg-primary/10" aria-label="Settings menu">
+                  <Settings className="h-5 w-5" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="bottom" align="start" className="w-48">
@@ -181,7 +181,10 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                 {isAdmin && (
                   <>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer text-ark-crit focus:text-ark-crit">
+                    {/* Amber = privileged admin area (matches the admin header
+                        accent). Kept distinct from Log out's destructive red so
+                        the two don't read as equally critical. */}
+                    <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer text-ark-amber focus:text-ark-amber">
                       <ShieldAlert className="mr-2 h-4 w-4" />
                       Platform Admin
                     </DropdownMenuItem>
