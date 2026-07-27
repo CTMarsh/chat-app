@@ -40,8 +40,13 @@ export function NotificationBadge({ count }: NotificationBadgeProps) {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
+        >
+          <Bell className="h-5 w-5" aria-hidden="true" />
           {count > 0 && (
             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
               {count > 9 ? '9+' : count}

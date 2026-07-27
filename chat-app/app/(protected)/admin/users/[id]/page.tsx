@@ -208,8 +208,13 @@ export default function AdminUserDetailPage({ params }: PageProps) {
 
       {/* Actions */}
       <div className="flex gap-3 flex-wrap">
+        {/* Suspend is reversible (caution), so it reads amber/outline — Delete in
+            the Danger Zone below stays the most alarming solid-red action. */}
         <Button
-          variant={isSuspended ? 'default' : 'destructive'}
+          variant="outline"
+          className={isSuspended
+            ? 'border-ark-good/50 text-ark-good hover:bg-ark-good/10'
+            : 'border-ark-warn/50 text-ark-warn hover:bg-ark-warn/10'}
           onClick={() => handleSuspend(!isSuspended)}
           disabled={isActing}
         >
