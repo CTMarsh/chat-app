@@ -47,7 +47,7 @@ export function WidgetMessageInput({
   return (
     <form
       onSubmit={handleSubmit}
-      className="border-t border-gray-200 p-3 flex items-end gap-2"
+      className="border-t border-border p-3 flex items-end gap-2"
     >
       <textarea
         ref={textareaRef}
@@ -57,7 +57,7 @@ export function WidgetMessageInput({
         placeholder="Type a message..."
         rows={1}
         disabled={isSending}
-        className="flex-1 resize-none px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+        className="flex-1 resize-none px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent disabled:bg-muted disabled:text-muted-foreground"
         style={{ '--tw-ring-color': primaryColor } as React.CSSProperties}
       />
       <button

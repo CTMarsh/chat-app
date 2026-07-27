@@ -10,8 +10,8 @@ function WidgetContent() {
 
   if (!embedToken) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <p className="text-gray-500">Widget configuration error</p>
+      <div className="flex items-center justify-center h-screen bg-background">
+        <p className="text-muted-foreground">Widget configuration error</p>
       </div>
     )
   }
@@ -22,8 +22,8 @@ function WidgetContent() {
 export default function WidgetPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     }>
       <WidgetContent />

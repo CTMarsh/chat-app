@@ -33,7 +33,7 @@ export function AuthCard({
   className,
 }: AuthCardProps) {
   return (
-    <div className="dark relative flex min-h-[100dvh] bg-ark-void text-foreground">
+    <div className="dark relative flex min-h-[100dvh] w-full overflow-x-hidden bg-ark-void text-foreground">
       {/* Hero art — full-bleed on mobile (behind the card), left pane on desktop */}
       <div className="absolute inset-0 overflow-hidden lg:relative lg:inset-auto lg:flex-1">
         <Image
@@ -78,7 +78,7 @@ export function AuthCard({
       {/* Form pane — fixed width on desktop, over the hero on mobile */}
       {/* ~38% form pane against the ~62% hero (canonical split), floored so the
           form never collapses at the lg breakpoint */}
-      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
+      <div className="relative z-10 flex w-full min-w-0 flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
         <div className="w-full max-w-[400px]">
           {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
           <div
