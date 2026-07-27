@@ -17,10 +17,17 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
-  // Verify MFA
+  // Enforce AAL2 — the admin console is always MFA-gated. Distinguish the two
+  // reasons a user can be below AAL2 so we send them somewhere that can actually
+  // resolve it: an admin with NO verified TOTP factor must be routed to the
+  // enrolment on-ramp (/mfa/setup), not /mfa/verify — the latter has nothing to
+  // verify and silently bounces them to /chat, locking the admin out with no
+  // guidance. Mirrors the routing logic in lib/supabase/proxy.ts.
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel !== 'aal2') {
-    redirect('/mfa/verify')
+    const { data: factors } = await supabase.auth.mfa.listFactors()
+    const hasVerifiedFactor = factors?.totp?.some(f => f.status === 'verified') ?? false
+    redirect(hasVerifiedFactor ? '/mfa/verify' : '/mfa/setup')
   }
 
   // Check platform admin
