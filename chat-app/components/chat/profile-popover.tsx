@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Circle, Clock, MinusCircle, EyeOff, Check, Ban } from 'lucide-react'
+import Link from 'next/link'
+import { Circle, Clock, MinusCircle, EyeOff, Check, Ban, MessageSquare } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Popover,
@@ -154,6 +155,25 @@ export function ProfilePopover({
             </div>
           )}
         </div>
+
+        {/* Open Chat CTA for current user — always-available route back to the chat app */}
+        {isCurrentUser && (
+          <>
+            <div className="border-t" />
+            <div className="p-2">
+              <Button
+                asChild
+                className="w-full justify-start gap-3"
+                onClick={() => setOpen(false)}
+              >
+                <Link href="/chat">
+                  <MessageSquare className="h-4 w-4" />
+                  Open Chat
+                </Link>
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* Status Selector for current user */}
         {isCurrentUser && (
