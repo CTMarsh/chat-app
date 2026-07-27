@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Settings, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
 import { SettingSection } from '@/components/settings/setting-section'
 import { SettingRow } from '@/components/settings/setting-row'
 import { getPlatformSettings, updatePlatformSetting } from '@/lib/actions/admin'
@@ -147,26 +148,29 @@ export default function AdminSettingsPage() {
                   label={info?.label || setting.key}
                   description={info?.description || setting.description || undefined}
                 >
-                  <Button
-                    variant={isEnabled ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={async () => {
-                      const newValue = isEnabled ? 'false' : 'true'
-                      setEditedValues(prev => ({ ...prev, [setting.key]: newValue }))
-                      setSavingKey(setting.key)
-                      const { error } = await updatePlatformSetting(setting.key, newValue)
-                      if (error) setError(error)
-                      else {
-                        setSettings(prev => prev.map(s =>
-                          s.key === setting.key ? { ...s, value: newValue, updated_at: new Date().toISOString() } : s
-                        ))
-                      }
-                      setSavingKey(null)
-                    }}
-                    disabled={savingKey === setting.key}
-                  >
-                    {savingKey === setting.key ? 'Saving...' : isEnabled ? 'Enabled' : 'Disabled'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground tabular-nums w-16 text-right">
+                      {savingKey === setting.key ? 'Saving…' : isEnabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                    <Switch
+                      checked={isEnabled}
+                      disabled={savingKey === setting.key}
+                      aria-label={info?.label || setting.key}
+                      onCheckedChange={async (checked) => {
+                        const newValue = checked ? 'true' : 'false'
+                        setEditedValues(prev => ({ ...prev, [setting.key]: newValue }))
+                        setSavingKey(setting.key)
+                        const { error } = await updatePlatformSetting(setting.key, newValue)
+                        if (error) setError(error)
+                        else {
+                          setSettings(prev => prev.map(s =>
+                            s.key === setting.key ? { ...s, value: newValue, updated_at: new Date().toISOString() } : s
+                          ))
+                        }
+                        setSavingKey(null)
+                      }}
+                    />
+                  </div>
                 </SettingRow>
               )
             })}

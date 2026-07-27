@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Github, Twitter, Linkedin } from 'lucide-react'
 
 const footerLinks = {
   product: [
@@ -27,12 +26,6 @@ const footerLinks = {
   ],
 }
 
-const socialLinks = [
-  { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-  { icon: Github, href: 'https://github.com', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-]
-
 export function Footer() {
   return (
     <footer className="relative border-t border-border/50 bg-card/30 backdrop-blur-sm">
@@ -55,20 +48,6 @@ export function Footer() {
               Navigate your conversations. A secure, real-time messaging platform
               built for teams and individuals.
             </p>
-            <div className="flex gap-2">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-primary/10 hover:text-primary"
-                  aria-label={social.label}
-                >
-                  <social.icon className="h-5 w-5" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Product Links */}

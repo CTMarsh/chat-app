@@ -194,6 +194,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Body copy is Inter (DESIGN-SYSTEM.md fonts). next/font sets --font-body
+       on <body>; apply it here so text doesn't fall back to the system stack. */
+    font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
   h1, h2, h3 {
     font-family: var(--font-display-brand), var(--font-body), sans-serif;
@@ -220,6 +223,14 @@
   ::selection {
     background: rgba(47, 143, 255, 0.35);
     color: var(--foreground);
+  }
+
+  /* Branded keyboard-focus ring (DESIGN-SYSTEM.md §7). Glow + outline in
+     --ark-blue so focus is unmistakably Constellation, not the UA default.
+     Mouse clicks stay ring-free (:focus-visible only). */
+  :focus-visible {
+    outline: 2px solid var(--ark-blue);
+    outline-offset: 2px;
   }
 
   :root { color-scheme: light; }
