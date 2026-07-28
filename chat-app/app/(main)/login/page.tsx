@@ -111,7 +111,10 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'keycloak',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        // Land in the app after SSO, not the marketing brochure. The callback
+        // forwards to /chat; the (protected) middleware still enforces AAL2/MFA
+        // there, exactly as the password path does.
+        redirectTo: `${window.location.origin}/auth/callback?next=/chat`,
         scopes: 'openid email profile',
       },
     })
