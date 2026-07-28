@@ -17,7 +17,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import Image from 'next/image'
-import { Menu, User, LogOut } from 'lucide-react'
+import { Menu, User, LogOut, MessageSquare } from 'lucide-react'
 
 type UserClaims = {
   email?: string
@@ -70,7 +70,11 @@ export async function Header() {
         {/* Auth Section */}
         <div className="flex items-center gap-4">
           {user ? (
-            <DropdownMenu>
+            <div className="flex items-center gap-2">
+              <Button asChild>
+                <Link href="/chat">Open Chat</Link>
+              </Button>
+              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar size="sm">
@@ -106,6 +110,12 @@ export async function Header() {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
+                  <Link href="/chat" className="cursor-pointer">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Open Chat
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/chat/settings/profile" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Profile
@@ -119,7 +129,8 @@ export async function Header() {
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
+              </DropdownMenu>
+            </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Button variant="ghost" asChild>
