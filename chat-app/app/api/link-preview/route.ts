@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { fetchWithSsrfGuard } from '@/lib/utils/ssrf'
 
 // POST /api/link-preview — replaces get-link-preview edge function
 // Fetches URL metadata (title, description, image, site name) server-side
@@ -31,18 +32,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url })
     }
 
-    // Fetch the URL with a timeout
+    // Fetch the URL with a timeout. SSRF guard resolves the host and rejects
+    // private/loopback/link-local targets, re-validating on every redirect hop
+    // (redirect: 'manual') so a public URL can't 302 to an internal one.
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 5000)
 
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithSsrfGuard(url, {
         signal: controller.signal,
         headers: {
           'User-Agent': 'ChatArk-LinkPreview/1.0',
           'Accept': 'text/html,application/xhtml+xml',
         },
-        redirect: 'follow',
       })
 
       clearTimeout(timeout)
