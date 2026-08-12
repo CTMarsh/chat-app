@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { allowRequest, getClientIp } from '@/lib/utils/ip-rate-limit'
 import { randomUUID } from 'crypto'
 
 // POST /api/widget/session — replaces visitor-session edge function
 // Handles both session creation and session resume
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit writes by IP (session create + resume).
+    const clientIp = getClientIp(request)
+    if (!allowRequest('widget-session', clientIp, 10, 6)) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const body = await request.json()
     const { embedToken, sessionToken, email, name } = body
 
@@ -31,13 +41,18 @@ export async function POST(request: NextRequest) {
     if (sessionToken) {
       const { data: existingSession, error: sessionError } = await supabase
         .from('visitor_sessions')
-        .select('id, email, name, session_token, widget_id')
+        .select('id, email, name, session_token, widget_id, expires_at')
         .eq('session_token', sessionToken)
         .eq('widget_id', widget.id)
         .single()
 
       if (sessionError || !existingSession) {
         return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+      }
+
+      // Reject expired sessions on resume.
+      if (existingSession.expires_at && new Date(existingSession.expires_at).getTime() <= Date.now()) {
+        return NextResponse.json({ error: 'Session expired' }, { status: 401 })
       }
 
       // Update last_seen_at

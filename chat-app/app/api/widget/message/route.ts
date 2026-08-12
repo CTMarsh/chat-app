@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { allowRequest, getClientIp } from '@/lib/utils/ip-rate-limit'
 
 // POST /api/widget/message — replaces visitor-message edge function
 // Sends a message from a widget visitor
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit message writes by IP.
+    const clientIp = getClientIp(request)
+    if (!allowRequest('widget-message', clientIp, 30, 2)) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      )
+    }
+
     const { sessionToken, content, conversationId } = await request.json()
 
     if (!sessionToken || !content?.trim()) {
@@ -20,12 +30,17 @@ export async function POST(request: NextRequest) {
     // Validate session
     const { data: session, error: sessionError } = await supabase
       .from('visitor_sessions')
-      .select('id, email, name, widget_id')
+      .select('id, email, name, widget_id, expires_at')
       .eq('session_token', sessionToken)
       .single()
 
     if (sessionError || !session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+
+    // Reject expired sessions.
+    if (session.expires_at && new Date(session.expires_at).getTime() <= Date.now()) {
+      return NextResponse.json({ error: 'Session expired' }, { status: 401 })
     }
 
     // Get or create conversation

@@ -24,12 +24,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Widget not found or inactive' }, { status: 404 })
     }
 
-    // Verify origin if allowed_origins is set
-    if (widget.allowed_origins && widget.allowed_origins.length > 0 && origin) {
-      const allowed = widget.allowed_origins.some(
-        (ao: string) => ao === '*' || ao === origin
-      )
-      if (!allowed) {
+    // Verify origin if allowed_origins is set. A configured allowlist must NOT
+    // be bypassable by simply omitting the origin. Trust the browser-set Origin
+    // header over the body field (page JS cannot forge the header). A wildcard
+    // entry ('*') opts out of the check entirely.
+    const allowedOrigins = (widget.allowed_origins as string[] | null) || []
+    if (allowedOrigins.length > 0 && !allowedOrigins.includes('*')) {
+      const requestOrigin =
+        request.headers.get('origin') || (typeof origin === 'string' ? origin : null)
+      if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) {
         return NextResponse.json({ error: 'Origin not allowed' }, { status: 403 })
       }
     }
