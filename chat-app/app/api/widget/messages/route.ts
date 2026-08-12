@@ -19,12 +19,17 @@ export async function GET(request: NextRequest) {
     // Validate session
     const { data: session, error: sessionError } = await supabase
       .from('visitor_sessions')
-      .select('id')
+      .select('id, expires_at')
       .eq('session_token', sessionToken)
       .single()
 
     if (sessionError || !session) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+
+    // Reject expired sessions.
+    if (session.expires_at && new Date(session.expires_at).getTime() <= Date.now()) {
+      return NextResponse.json({ error: 'Session expired' }, { status: 401 })
     }
 
     // Verify conversation belongs to this session
