@@ -107,7 +107,7 @@ export default function SignupPage() {
         }
       >
         <div className="rounded-lg border border-muted bg-muted/30 p-4 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-ark-body text-muted-foreground">
             Signups are currently disabled by the platform administrator. Please contact your administrator for access.
           </p>
         </div>
@@ -133,8 +133,8 @@ export default function SignupPage() {
           </Link>
         }
       >
-        <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-ark-stack text-center">
+          <p className="text-ark-body text-muted-foreground">
             Click the link in your email to confirm your account and sign in.
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function SignupPage() {
       description="Enter your details to get started"
       icon={<UserPlus className="h-7 w-7 text-primary" />}
       footer={
-        <p className="text-sm text-muted-foreground">
+        <p className="text-ark-body text-muted-foreground">
           Already have an account?{' '}
           <Link href="/login" className="font-medium text-ark-blue-bright hover:underline">
             Sign in
@@ -156,9 +156,9 @@ export default function SignupPage() {
         </p>
       }
     >
-      <form onSubmit={handleSignup} className="space-y-4">
+      <form onSubmit={handleSignup} className="space-y-ark-stack">
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-ark-inline text-ark-body text-destructive">
             {error}
           </div>
         )}
@@ -194,7 +194,7 @@ export default function SignupPage() {
           </AuthInputWrapper>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-ark-stack sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <AuthInputWrapper icon={<Lock className="h-4 w-4" />}>
@@ -230,7 +230,7 @@ export default function SignupPage() {
 
         <Button
           type="submit"
-          className="h-11 w-full text-base"
+          className="h-11 w-full text-ark-body"
           disabled={loading}
         >
           {loading ? (
