@@ -132,7 +132,7 @@ export default function LoginPage() {
       title="Welcome back"
       description="Sign in to pick up the conversation."
       footer={
-        <p className="text-sm text-muted-foreground">
+        <p className="text-ark-body text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link href="/signup" className="font-medium text-ark-blue-bright hover:underline">
             Sign up
@@ -140,15 +140,15 @@ export default function LoginPage() {
         </p>
       }
     >
-      <form onSubmit={handleLogin} className="space-y-5">
+      <form onSubmit={handleLogin} className="space-y-ark-stack">
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-ark-inline text-ark-body text-destructive">
             {error}
           </div>
         )}
 
         {isLockedOut && (
-          <div className="rounded-lg border border-ark-warn/30 bg-ark-warn/10 p-3 text-sm text-ark-warn">
+          <div className="rounded-lg border border-ark-warn/30 bg-ark-warn/10 p-ark-inline text-ark-body text-ark-warn">
             Account temporarily locked. Try again in {lockoutRemaining}s
           </div>
         )}
@@ -162,7 +162,7 @@ export default function LoginPage() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="h-12 pl-[42px] text-[15px] placeholder:text-ark-ink-3"
+              className="h-12 pl-[42px] text-ark-body placeholder:text-ark-ink-3"
               required
             />
           </AuthInputWrapper>
@@ -173,7 +173,7 @@ export default function LoginPage() {
             <Label htmlFor="password" className="font-semibold">Password</Label>
             <Link
               href="/forgot-password"
-              className="text-[13px] text-ark-blue-bright transition-colors hover:underline"
+              className="text-ark-cap text-ark-blue-bright transition-colors hover:underline"
             >
               Forgot password?
             </Link>
@@ -185,7 +185,7 @@ export default function LoginPage() {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="h-12 pl-[42px] pr-11 text-[15px] placeholder:text-ark-ink-3"
+              className="h-12 pl-[42px] pr-11 text-ark-body placeholder:text-ark-ink-3"
               required
             />
             <button
@@ -201,7 +201,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          className="mt-6 h-12 w-full text-[15px]"
+          className="mt-ark-panel h-12 w-full text-ark-body"
           disabled={loading || isLockedOut}
         >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -210,12 +210,12 @@ export default function LoginPage() {
       </form>
 
       {/* Estate SSO — same Constellation .btn-ghost (outline) used across every app's login */}
-      <div className="relative my-6" role="separator" aria-label="or">
+      <div className="relative my-ark-panel" role="separator" aria-label="or">
         <div className="absolute inset-0 flex items-center" aria-hidden="true">
           <span className="w-full border-t border-ark-line" />
         </div>
         <div className="relative flex justify-center">
-          <span className="bg-ark-surface px-3 font-mono text-[11px] uppercase tracking-[0.1em] text-ark-ink-3 lg:bg-ark-void">
+          <span className="bg-ark-surface px-ark-inline font-mono text-ark-micro uppercase text-ark-ink-3 lg:bg-ark-void">
             or
           </span>
         </div>
@@ -226,7 +226,7 @@ export default function LoginPage() {
         variant="outline"
         onClick={handleAuthentik}
         disabled={oauthLoading || loading || isLockedOut}
-        className="h-12 w-full text-[15px]"
+        className="h-12 w-full text-ark-body"
       >
         {oauthLoading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />

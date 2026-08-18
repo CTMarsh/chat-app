@@ -43,21 +43,21 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-[120px] justify-start gap-2"
+          className="w-[120px] justify-start gap-ark-1"
         >
           <div
             className="h-4 w-4 rounded-full border"
             style={{ backgroundColor: value }}
           />
-          <span className="truncate text-xs">{value}</span>
+          <span className="truncate text-ark-cap">{value}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64" align="end">
-        <div className="space-y-3">
-          <div className="text-sm font-medium">Accent Colour</div>
+        <div className="space-y-ark-inline">
+          <div className="text-ark-body font-medium">Accent Colour</div>
 
           {/* Preset colours */}
-          <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Preset accent colours">
+          <div className="grid grid-cols-3 gap-ark-inline" role="radiogroup" aria-label="Preset accent colours">
             {presetColors.map((color) => (
               <button
                 key={color.value}
@@ -66,7 +66,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                 aria-checked={value.toLowerCase() === color.value.toLowerCase()}
                 aria-label={`${color.name} colour`}
                 className={cn(
-                  'flex flex-col items-center gap-1.5 rounded-lg p-2 transition-all',
+                  'flex flex-col items-center gap-ark-1 rounded-lg p-ark-1 transition-all',
                   value.toLowerCase() === color.value.toLowerCase()
                     ? 'bg-muted ring-2 ring-foreground'
                     : 'hover:bg-muted/50'
@@ -89,13 +89,13 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
                     <Check className="h-4 w-4 text-white" aria-hidden="true" />
                   )}
                 </div>
-                <span className="text-[10px] font-medium text-muted-foreground">{color.name}</span>
+                <span className="text-ark-micro font-medium text-muted-foreground">{color.name}</span>
               </button>
             ))}
           </div>
 
           {/* Custom color input */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-ark-1">
             <div
               className="h-8 w-8 shrink-0 rounded-full border"
               style={{ backgroundColor: customColor }}
@@ -105,12 +105,12 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
               value={customColor}
               onChange={handleCustomColorChange}
               placeholder="#2f8fff"
-              className="h-8 font-mono text-xs"
+              className="h-8 font-mono text-ark-cap"
             />
           </div>
 
           {/* Native color picker */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-ark-1">
             <label htmlFor="accent-color-picker" className="sr-only">
               Select custom color
             </label>
@@ -125,7 +125,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
               className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent p-0"
               aria-label="Custom color picker"
             />
-            <span className="text-xs text-muted-foreground" aria-hidden="true">
+            <span className="text-ark-cap text-muted-foreground" aria-hidden="true">
               Or use color picker
             </span>
           </div>

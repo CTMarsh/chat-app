@@ -97,6 +97,49 @@
   --shadow-glow-lg: 0 0 28px rgba(47, 143, 255, 0.6);
   --shadow-glow-cyan: 0 0 20px rgba(51, 214, 230, 0.4);
   --shadow-card:    0 8px 30px rgba(5, 10, 25, 0.5);
+
+  /* --- Constellation type scale → text-ark-micro … text-ark-hero ---
+   * Six roles, no seventh. Tailwind v4 reads the `--line-height` /
+   * `--letter-spacing` sub-keys, so a single `text-ark-cap` carries its size,
+   * leading AND tracking together — they are not separately choosable.
+   * Values live in @noahsark/constellation/tokens.css; bound here rather than
+   * importing the package's theme.css, because that file maps the colour
+   * utilities to the RAW ark constants and would flatten this app's
+   * theme-aware light/dark mapping above. Type + spacing only. */
+  --text-ark-micro: var(--ark-t-micro);
+  --text-ark-micro--line-height: var(--ark-lh-micro);
+  --text-ark-micro--letter-spacing: var(--ark-ls-micro);
+  --text-ark-cap: var(--ark-t-cap);
+  --text-ark-cap--line-height: var(--ark-lh-cap);
+  --text-ark-cap--letter-spacing: var(--ark-ls-cap);
+  --text-ark-body: var(--ark-t-body);
+  --text-ark-body--line-height: var(--ark-lh-body);
+  --text-ark-lead: var(--ark-t-lead);
+  --text-ark-lead--line-height: var(--ark-lh-lead);
+  --text-ark-lead--letter-spacing: var(--ark-ls-lead);
+  --text-ark-stat: var(--ark-t-stat);
+  --text-ark-stat--line-height: var(--ark-lh-stat);
+  --text-ark-stat--letter-spacing: var(--ark-ls-stat);
+  --text-ark-hero: var(--ark-t-hero);
+  --text-ark-hero--line-height: var(--ark-lh-hero);
+  --text-ark-hero--letter-spacing: var(--ark-ls-hero);
+
+  /* --- Constellation 6px spacing scale → p-ark-4, gap-ark-section, … ---
+   * The named rhythm roles (inline/stack/panel/section) are the preferred
+   * call sites; the numbered steps are the escape hatch. */
+  --spacing-ark-1: var(--ark-sp-1);
+  --spacing-ark-2: var(--ark-sp-2);
+  --spacing-ark-3: var(--ark-sp-3);
+  --spacing-ark-4: var(--ark-sp-4);
+  --spacing-ark-5: var(--ark-sp-5);
+  --spacing-ark-6: var(--ark-sp-6);
+  --spacing-ark-7: var(--ark-sp-7);
+  --spacing-ark-8: var(--ark-sp-8);
+  --spacing-ark-9: var(--ark-sp-9);
+  --spacing-ark-inline: var(--ark-gap-inline);
+  --spacing-ark-stack: var(--ark-gap-stack);
+  --spacing-ark-panel: var(--ark-gap-panel);
+  --spacing-ark-section: var(--ark-gap-section);
 }
 
 /* ============================================================
@@ -197,11 +240,37 @@
     /* Body copy is Inter (DESIGN-SYSTEM.md fonts). next/font sets --font-body
        on <body>; apply it here so text doesn't fall back to the system stack. */
     font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+    /* Constellation body role — 15px/1.5. Declared in @layer base so any
+       component writing `text-sm` / `text-ark-cap` still wins. */
+    font-size: var(--ark-t-body);
+    line-height: var(--ark-lh-body);
+    letter-spacing: var(--ark-ls-body);
   }
+  /* Headings take the leading and tracking that belong to their role — the
+     blanket `letter-spacing: -0.02em` that used to sit here applied stat-level
+     tracking to every heading regardless of size. */
   h1, h2, h3 {
     font-family: var(--font-display-brand), var(--font-body), sans-serif;
-    letter-spacing: -0.02em;
     text-wrap: balance;
+  }
+  h1 {
+    font-size: var(--ark-t-hero);
+    line-height: var(--ark-lh-hero);
+    letter-spacing: var(--ark-ls-hero);
+  }
+  h2 {
+    font-size: var(--ark-t-stat);
+    line-height: var(--ark-lh-stat);
+    letter-spacing: var(--ark-ls-stat);
+  }
+  h3 {
+    font-size: var(--ark-t-lead);
+    line-height: var(--ark-lh-lead);
+    letter-spacing: var(--ark-ls-lead);
+  }
+  small, figcaption {
+    font-size: var(--ark-t-cap);
+    line-height: var(--ark-lh-cap);
   }
 
   /* Global chrome (DESIGN-SYSTEM.md §7) — the off-brand details a rebrand
@@ -258,11 +327,12 @@
   .ark-badge {
     font-family: var(--font-mono-brand), ui-monospace, monospace;
     font-weight: 600;
-    font-size: 0.7rem;
-    line-height: 1;
+    /* micro role — the uppercase mono chrome size, with its paired tracking */
+    font-size: var(--ark-t-micro);
+    line-height: var(--ark-lh-micro);
     text-transform: uppercase;
-    letter-spacing: 0.07em;
-    padding: 0.25rem 0.5rem;
+    letter-spacing: var(--ark-ls-micro);
+    padding: var(--ark-sp-1) var(--ark-sp-2);
     border-radius: 6px;
     font-variant-numeric: tabular-nums;
   }
@@ -273,8 +343,9 @@
   /* Uppercase label treatment */
   .ark-label {
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-size: 0.7rem;
+    letter-spacing: var(--ark-ls-micro);
+    font-size: var(--ark-t-micro);
+    line-height: var(--ark-lh-micro);
     font-weight: 600;
   }
 
@@ -305,98 +376,105 @@
    set by the PreferencesProvider
    ===================================================== */
 
-/* UI Scale Variables */
+/* UI Scale Variables
+ * NOTE ON THE `font-size` DECLARATIONS BELOW: these sit on <html>, so they are
+ * the app's REM BASIS, not a type role — every rem-based Tailwind utility in
+ * the app is measured against them. They are deliberately left at 14/16/18 so
+ * this change stays type-and-spacing-only; rebasing them would silently
+ * rescale every padding, margin and width in the product. The text the user
+ * actually reads is snapped to the six roles on `body` instead (see the
+ * [data-font-size] block below). */
 :root {
   --ui-spacing-scale: 1;
-  --ui-padding: 1rem;
-  --ui-gap: 1rem;
+  --ui-padding: var(--ark-gap-stack);
+  --ui-gap: var(--ark-gap-stack);
   --base-font-size: 16px;
 }
 
 [data-ui-scale="compact"] {
   --ui-spacing-scale: 0.8;
-  --ui-padding: 0.75rem;
-  --ui-gap: 0.5rem;
+  --ui-padding: var(--ark-sp-2);
+  --ui-gap: var(--ark-sp-1);
   font-size: 14px;
 }
 
 [data-ui-scale="comfortable"] {
   --ui-spacing-scale: 1;
-  --ui-padding: 1rem;
-  --ui-gap: 1rem;
+  --ui-padding: var(--ark-gap-stack);
+  --ui-gap: var(--ark-gap-stack);
   font-size: 16px;
 }
 
 [data-ui-scale="spacious"] {
   --ui-spacing-scale: 1.2;
-  --ui-padding: 1.5rem;
-  --ui-gap: 1.5rem;
+  --ui-padding: var(--ark-gap-panel);
+  --ui-gap: var(--ark-gap-panel);
   font-size: 18px;
 }
 
 /* UI Scale - Apply to buttons */
 [data-ui-scale="compact"] button,
 [data-ui-scale="compact"] [role="button"] {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.8125rem;
+  padding: var(--ark-sp-1) var(--ark-sp-2);
+  font-size: var(--ark-t-cap);
 }
 
 [data-ui-scale="spacious"] button,
 [data-ui-scale="spacious"] [role="button"] {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  padding: var(--ark-sp-2) var(--ark-sp-4);
+  font-size: var(--ark-t-body);
 }
 
 /* UI Scale - Apply to inputs */
 [data-ui-scale="compact"] input,
 [data-ui-scale="compact"] textarea,
 [data-ui-scale="compact"] select {
-  padding: 0.375rem 0.625rem;
-  font-size: 0.8125rem;
+  padding: var(--ark-sp-1) var(--ark-sp-2);
+  font-size: var(--ark-t-cap);
 }
 
 [data-ui-scale="spacious"] input,
 [data-ui-scale="spacious"] textarea,
 [data-ui-scale="spacious"] select {
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
+  padding: var(--ark-sp-2) var(--ark-sp-3);
+  font-size: var(--ark-t-body);
 }
 
 /* UI Scale - Apply to sidebar and main layout padding */
 [data-ui-scale="compact"] .sidebar,
 [data-ui-scale="compact"] aside {
-  padding: 0.5rem;
+  padding: var(--ark-sp-1);
 }
 
 [data-ui-scale="spacious"] .sidebar,
 [data-ui-scale="spacious"] aside {
-  padding: 1.25rem;
+  padding: var(--ark-gap-stack);
 }
 
 /* UI Scale - Apply to cards */
 [data-ui-scale="compact"] [data-slot="card"],
 [data-ui-scale="compact"] .card {
-  padding: 0.75rem;
-  gap: 0.5rem;
+  padding: var(--ark-sp-2);
+  gap: var(--ark-sp-1);
 }
 
 [data-ui-scale="spacious"] [data-slot="card"],
 [data-ui-scale="spacious"] .card {
-  padding: 1.75rem;
-  gap: 1.25rem;
+  padding: var(--ark-sp-5);
+  gap: var(--ark-gap-stack);
 }
 
 /* UI Scale - Apply to conversation items */
 [data-ui-scale="compact"] .conversation-item,
 [data-ui-scale="compact"] [data-slot="conversation-item"] {
-  padding: 0.5rem;
-  gap: 0.5rem;
+  padding: var(--ark-sp-1);
+  gap: var(--ark-sp-1);
 }
 
 [data-ui-scale="spacious"] .conversation-item,
 [data-ui-scale="spacious"] [data-slot="conversation-item"] {
-  padding: 1rem;
-  gap: 1rem;
+  padding: var(--ark-gap-stack);
+  gap: var(--ark-gap-stack);
 }
 
 /* UI Scale - Apply to avatars */
@@ -412,39 +490,62 @@
   height: 3.5rem;
 }
 
-/* Font Size Scaling */
+/* Font Size Scaling
+ * The <html> declarations stay the rem basis (see the UI Scale note above).
+ * The reading size the preference actually controls is set on `body`, and it
+ * steps through three of the six roles — cap / body / lead — so no state of
+ * this control can produce a size outside the scale. */
 [data-font-size="small"] {
   --base-font-size: 14px;
   font-size: 14px;
+}
+[data-font-size="small"] body {
+  font-size: var(--ark-t-cap);
+  line-height: var(--ark-lh-cap);
+  letter-spacing: var(--ark-ls-cap);
 }
 
 [data-font-size="medium"] {
   --base-font-size: 16px;
   font-size: 16px;
 }
+[data-font-size="medium"] body {
+  font-size: var(--ark-t-body);
+  line-height: var(--ark-lh-body);
+  letter-spacing: var(--ark-ls-body);
+}
 
 [data-font-size="large"] {
   --base-font-size: 18px;
   font-size: 18px;
 }
+[data-font-size="large"] body {
+  font-size: var(--ark-t-lead);
+  line-height: var(--ark-lh-lead);
+  letter-spacing: var(--ark-ls-lead);
+}
 
-/* Message Density - Apply to message list items */
+/* Message Density - Apply to message list items
+ * Deliberately the tightest end of the scale: this is the one region where
+ * density beats breathing room, so the three states walk the first three
+ * spacing steps (6 / 12 / 18) rather than reaching for the panel or section
+ * roles used between regions. */
 [data-message-density="compact"] [data-slot="message-item"],
 [data-message-density="compact"] .message-item {
-  padding-block: 0.25rem;
-  gap: 0.5rem;
+  padding-block: var(--ark-sp-1);
+  gap: var(--ark-sp-1);
 }
 
 [data-message-density="default"] [data-slot="message-item"],
 [data-message-density="default"] .message-item {
-  padding-block: 0.5rem;
-  gap: 0.75rem;
+  padding-block: var(--ark-sp-2);
+  gap: var(--ark-sp-2);
 }
 
 [data-message-density="relaxed"] [data-slot="message-item"],
 [data-message-density="relaxed"] .message-item {
-  padding-block: 1rem;
-  gap: 1rem;
+  padding-block: var(--ark-sp-3);
+  gap: var(--ark-sp-3);
 }
 
 /* Accent Color Override - Uses CSS variable set by PreferencesProvider */

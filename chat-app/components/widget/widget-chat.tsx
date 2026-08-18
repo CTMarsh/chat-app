@@ -368,8 +368,8 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   // Error state
   if (error && !config) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background p-4">
-        <p className="text-destructive text-center">{error}</p>
+      <div className="flex items-center justify-center h-screen bg-background p-ark-stack">
+        <p className="text-ark-body text-destructive text-center">{error}</p>
       </div>
     )
   }
@@ -377,8 +377,8 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
   // No config
   if (!config) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background p-4">
-        <p className="text-muted-foreground text-center">Widget not available</p>
+      <div className="flex items-center justify-center h-screen bg-background p-ark-stack">
+        <p className="text-ark-body text-muted-foreground text-center">Widget not available</p>
       </div>
     )
   }
@@ -410,10 +410,10 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
           />
         ) : showEndedUI ? (
           // Show full-screen ended conversation UI
-          <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted">
+          <div className="flex-1 flex flex-col items-center justify-center p-ark-panel bg-muted">
             {/* Checkmark icon */}
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mb-6"
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-ark-panel"
               style={{ backgroundColor: `${primaryColor}20` }}
             >
               <svg
@@ -428,16 +428,16 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
             </div>
 
             {/* Title and description */}
-            <h2 className="text-xl font-semibold text-foreground mb-2">Conversation Ended</h2>
-            <p className="text-sm text-muted-foreground text-center mb-8 max-w-xs">
+            <h2 className="text-ark-lead font-semibold text-foreground mb-ark-1">Conversation Ended</h2>
+            <p className="text-ark-body text-muted-foreground text-center mb-ark-5 max-w-xs">
               Thank you for chatting with us! You can download a transcript of this conversation.
             </p>
 
             {/* Action buttons */}
-            <div className="w-full max-w-xs space-y-3">
+            <div className="w-full max-w-xs space-y-ark-inline">
               <button
                 onClick={downloadTranscript}
-                className="w-full py-3 px-4 text-sm font-medium rounded-xl border-2 border-border text-foreground hover:bg-muted hover:border-border transition-all flex items-center justify-center gap-2"
+                className="w-full py-ark-inline px-ark-stack text-ark-body font-medium rounded-xl border-2 border-border text-foreground hover:bg-muted hover:border-border transition-all flex items-center justify-center gap-ark-1"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -446,7 +446,7 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
               </button>
               <button
                 onClick={startNewChat}
-                className="w-full py-3 px-4 text-sm font-medium rounded-xl text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                className="w-full py-ark-inline px-ark-stack text-ark-body font-medium rounded-xl text-white transition-all hover:opacity-90 flex items-center justify-center gap-ark-1"
                 style={{ backgroundColor: primaryColor }}
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -481,11 +481,11 @@ export function WidgetChat({ embedToken }: { embedToken: string }) {
       </div>
 
       {error && (
-        <div className="px-4 py-2 bg-destructive/10 border-t border-destructive/30">
-          <p className="text-sm text-destructive">{error}</p>
+        <div className="px-ark-stack py-ark-1 bg-destructive/10 border-t border-destructive/30">
+          <p className="text-ark-body text-destructive">{error}</p>
           <button
             onClick={() => setError(null)}
-            className="text-xs text-destructive underline"
+            className="text-ark-cap text-destructive underline"
           >
             Dismiss
           </button>
