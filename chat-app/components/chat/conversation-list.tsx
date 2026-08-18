@@ -122,8 +122,8 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       {/* Header with gradient accent */}
       <div className="relative">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-ark-blue via-ark-cyan to-transparent" />
-        <div className="flex items-center justify-between border-b px-4 py-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between border-b px-ark-stack py-ark-stack">
+          <div className="flex items-center gap-ark-inline">
             {currentUser && (
               <ProfilePopover profile={currentUser} isCurrentUser side="bottom" align="start">
                 <button className="relative cursor-pointer" aria-label="Open your profile">
@@ -150,12 +150,12 @@ export function ConversationList({ onSelect }: ConversationListProps) {
               </ProfilePopover>
             )}
             <div className="flex flex-col">
-              <span className="font-semibold">{currentUser?.display_name || currentUser?.username}</span>
-              <span className="text-xs text-muted-foreground">@{currentUser?.username}</span>
+              <span className="text-ark-body font-semibold">{currentUser?.display_name || currentUser?.username}</span>
+              <span className="text-ark-cap text-muted-foreground">@{currentUser?.username}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-ark-1">
             <NotificationBadge count={unreadCount} />
 
             <DropdownMenu>
@@ -202,7 +202,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       </div>
 
       {/* Search */}
-      <div className="p-4 pb-2">
+      <div className="p-ark-stack pb-ark-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -216,7 +216,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
 
       {/* Filter tabs */}
       {widgetConversations.length > 0 && (
-        <div className="flex gap-1 px-4 pb-2">
+        <div className="flex gap-ark-1 px-ark-stack pb-ark-2">
           <Button
             variant={filter === 'all' ? 'default' : 'ghost'}
             size="sm"
@@ -244,7 +244,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
             <Headphones className="mr-1.5 h-3.5 w-3.5" />
             Inbox
             {widgetUnreadCount > 0 && (
-              <span className="ml-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-medium text-destructive-foreground">
+              <span className="ml-ark-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-ark-micro font-medium text-destructive-foreground">
                 {widgetUnreadCount}
               </span>
             )}
@@ -253,7 +253,7 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       )}
 
       {/* New chat buttons */}
-      <div className="flex gap-2 px-4 pb-4">
+      <div className="flex gap-ark-inline px-ark-stack pb-ark-section">
         <Button
           variant="outline"
           className="flex-1 h-10 bg-background/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
@@ -273,9 +273,9 @@ export function ConversationList({ onSelect }: ConversationListProps) {
       </div>
 
       {/* Conversation list */}
-      <nav className="flex-1 overflow-y-auto px-2" aria-label="Conversations">
+      <nav className="flex-1 overflow-y-auto px-ark-1" aria-label="Conversations">
         {filteredConversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
+          <div className="flex flex-col items-center justify-center p-ark-5 text-center">
             <div className="relative h-24 w-24 overflow-hidden rounded-full border border-border shadow-glow">
               <Image
                 src="/brand/empty-nodes.png"
@@ -285,15 +285,15 @@ export function ConversationList({ onSelect }: ConversationListProps) {
                 className="object-cover"
               />
             </div>
-            <p className="mt-4 text-sm font-medium text-muted-foreground">
+            <p className="mt-ark-stack text-ark-body font-medium text-muted-foreground">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground/70">
+            <p className="mt-ark-1 text-ark-cap text-muted-foreground/70">
               Start a new chat to light the first node
             </p>
           </div>
         ) : (
-          <ul className="space-y-1 list-none" role="list">
+          <ul className="space-y-ark-1 list-none" role="list">
             {filteredConversations.map(conversation => (
               <li key={conversation.id}>
                 <ConversationItem

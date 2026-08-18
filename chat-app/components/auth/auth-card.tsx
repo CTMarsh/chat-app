@@ -49,10 +49,10 @@ export function AuthCard({
         <div className="absolute inset-0 bg-gradient-to-t from-ark-void via-ark-void/50 to-ark-void/20 lg:bg-gradient-to-r lg:from-ark-void/40 lg:via-transparent lg:to-ark-void" />
 
         {/* Brand statement over the art, anchored bottom-left (desktop only) */}
-        <div className="absolute bottom-12 left-12 right-24 z-10 hidden lg:block">
+        <div className="absolute bottom-ark-7 left-ark-7 right-ark-8 z-10 hidden lg:block">
           <Link
             href="/"
-            className="mb-5 flex w-fit items-center gap-3 transition-opacity hover:opacity-80"
+            className="mb-ark-stack flex w-fit items-center gap-ark-inline transition-opacity hover:opacity-80"
           >
             <Image
               src="/chatark-logo.png"
@@ -61,14 +61,15 @@ export function AuthCard({
               height={40}
               className="rounded-xl shadow-glow"
             />
-            <span className="font-display text-lg font-semibold tracking-tight text-ark-ink">
+            <span className="font-display text-ark-lead font-semibold text-ark-ink">
               Chat<span className="text-ark-blue-bright">Ark</span>
             </span>
           </Link>
-          <h2 className="font-display text-3xl font-semibold leading-tight text-ark-ink xl:text-4xl">
+          {/* The one heading that has to carry: stat role, hero at xl. */}
+          <h2 className="font-display text-ark-stat font-semibold text-ark-ink xl:text-ark-hero">
             Every conversation, one constellation.
           </h2>
-          <p className="mt-3 max-w-md text-sm text-ark-ink-2">
+          <p className="mt-ark-inline max-w-md text-ark-body text-ark-ink-2">
             Self-hosted messaging for the people who matter — private by
             design, real-time by default.
           </p>
@@ -78,12 +79,12 @@ export function AuthCard({
       {/* Form pane — fixed width on desktop, over the hero on mobile */}
       {/* ~38% form pane against the ~62% hero (canonical split), floored so the
           form never collapses at the lg breakpoint */}
-      <div className="relative z-10 flex w-full min-w-0 flex-1 items-center justify-center px-4 py-10 sm:px-8 lg:w-[30rem] lg:flex-none">
+      <div className="relative z-10 flex w-full min-w-0 flex-1 items-center justify-center px-ark-stack py-ark-section sm:px-ark-5 lg:w-[30rem] lg:flex-none">
         <div className="w-full max-w-[400px]">
           {/* Glassy card on mobile (over the hero); flat on the desktop void pane */}
           <div
             className={cn(
-              'rounded-[16px] border border-ark-line bg-ark-surface/80 p-6 shadow-card backdrop-blur-md sm:p-8',
+              'rounded-[16px] border border-ark-line bg-ark-surface/80 p-ark-panel shadow-card backdrop-blur-md sm:p-ark-5',
               'lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-blur-none',
               className
             )}
@@ -91,7 +92,7 @@ export function AuthCard({
             {/* Compact brand header — mobile only (desktop carries it on the hero) */}
             <Link
               href="/"
-              className="mb-8 flex w-fit items-center gap-3 transition-opacity hover:opacity-80 lg:hidden"
+              className="mb-ark-5 flex w-fit items-center gap-ark-inline transition-opacity hover:opacity-80 lg:hidden"
             >
               <Image
                 src="/chatark-logo.png"
@@ -100,31 +101,31 @@ export function AuthCard({
                 height={40}
                 className="rounded-xl shadow-glow"
               />
-              <span className="font-display text-lg font-semibold tracking-tight text-ark-ink">
+              <span className="font-display text-ark-lead font-semibold text-ark-ink">
                 Chat<span className="text-ark-blue-bright">Ark</span>
               </span>
             </Link>
 
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.14em] text-ark-cyan">
+            <p className="mb-ark-inline font-mono text-ark-micro uppercase text-ark-cyan">
               Noah&apos;s Ark &middot; Secure comms
             </p>
-            <h1 className="mb-1 font-display text-3xl font-semibold text-ark-ink">
+            <h1 className="mb-ark-1 font-display text-ark-stat font-semibold text-ark-ink">
               {title}
             </h1>
             {description && (
-              <p className="text-[15px] text-ark-ink-2">{description}</p>
+              <p className="text-ark-body text-ark-ink-2">{description}</p>
             )}
 
-            <div className="mt-8">{children}</div>
+            <div className="mt-ark-5">{children}</div>
 
             {footer && (
-              <div className="mt-5 text-center text-sm text-ark-ink-2">
+              <div className="mt-ark-stack text-center text-ark-body text-ark-ink-2">
                 {footer}
               </div>
             )}
           </div>
 
-          <p className="mt-10 text-center font-mono text-[11px] uppercase tracking-[0.1em] text-ark-ink-3">
+          <p className="mt-ark-section text-center font-mono text-ark-micro uppercase text-ark-ink-3">
             ChatArk &middot; Noah&apos;s Ark
           </p>
         </div>
