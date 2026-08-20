@@ -44,6 +44,30 @@ lint:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_MERGE_REQUEST_IID
 
+# ── Stage 2: Unit Tests (BLOCKING — never allow_failure) ──
+# Pins the security helpers behind the public/unauth API surface: the SSRF guard
+# on /api/link-preview and the per-IP rate limiter + widget authz predicates on
+# the unauthenticated /api/widget/* routes. If this job goes red the pipeline
+# stops — it must never be marked allow_failure.
+test:unit:
+  stage: test
+  image: node:20-alpine
+  needs: []
+  interruptible: true
+  cache:
+    key:
+      files:
+        - chat-app/package-lock.json
+    paths:
+      - chat-app/node_modules/
+  script:
+    - cd chat-app
+    - npm ci
+    - npm test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_IID
+
 # ── Stage 2: Build & Push Container Image ────────────────────
 .kaniko-auth: &kaniko-auth
   before_script:
@@ -56,6 +80,9 @@ build:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]
   <<: *kaniko-auth
+  needs:
+    - job: lint
+    - job: test:unit
   interruptible: true
   retry:
     max: 2
