@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { allowRequest, getClientIp } from '@/lib/utils/ip-rate-limit'
+import { isSessionExpired } from '@/lib/utils/widget-auth'
 
 // POST /api/widget/message — replaces visitor-message edge function
 // Sends a message from a widget visitor
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Reject expired sessions.
-    if (session.expires_at && new Date(session.expires_at).getTime() <= Date.now()) {
+    if (isSessionExpired(session.expires_at)) {
       return NextResponse.json({ error: 'Session expired' }, { status: 401 })
     }
 

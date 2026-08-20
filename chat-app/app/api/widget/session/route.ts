@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { allowRequest, getClientIp } from '@/lib/utils/ip-rate-limit'
+import { isSessionExpired } from '@/lib/utils/widget-auth'
 import { randomUUID } from 'crypto'
 
 // POST /api/widget/session — replaces visitor-session edge function
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Reject expired sessions on resume.
-      if (existingSession.expires_at && new Date(existingSession.expires_at).getTime() <= Date.now()) {
+      if (isSessionExpired(existingSession.expires_at)) {
         return NextResponse.json({ error: 'Session expired' }, { status: 401 })
       }
 
