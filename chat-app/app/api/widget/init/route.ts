@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
+import { isOriginAllowed } from '@/lib/utils/widget-auth'
 
 // POST /api/widget/init — replaces widget-init edge function
 export async function POST(request: NextRequest) {
@@ -25,16 +26,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify origin if allowed_origins is set. A configured allowlist must NOT
-    // be bypassable by simply omitting the origin. Trust the browser-set Origin
-    // header over the body field (page JS cannot forge the header). A wildcard
-    // entry ('*') opts out of the check entirely.
-    const allowedOrigins = (widget.allowed_origins as string[] | null) || []
-    if (allowedOrigins.length > 0 && !allowedOrigins.includes('*')) {
-      const requestOrigin =
-        request.headers.get('origin') || (typeof origin === 'string' ? origin : null)
-      if (!requestOrigin || !allowedOrigins.includes(requestOrigin)) {
-        return NextResponse.json({ error: 'Origin not allowed' }, { status: 403 })
-      }
+    // be bypassable by simply omitting the origin — see isOriginAllowed().
+    if (
+      !isOriginAllowed(
+        widget.allowed_origins as string[] | null,
+        request.headers.get('origin'),
+        origin
+      )
+    ) {
+      return NextResponse.json({ error: 'Origin not allowed' }, { status: 403 })
     }
 
     // Check if any workspace members are online (agents)
