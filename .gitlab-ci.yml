@@ -15,6 +15,7 @@ stages:
   - lint
   - test
   - build
+  - scan
   - deploy
   - release
 
@@ -103,12 +104,56 @@ build:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
+# ── Stage: Trivy Image Scan (fail on CRITICAL) ───────────────
+# chat-app had NO container image CVE scanning. The SAST and Secret-Detection
+# templates included above scan SOURCE — neither one ever looks at the built
+# image, so every OS/base-layer CVE in the shipped container was unmeasured.
+# Mirrors the gate already running in tars / notify / status-page.
+#
+# --db-repository is given TWICE on purpose. trivy only auto-falls-back to the
+# next repository on 429/5xx; the GCR mirror currently answers 404, which is NOT
+# a fallback trigger, so ghcr.io must be listed FIRST and the mirror kept only as
+# a genuine-rate-limit backstop.
+#
+# NO allow_failure. A security gate that cannot fail is not a gate.
+trivy:scan:
+  stage: scan
+  image:
+    name: aquasec/trivy:0.62.1
+    entrypoint: [""]
+  needs:
+    - job: build
+  variables:
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_NO_PROGRESS: "true"
+    DB_FLAGS: "--db-repository ghcr.io/aquasecurity/trivy-db --db-repository mirror.gcr.io/aquasec/trivy-db"
+  script:
+    - if [ -f .trivyignore ]; then IGN="--ignorefile .trivyignore"; else IGN=""; fi
+    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format table "$IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format json --output trivy-chat-app.json "$IMAGE:$CI_COMMIT_SHORT_SHA"
+    - trivy image $DB_FLAGS --exit-code 1 --severity CRITICAL $IGN --format table "$IMAGE:$CI_COMMIT_SHORT_SHA" >/dev/null || CRITICAL_FOUND=1
+    - if [ "${CRITICAL_FOUND:-0}" = "1" ]; then echo "CRITICAL vulnerabilities found - failing pipeline"; exit 1; fi
+    - echo "No unignored CRITICAL vulnerabilities."
+  artifacts:
+    paths:
+      - trivy-chat-app.json
+    expire_in: 30 days
+    when: always
+  allow_failure: false
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
 # ── Stage 3: Deploy to Kubernetes ────────────────────────────
 deploy:k8s:
   stage: deploy
   image: alpine/git:2.47.2
   needs:
     - job: build
+    # Gate the deploy on the scan, otherwise the scan is decorative: without this
+    # `needs`, deploy:k8s starts as soon as build finishes and ships the image
+    # regardless of the CVE result.
+    - job: trivy:scan
   resource_group: production
   variables:
     MANIFEST_PROJECT_ID: "41"
