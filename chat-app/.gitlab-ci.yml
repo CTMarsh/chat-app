@@ -24,7 +24,7 @@ variables:
 # ── Stage 1: Lint & Type Check ──────────────────────────────
 lint:
   stage: lint
-  image: node:20-alpine
+  image: node:22.23.4-alpine
   needs: []
   interruptible: true
   cache:
