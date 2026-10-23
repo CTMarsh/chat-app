@@ -1,4 +1,9 @@
-FROM node:20-alpine AS base
+# Node 22.23.4 - Node2Shell (CVE-2026-111497) fix: the Brotli decoder in
+# node:zlib is RCE-able via `Content-Encoding: br` bodies and via outbound
+# fetch() (which /api/link-preview does against arbitrary URLs). Node 20 will
+# never receive the fix, so this is a major bump 20 -> 22, pinned to the exact
+# patched release. Never float back below 22.23.4.
+FROM node:22.23.4-alpine AS base
 
 FROM base AS deps
 WORKDIR /app
@@ -26,7 +31,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 # Strip npm/npx from the RUNTIME image. Next.js standalone output bundles its
 # own node_modules and this stage's entrypoint is `node server.js` — npm is
-# never invoked at runtime, it is only present because node:20-alpine ships it.
+# never invoked at runtime, it is only present because the node alpine base ships it.
 #
 # It is not free, though: npm vendors its own copy of node-tar, and
 # /usr/local/lib/node_modules/npm/node_modules/tar was 6.2.1 — CVE-2026-59873,
