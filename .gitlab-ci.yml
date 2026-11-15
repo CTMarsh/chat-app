@@ -75,10 +75,22 @@ test:unit:
     - mkdir -p /kaniko/.docker
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 -w 0)\"}}}" > /kaniko/.docker/config.json
 
+# Builder: the osscontainertools kaniko fork. Upstream
+# GoogleContainerTools/kaniko was archived 2025-06-03; this fork is maintained,
+# drop-in (same /kaniko/executor flags, same DOCKER_CONFIG=/kaniko/.docker) and,
+# unlike rootless BuildKit or Buildah, runs on the chris-pc-docker Docker
+# executor with NO privileged mode and NO seccomp/apparmor relaxation — both of
+# those failed there with "operation not permitted" under default settings.
+# Pinned by digest; bump tag+digest together.
+#   https://github.com/osscontainertools/kaniko
+#
+# MR pipelines build too (catch build breaks pre-merge) but push only to the
+# scratch repo  <project>/mr-builds/chat-app:<sha>  — never to the deployed
+# <project>/chat-app  repo and never :latest.
 build:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    name: ghcr.io/osscontainertools/kaniko:v1.29.1-debug@sha256:ebc38a988e5aa1aaea99240e931aeeeff9d8e6bb5a0bd0e00eaf79973bf0a773
     entrypoint: [""]
   <<: *kaniko-auth
   needs:
@@ -90,19 +102,51 @@ build:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
+  variables:
+    # Without this, every intermediate cache push also (re)writes the digest
+    # file and builds the full output (fork issue #1329, fixed behind this flag
+    # in v1.29.0 via PR #1223). REMOVE-WHEN the fork makes it the default.
+    FF_KANIKO_ISOLATE_CACHE_PUSH: "1"
   script:
+    - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        BUILD_IMAGE="$IMAGE"
+        EXTRA_DEST="--destination $IMAGE:latest"
+      else
+        BUILD_IMAGE="$CI_REGISTRY_IMAGE/mr-builds/chat-app"
+        EXTRA_DEST=""
+      fi
     - /kaniko/executor
       --context "$CI_PROJECT_DIR/chat-app"
       --dockerfile "$CI_PROJECT_DIR/chat-app/Dockerfile"
       --build-arg "NPM_TOKEN=$NPM_TOKEN"
       --build-arg "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL"
       --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-      --destination "$IMAGE:$CI_COMMIT_SHORT_SHA"
-      --destination "$IMAGE:latest"
+      --destination "$BUILD_IMAGE:$CI_COMMIT_SHORT_SHA"
+      $EXTRA_DEST
       --cache=true
       --cache-repo="$CI_REGISTRY_IMAGE/cache/chat-app"
+      --digest-file /kaniko/image-digest
+    # The digest file MUST live outside the build context ($CI_PROJECT_DIR/chat-app,
+    # and the whole $CI_PROJECT_DIR): anything written into the context mid-build
+    # changes the `COPY . .` hash between kaniko's two cache-key passes and trips
+    # the fork's executor.compositekey.pass-match assertion (issue #1329). Copy it
+    # in only after the executor has exited.
+    - cp /kaniko/image-digest "$CI_PROJECT_DIR/image-digest"
+    - test -s "$CI_PROJECT_DIR/image-digest"
+    # Hand the exact pushed digest to later jobs, so Trivy scans the bytes that
+    # were pushed rather than whatever a mutable tag points at by then.
+    - echo "IMAGE_REF=$BUILD_IMAGE@$(cat "$CI_PROJECT_DIR/image-digest")" > build.env
+    - cat build.env
+  artifacts:
+    paths:
+      - image-digest
+    reports:
+      dotenv: build.env
+    expire_in: 30 days
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_IID
 
 # ── Stage: Trivy Image Scan (fail on CRITICAL) ───────────────
 # chat-app had NO container image CVE scanning. The SAST and Secret-Detection
@@ -129,10 +173,13 @@ trivy:scan:
     TRIVY_NO_PROGRESS: "true"
     DB_FLAGS: "--db-repository ghcr.io/aquasecurity/trivy-db --db-repository mirror.gcr.io/aquasec/trivy-db"
   script:
+    # IMAGE_REF (repo@sha256:...) comes from build's dotenv report.
+    - test -n "$IMAGE_REF" || { echo "IMAGE_REF missing from build dotenv"; exit 1; }
+    - echo "Scanning $IMAGE_REF"
     - if [ -f .trivyignore ]; then IGN="--ignorefile .trivyignore"; else IGN=""; fi
-    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format table "$IMAGE:$CI_COMMIT_SHORT_SHA"
-    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format json --output trivy-chat-app.json "$IMAGE:$CI_COMMIT_SHORT_SHA"
-    - trivy image $DB_FLAGS --exit-code 1 --severity CRITICAL $IGN --format table "$IMAGE:$CI_COMMIT_SHORT_SHA" >/dev/null || CRITICAL_FOUND=1
+    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format table "$IMAGE_REF"
+    - trivy image $DB_FLAGS --exit-code 0 --severity CRITICAL,HIGH --format json --output trivy-chat-app.json "$IMAGE_REF"
+    - trivy image $DB_FLAGS --exit-code 1 --severity CRITICAL $IGN --format table "$IMAGE_REF" >/dev/null || CRITICAL_FOUND=1
     - if [ "${CRITICAL_FOUND:-0}" = "1" ]; then echo "CRITICAL vulnerabilities found - failing pipeline"; exit 1; fi
     - echo "No unignored CRITICAL vulnerabilities."
   artifacts:
@@ -143,6 +190,7 @@ trivy:scan:
   allow_failure: false
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_MERGE_REQUEST_IID
 
 # ── Stage 3: Deploy to Kubernetes ────────────────────────────
 deploy:k8s:
