@@ -195,7 +195,11 @@ trivy:scan:
 # ── Stage 3: Deploy to Kubernetes ────────────────────────────
 deploy:k8s:
   stage: deploy
-  image: alpine/git:2.47.2
+  # alpine/git sets ENTRYPOINT ["git"]; the Docker executor (chris-pc-docker) would run the
+  # job shell as `git sh` and fail with "git: 'sh' is not a git command". Clear it.
+  image:
+    name: alpine/git:2.47.2
+    entrypoint: [""]
   needs:
     - job: build
     # Gate the deploy on the scan, otherwise the scan is decorative: without this
